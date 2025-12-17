@@ -1,0 +1,166 @@
+﻿@model WebApplication1.ViewModels.StudentGradeViewModel
+@{
+    ViewData["Title"] = "Grades";
+    ViewData["PageTitle"] = "View Grades";
+    Layout = "~/Views/Shared/_DashboardLayout.cshtml";
+}
+
+@section SidebarMenu {
+    <li class="nav-item">
+        <a class="nav-link" asp-area="Student" asp-controller="Dashboard" asp-action="Index">
+            <i class="bi bi-house-door"></i>Home
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" asp-area="Student" asp-controller="Enrollment" asp-action="Index">
+            <i class="bi bi-clipboard-check"></i>Course Registration
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" asp-area="Student" asp-controller="Schedule" asp-action="Index">
+            <i class="bi bi-calendar3"></i>Schedule
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link active" asp-area="Student" asp-controller="Grade" asp-action="Index">
+            <i class="bi bi-award"></i>View Grades
+        </a>
+    </li>
+}
+
+@if (Model != null)
+{
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h6 class="text-muted">GPA</h6>
+                    <h2 class="mb-0" style="color: #667eea;">
+                        @(Model.GPA.HasValue ? Model.GPA.Value.ToString("F2") : "N/A")
+                    </h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h6 class="text-muted">Total Credits</h6>
+                    <h2 class="mb-0">@Model.TotalCredits</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h6 class="text-muted">Passed Credits</h6>
+                    <h2 class="mb-0 text-success">@Model.PassedCredits</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h6 class="text-muted">Semester</h6>
+                    <h5 class="mb-0">@Model.Semester</h5>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header bg-white">
+            <h5 class="mb-0"><i class="bi bi-table me-2"></i>Grade Details</h5>
+        </div>
+        <div class="card-body">
+            @if (Model.Grades.Any())
+            {
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Code</th>
+                                <th>Subject</th>
+                                <th>Credits</th>
+                                <th>Attendance</th>
+                                <th>Midterm</th>
+                                <th>Final</th>
+                                <th>Total</th>
+                                <th>Letter Grade</th>
+                                <th>Result</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var grade in Model.Grades)
+                            {
+                                <tr>
+                                    <td><span class="badge bg-primary">@grade.SubjectCode</span></td>
+                                    <td>
+                                        <strong>@grade.SubjectName</strong><br>
+                                        <small class="text-muted">@grade.ClassCode</small>
+                                    </td>
+                                    <td>@grade.Credits</td>
+                                    <td>@(grade.AttendanceScore?.ToString("F1") ?? "-")</td>
+                                    <td>@(grade.MidtermScore?.ToString("F1") ?? "-")</td>
+                                    <td>@(grade.FinalScore?.ToString("F1") ?? "-")</td>
+                                    <td>
+                                        @if (grade.TotalScore.HasValue)
+                                        {
+                                            <strong style="color: @(grade.TotalScore >= 8 ? "#10b981" : grade.TotalScore >= 6.5 ? "#3b82f6" : grade.TotalScore >= 5 ? "#f59e0b" : "#ef4444")">
+                                                @grade.TotalScore.Value.ToString("F2")
+                                            </strong>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">-</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        @if (!string.IsNullOrEmpty(grade.LetterGrade))
+                                        {
+                                            <span class="badge" style="background-color: @(grade.LetterGrade == "A" || grade.LetterGrade == "B+" ? "#10b981" : grade.LetterGrade.StartsWith("B") || grade.LetterGrade.StartsWith("C") ? "#3b82f6" : grade.LetterGrade.StartsWith("D") ? "#f59e0b" : "#ef4444")">
+                                                @grade.LetterGrade
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">-</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        @if (grade.TotalScore.HasValue)
+                                        {
+                                            @if (grade.IsPassed)
+                                            {
+                                                <span class="badge bg-success">Passed</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge bg-danger">Failed</span>
+                                            }
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-secondary">No Grade</span>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+            else
+            {
+                <div class="alert alert-info mb-0">
+                    <i class="bi bi-info-circle me-2"></i>No grades available to display
+                </div>
+            }
+        </div>
+    </div>
+}
+else
+{
+    <div class="alert alert-warning">
+        <i class="bi bi-exclamation-triangle me-2"></i>Student information not found
+    </div>
+}

@@ -1,0 +1,193 @@
+@model WebApplication1.ViewModels.CourseClassDetailViewModel
+@{
+    ViewData["Title"] = "Course Class Details";
+    ViewData["PageTitle"] = $"Course Class - {Model.ClassCode}";
+    Layout = "~/Views/Shared/_DashboardLayout.cshtml";
+}
+
+@section SidebarMenu {
+    <li class="nav-item">
+        <a class="nav-link" asp-area="Lecturer" asp-controller="Dashboard" asp-action="Index">
+            <i class="bi bi-house-door"></i>Home
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link active" asp-area="Lecturer" asp-controller="CourseClass" asp-action="Index">
+            <i class="bi bi-journal-text"></i>Course Classes
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" asp-area="Lecturer" asp-controller="Grade" asp-action="Index">
+            <i class="bi bi-pencil-square"></i>Manage Grades
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" asp-area="Lecturer" asp-controller="Attendance" asp-action="Index">
+            <i class="bi bi-clipboard-check"></i>Attendance
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" asp-area="Lecturer" asp-controller="Schedule" asp-action="Index">
+            <i class="bi bi-calendar3"></i>Teaching Schedule
+        </a>
+    </li>
+}
+
+<div class="mb-3">
+    <a asp-area="Lecturer" asp-controller="CourseClass" asp-action="Index" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left me-2"></i>Back to Classes
+    </a>
+    <a asp-area="Lecturer" asp-controller="Grade" asp-action="CourseClass" asp-route-id="@Model.Id" class="btn btn-primary">
+        <i class="bi bi-pencil-square me-2"></i>Enter Grades
+    </a>
+</div>
+
+<div class="row g-4">
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header bg-white">
+                <h5 class="mb-0"><i class="bi bi-info-circle me-2"></i>Class Information</h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <label class="text-muted small">Class Code</label>
+                    <p class="fw-semibold">@Model.ClassCode</p>
+                </div>
+                <div class="mb-3">
+                    <label class="text-muted small">Subject</label>
+                    <p class="fw-semibold">@Model.SubjectName (@Model.SubjectCode)</p>
+                </div>
+                <div class="mb-3">
+                    <label class="text-muted small">Credits</label>
+                    <p class="fw-semibold">@Model.Credits</p>
+                </div>
+                <div class="mb-3">
+                    <label class="text-muted small">Lecturer</label>
+                    <p class="fw-semibold">@Model.LecturerName</p>
+                </div>
+                <div class="mb-3">
+                    <label class="text-muted small">Semester</label>
+                    <p class="fw-semibold">@Model.Semester</p>
+                </div>
+                <div class="mb-3">
+                    <label class="text-muted small">Room</label>
+                    <p class="fw-semibold">@Model.Room</p>
+                </div>
+                <div class="mb-3">
+                    <label class="text-muted small">Enrollment</label>
+                    <div class="progress" style="height: 25px;">
+                        <div class="progress-bar" role="progressbar" style="width: @((Model.CurrentStudents * 100.0 / Model.MaxStudents).ToString("F0"))%">
+                            @Model.CurrentStudents / @Model.MaxStudents
+                        </div>
+                    </div>
+                </div>
+                <div class="mb-0">
+                    <label class="text-muted small">Status</label>
+                    <p>
+                        <span class="badge" style="background-color: @(Model.Status == "InProgress" ? "#10b981" : Model.Status == "Open" ? "#3b82f6" : "#6b7280")">
+                            @(Model.Status == "InProgress" ? "In Progress" : Model.Status == "Open" ? "Open" : "Completed")
+                        </span>
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        @if (Model.Schedules.Any())
+        {
+            <div class="card mt-4">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0"><i class="bi bi-calendar3 me-2"></i>Class Schedule</h5>
+                </div>
+                <div class="card-body">
+                    @foreach (var schedule in Model.Schedules)
+                    {
+                        <div class="mb-3 pb-3 @(schedule != Model.Schedules.Last() ? "border-bottom" : "")">
+                            <div class="d-flex align-items-center mb-2">
+                                <i class="bi bi-calendar-day me-2 text-primary"></i>
+                                <strong>@schedule.DayOfWeek</strong>
+                            </div>
+                            <div class="ms-4">
+                                <div class="small text-muted">@schedule.Session (@schedule.Period)</div>
+                                <div class="small">@schedule.TimeRange</div>
+                                <div class="small"><i class="bi bi-door-open me-1"></i>@schedule.Room</div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        }
+    </div>
+
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header bg-white">
+                <h5 class="mb-0"><i class="bi bi-people me-2"></i>Student List (@Model.CurrentStudents students)</h5>
+            </div>
+            <div class="card-body">
+                @if (Model.Students.Any())
+                {
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead>
+                                <tr>
+                                    <th style="width: 60px;">No.</th>
+                                    <th style="width: 120px;">Student Code</th>
+                                    <th>Full Name</th>
+                                    <th>Email</th>
+                                    <th style="width: 100px;">Status</th>
+                                    <th style="width: 80px;">Score</th>
+                                    <th style="width: 60px;">Grade</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @for (int i = 0; i < Model.Students.Count; i++)
+                                {
+                                    var student = Model.Students[i];
+                                    <tr>
+                                        <td>@(i + 1)</td>
+                                        <td><strong>@student.StudentCode</strong></td>
+                                        <td>@student.FullName</td>
+                                        <td>@student.Email</td>
+                                        <td>
+                                            <span class="badge" style="background-color: @(student.EnrollmentStatus == "Approved" ? "#10b981" : student.EnrollmentStatus == "Pending" ? "#f59e0b" : "#6b7280")">
+                                                @student.EnrollmentStatus
+                                            </span>
+                                        </td>
+                                        <td>
+                                            @if (student.TotalScore.HasValue)
+                                            {
+                                                <strong>@student.TotalScore.Value.ToString("F2")</strong>
+                                            }
+                                            else
+                                            {
+                                                <span class="text-muted">-</span>
+                                            }
+                                        </td>
+                                        <td>
+                                            @if (!string.IsNullOrEmpty(student.LetterGrade))
+                                            {
+                                                <span class="badge" style="background-color: @(student.LetterGrade == "F" ? "#ef4444" : student.LetterGrade.StartsWith("A") ? "#10b981" : student.LetterGrade.StartsWith("B") ? "#3b82f6" : student.LetterGrade.StartsWith("C") ? "#f59e0b" : "#6b7280")">
+                                                    @student.LetterGrade
+                                                </span>
+                                            }
+                                            else
+                                            {
+                                                <span class="text-muted">-</span>
+                                            }
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+                else
+                {
+                    <div class="alert alert-info mb-0">
+                        <i class="bi bi-info-circle me-2"></i>No students enrolled yet.
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>

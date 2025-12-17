@@ -1,0 +1,83 @@
+﻿@model List<WebApplication1.ViewModels.CourseClassListViewModel>
+@{
+    ViewData["Title"] = "Course Classes";
+    ViewData["PageTitle"] = "My Course Classes";
+    Layout = "~/Views/Shared/_DashboardLayout.cshtml";
+}
+
+@section SidebarMenu {
+    <li class="nav-item">
+        <a class="nav-link" asp-area="Lecturer" asp-controller="Dashboard" asp-action="Index">
+            <i class="bi bi-house-door me-2"></i>Home
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link active" asp-area="Lecturer" asp-controller="CourseClass" asp-action="Index">
+            <i class="bi bi-journal-text me-2"></i>Course Classes
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" asp-area="Lecturer" asp-controller="Grade" asp-action="Index">
+            <i class="bi bi-pencil-square me-2"></i>Manage Grades
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" asp-area="Lecturer" asp-controller="Attendance" asp-action="Index">
+            <i class="bi bi-clipboard-check me-2"></i>Attendance
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" asp-area="Lecturer" asp-controller="Schedule" asp-action="Index">
+            <i class="bi bi-calendar3 me-2"></i>Teaching Schedule
+        </a>
+    </li>
+}
+
+<div class="card">
+    <div class="card-header bg-white">
+        <h5 class="mb-0"><i class="bi bi-list me-2"></i>Course Class List</h5>
+    </div>
+    <div class="card-body">
+        @if (Model.Any())
+        {
+            <div class="row g-3">
+                @foreach (var courseClass in Model)
+                {
+                    <div class="col-md-6">
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-start mb-3">
+                                    <div>
+                                        <h5 class="card-title mb-1">@courseClass.SubjectName</h5>
+                                        <span class="badge bg-primary">@courseClass.ClassCode</span>
+                                        <span class="badge bg-secondary">@courseClass.Semester</span>
+                                    </div>
+                                    <span class="badge" style="background-color: @(courseClass.Status == "InProgress" ? "#10b981" : courseClass.Status == "Open" ? "#3b82f6" : "#6b7280")">
+                                        @(courseClass.Status == "InProgress" ? "In Progress" : courseClass.Status == "Open" ? "Open" : "Completed")
+                                    </span>
+                                </div>
+                                <p class="mb-2"><i class="bi bi-code-square me-2"></i><strong>Subject Code:</strong> @courseClass.SubjectCode</p>
+                                <p class="mb-2"><i class="bi bi-door-open me-2"></i><strong>Room:</strong> @courseClass.Room</p>
+                                <p class="mb-3"><i class="bi bi-people me-2"></i><strong>Enrollment:</strong> @courseClass.CurrentStudents/@courseClass.MaxStudents</p>
+                                <div class="d-grid gap-2">
+                                    <a asp-action="Details" asp-route-id="@courseClass.Id" class="btn btn-outline-primary btn-sm">
+                                        <i class="bi bi-eye me-2"></i>View Details
+                                    </a>
+                                    <a asp-area="Lecturer" asp-controller="Grade" asp-action="CourseClass" asp-route-id="@courseClass.Id" class="btn btn-outline-success btn-sm">
+                                        <i class="bi bi-pencil-square me-2"></i>Enter Grades
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+        else
+        {
+            <div class="alert alert-info mb-0">
+                <i class="bi bi-info-circle me-2"></i>You have no course classes assigned
+            </div>
+        }
+    </div>
+</div>

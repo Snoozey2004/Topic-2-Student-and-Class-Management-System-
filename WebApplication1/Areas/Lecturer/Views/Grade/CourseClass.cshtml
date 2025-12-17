@@ -1,0 +1,190 @@
+@model WebApplication1.ViewModels.ClassGradeListViewModel
+@{
+    ViewData["Title"] = "Enter Grades";
+    ViewData["PageTitle"] = $"Enter Grades - {Model.ClassCode}";
+    Layout = "~/Views/Shared/_DashboardLayout.cshtml";
+}
+
+@section SidebarMenu {
+    <li class="nav-item">
+        <a class="nav-link" asp-area="Lecturer" asp-controller="Dashboard" asp-action="Index">
+            <i class="bi bi-house-door me-2"></i>Home
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" asp-area="Lecturer" asp-controller="CourseClass" asp-action="Index">
+            <i class="bi bi-journal-text me-2"></i>Course Classes
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link active" asp-area="Lecturer" asp-controller="Grade" asp-action="CourseClass" asp-route-id="@Model.CourseClassId">
+            <i class="bi bi-pencil-square me-2"></i>Manage Grades
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" asp-area="Lecturer" asp-controller="Attendance" asp-action="Index">
+            <i class="bi bi-clipboard-check me-2"></i>Attendance
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" asp-area="Lecturer" asp-controller="Schedule" asp-action="Index">
+            <i class="bi bi-calendar3 me-2"></i>Teaching Schedule
+        </a>
+    </li>
+}
+
+<div class="card mb-4">
+    <div class="card-header bg-white">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h5 class="mb-0"><i class="bi bi-pencil-square me-2"></i>Enter Grades</h5>
+                <small class="text-muted">Class: @Model.ClassCode - @Model.SubjectName</small>
+            </div>
+            <a asp-area="Lecturer" asp-controller="CourseClass" asp-action="Index" class="btn btn-outline-secondary btn-sm">
+                <i class="bi bi-arrow-left me-2"></i>Back to Classes
+            </a>
+        </div>
+    </div>
+    <div class="card-body">
+        <div class="alert alert-info">
+            <i class="bi bi-info-circle me-2"></i>
+            <strong>Grading Formula:</strong> Attendance (10%) + Midterm (30%) + Final (60%) = Total Score
+        </div>
+
+        @if (Model.Grades.Any())
+        {
+            <form asp-area="Lecturer" asp-controller="Grade" asp-action="UpdateGrades" method="post">
+                <input type="hidden" name="courseClassId" value="@Model.CourseClassId" />
+                
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th style="width: 80px;">STT</th>
+                                <th style="width: 120px;">Student Code</th>
+                                <th>Student Name</th>
+                                <th style="width: 120px;">Attendance (10%)</th>
+                                <th style="width: 120px;">Midterm (30%)</th>
+                                <th style="width: 120px;">Final (60%)</th>
+                                <th style="width: 100px;">Total</th>
+                                <th style="width: 80px;">Grade</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @for (int i = 0; i < Model.Grades.Count; i++)
+                            {
+                                var grade = Model.Grades[i];
+                                var total = (grade.AttendanceScore ?? 0) * 0.1 + (grade.MidtermScore ?? 0) * 0.3 + (grade.FinalScore ?? 0) * 0.6;
+                                var letterGrade = total >= 8.5 ? "A" : total >= 8.0 ? "B+" : total >= 7.0 ? "B" : total >= 6.5 ? "C+" : total >= 5.5 ? "C" : total >= 5.0 ? "D+" : total >= 4.0 ? "D" : "F";
+                                
+                                <tr>
+                                    <td>@(i + 1)</td>
+                                    <td>
+                                        <strong>@grade.StudentCode</strong>
+                                        <input type="hidden" name="grades[@i].GradeId" value="@grade.GradeId" />
+                                        <input type="hidden" name="grades[@i].EnrollmentId" value="@grade.EnrollmentId" />
+                                        <input type="hidden" name="grades[@i].StudentId" value="@grade.StudentId" />
+                                    </td>
+                                    <td>@grade.StudentName</td>
+                                    <td>
+                                        <input type="number" 
+                                               class="form-control form-control-sm" 
+                                               name="grades[@i].AttendanceScore" 
+                                               value="@grade.AttendanceScore" 
+                                               step="0.1" 
+                                               min="0" 
+                                               max="10" 
+                                               placeholder="0-10" />
+                                    </td>
+                                    <td>
+                                        <input type="number" 
+                                               class="form-control form-control-sm" 
+                                               name="grades[@i].MidtermScore" 
+                                               value="@grade.MidtermScore" 
+                                               step="0.1" 
+                                               min="0" 
+                                               max="10" 
+                                               placeholder="0-10" />
+                                    </td>
+                                    <td>
+                                        <input type="number" 
+                                               class="form-control form-control-sm" 
+                                               name="grades[@i].FinalScore" 
+                                               value="@grade.FinalScore" 
+                                               step="0.1" 
+                                               min="0" 
+                                               max="10" 
+                                               placeholder="0-10" />
+                                    </td>
+                                    <td>
+                                        @if (grade.AttendanceScore.HasValue || grade.MidtermScore.HasValue || grade.FinalScore.HasValue)
+                                        {
+                                            <strong>@total.ToString("F2")</strong>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">-</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        @if (grade.AttendanceScore.HasValue || grade.MidtermScore.HasValue || grade.FinalScore.HasValue)
+                                        {
+                                            <span class="badge" style="background-color: @(letterGrade == "F" ? "#ef4444" : letterGrade.StartsWith("A") ? "#10b981" : letterGrade.StartsWith("B") ? "#3b82f6" : letterGrade.StartsWith("C") ? "#f59e0b" : "#6b7280")">
+                                                @letterGrade
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">-</span>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="mt-3">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-check-circle me-2"></i>Save Grades
+                    </button>
+                    <a asp-area="Lecturer" asp-controller="CourseClass" asp-action="Index" class="btn btn-secondary">
+                        <i class="bi bi-x-circle me-2"></i>Cancel
+                    </a>
+                </div>
+            </form>
+        }
+        else
+        {
+            <div class="alert alert-warning mb-0">
+                <i class="bi bi-exclamation-triangle me-2"></i>No students enrolled in this class yet.
+            </div>
+        }
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Auto-calculate total and letter grade when input changes
+        document.querySelectorAll('input[type="number"]').forEach(input => {
+            input.addEventListener('input', function() {
+                const row = this.closest('tr');
+                const attendance = parseFloat(row.querySelector('[name$=".AttendanceScore"]').value) || 0;
+                const midterm = parseFloat(row.querySelector('[name$=".MidtermScore"]').value) || 0;
+                const final = parseFloat(row.querySelector('[name$=".FinalScore"]').value) || 0;
+                
+                const total = (attendance * 0.1) + (midterm * 0.3) + (final * 0.6);
+                const letterGrade = total >= 8.5 ? "A" : total >= 8.0 ? "B+" : total >= 7.0 ? "B" : total >= 6.5 ? "C+" : total >= 5.5 ? "C" : total >= 5.0 ? "D+" : total >= 4.0 ? "D" : "F";
+                const gradeColor = letterGrade === "F" ? "#ef4444" : letterGrade.startsWith("A") ? "#10b981" : letterGrade.startsWith("B") ? "#3b82f6" : letterGrade.startsWith("C") ? "#f59e0b" : "#6b7280";
+                
+                // Update total score
+                const totalCell = row.cells[6];
+                totalCell.innerHTML = `<strong>${total.toFixed(2)}</strong>`;
+                
+                // Update letter grade
+                const gradeCell = row.cells[7];
+                gradeCell.innerHTML = `<span class="badge" style="background-color: ${gradeColor}">${letterGrade}</span>`;
+            });
+        });
+    </script>
+}

@@ -1,0 +1,201 @@
+﻿@model WebApplication1.ViewModels.EnrollmentRegisterViewModel
+@{
+    ViewData["Title"] = "Course Registration";
+    ViewData["PageTitle"] = "Course Registration";
+    Layout = "~/Views/Shared/_DashboardLayout.cshtml";
+}
+
+@section SidebarMenu {
+    <li class="nav-item">
+        <a class="nav-link" asp-area="Student" asp-controller="Dashboard" asp-action="Index">
+            <i class="bi bi-house-door"></i>Home
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link active" asp-area="Student" asp-controller="Enrollment" asp-action="Index">
+            <i class="bi bi-clipboard-check"></i>Course Registration
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" asp-area="Student" asp-controller="Schedule" asp-action="Index">
+            <i class="bi bi-calendar3"></i>Schedule
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" asp-area="Student" asp-controller="Grade" asp-action="Index">
+            <i class="bi bi-award"></i>View Grades
+        </a>
+    </li>
+}
+
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-white">
+                <h5 class="mb-0"><i class="bi bi-list-ul me-2"></i>Available Courses</h5>
+            </div>
+            <div class="card-body">
+                @if (Model.AvailableCourses.Any())
+                {
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Class Code</th>
+                                    <th>Course</th>
+                                    <th>Credits</th>
+                                    <th>Lecturer</th>
+                                    <th>Enrollment</th>
+                                    <th>Schedule</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var course in Model.AvailableCourses)
+                                {
+                                    <tr>
+                                        <td><span class="badge bg-primary">@course.ClassCode</span></td>
+                                        <td>
+                                            <strong>@course.SubjectName</strong><br>
+                                            <small class="text-muted">@course.SubjectCode</small>
+                                        </td>
+                                        <td>@course.Credits</td>
+                                        <td>@course.LecturerName</td>
+                                        <td>
+                                            <div class="progress" style="height: 20px;">
+                                                <div class="progress-bar" role="progressbar" 
+                                                     style="width: @((course.CurrentStudents * 100.0 / course.MaxStudents))%;">
+                                                    @course.CurrentStudents/@course.MaxStudents
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            @foreach (var schedule in course.ScheduleInfo)
+                                            {
+                                                <small class="d-block">@schedule</small>
+                                            }
+                                        </td>
+                                        <td>
+                                            @if (course.CanEnroll)
+                                            {
+                                                <form asp-action="Enroll" method="post" class="d-inline">
+                                                    <input type="hidden" name="courseClassId" value="@course.CourseClassId" />
+                                                    <button type="submit" class="btn btn-sm btn-success">
+                                                        <i class="bi bi-plus-circle"></i> Enroll
+                                                    </button>
+                                                </form>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge bg-secondary" title="@course.EnrollmentMessage">
+                                                    Cannot Enroll
+                                                </span>
+                                            }
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+                else
+                {
+                    <div class="alert alert-info mb-0">
+                        <i class="bi bi-info-circle me-2"></i>No courses available for registration
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-white">
+                <h5 class="mb-0"><i class="bi bi-journal-check me-2"></i>My Enrolled Courses</h5>
+            </div>
+            <div class="card-body">
+                @if (Model.MyEnrollments.Any())
+                {
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Class Code</th>
+                                    <th>Course</th>
+                                    <th>Semester</th>
+                                    <th>Enrollment Date</th>
+                                    <th>Status</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var enrollment in Model.MyEnrollments)
+                                {
+                                    <tr>
+                                        <td><span class="badge bg-primary">@enrollment.ClassCode</span></td>
+                                        <td><strong>@enrollment.SubjectName</strong></td>
+                                        <td>@enrollment.Semester</td>
+                                        <td>@enrollment.EnrollmentDate.ToString("dd/MM/yyyy")</td>
+                                        <td>
+                                            @switch (enrollment.Status)
+                                            {
+                                                case "Pending":
+                                                    <span class="badge bg-warning">Pending</span>
+                                                    break;
+                                                case "Approved":
+                                                    <span class="badge bg-success">Approved</span>
+                                                    break;
+                                                case "Rejected":
+                                                    <span class="badge bg-danger">Rejected</span>
+                                                    break;
+                                                case "Dropped":
+                                                    <span class="badge bg-secondary">Dropped</span>
+                                                    break;
+                                            }
+                                        </td>
+                                        <td>
+                                            @if (enrollment.Status == "Pending")
+                                            {
+                                                <form asp-action="Drop" method="post" class="d-inline" 
+                                                      onsubmit="return confirm('Are you sure you want to drop this course?');">
+                                                    <input type="hidden" name="enrollmentId" value="@enrollment.Id" />
+                                                    <button type="submit" class="btn btn-sm btn-danger">
+                                                        <i class="bi bi-x-circle"></i> Drop
+                                                    </button>
+                                                </form>
+                                            }
+                                            @if (enrollment.Status == "Rejected" && !string.IsNullOrEmpty(enrollment.RejectionReason))
+                                            {
+                                                <button class="btn btn-sm btn-info" data-bs-toggle="tooltip" 
+                                                        title="@enrollment.RejectionReason">
+                                                    <i class="bi bi-info-circle"></i> Reason
+                                                </button>
+                                            }
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+                else
+                {
+                    <div class="alert alert-info mb-0">
+                        <i class="bi bi-info-circle me-2"></i>You have not enrolled in any courses yet
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl)
+        })
+    </script>
+}

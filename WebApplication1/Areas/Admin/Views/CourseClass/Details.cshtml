@@ -1,0 +1,63 @@
+﻿@model WebApplication1.ViewModels.CourseClassDetailViewModel
+@{
+    ViewData["Title"] = "Course Class Details";
+    Layout = "~/Views/Shared/_DashboardLayout.cshtml";
+}
+
+<div class="card">
+    <div class="card-header">Course Class Details</div>
+    <div class="card-body">
+        <p><strong>Class Code:</strong> @Model.ClassCode</p>
+        <p><strong>Subject:</strong> @Model.SubjectName (@Model.SubjectCode)</p>
+        <p><strong>Lecturer:</strong> @Model.LecturerName</p>
+        <p><strong>Semester:</strong> @Model.Semester</p>
+        <p><strong>Students:</strong> @Model.CurrentStudents / @Model.MaxStudents</p>
+        <p><strong>Room:</strong> @Model.Room</p>
+        <h6>Schedules</h6>
+        @if (Model.Schedules.Any())
+        {
+            <ul>
+                @foreach (var s in Model.Schedules)
+                {
+                    <li>@s.DayOfWeek - @s.TimeRange (@s.Room)</li>
+                }
+            </ul>
+        }
+        else
+        {
+            <div class="alert alert-info">No schedules</div>
+        }
+
+        <h6>Students</h6>
+        @if (Model.Students.Any())
+        {
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Student Code</th>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Total</th>
+                        <th>Letter</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var st in Model.Students)
+                    {
+                        <tr>
+                            <td>@st.StudentCode</td>
+                            <td>@st.FullName</td>
+                            <td>@st.Email</td>
+                            <td>@(st.TotalScore?.ToString("0.00") ?? "-")</td>
+                            <td>@(st.LetterGrade ?? "-")</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+        else
+        {
+            <div class="alert alert-info">No students enrolled</div>
+        }
+    </div>
+</div>

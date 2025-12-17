@@ -1,0 +1,641 @@
+/* ============================================
+   FORCE NAVY BLUE THEME - ALL VIEWS OVERRIDE
+   Applies to Admin, Lecturer, Student areas
+   ============================================ */
+
+/* ============================================
+   BUTTONS - Force Navy Blue
+   ============================================ */
+
+/* Primary buttons - Navy Blue */
+.btn-primary,
+.btn-primary:not(:disabled):not(.disabled),
+button.btn-primary {
+    background-color: #1e3a5f !important;
+    background-image: none !important;
+    border-color: #1e3a5f !important;
+    color: white !important;
+}
+
+.btn-primary:hover,
+.btn-primary:focus,
+.btn-primary:active,
+.btn-primary.active {
+    background-color: #163354 !important;
+    border-color: #163354 !important;
+    color: white !important;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(30, 58, 95, 0.3) !important;
+}
+
+/* Success buttons - Teal */
+.btn-success {
+    background-color: #2d9e8e !important;
+    border-color: #2d9e8e !important;
+    color: white !important;
+}
+
+.btn-success:hover {
+    background-color: #248577 !important;
+    border-color: #248577 !important;
+}
+
+/* Info buttons - Teal */
+.btn-info {
+    background-color: #2d9e8e !important;
+    border-color: #2d9e8e !important;
+    color: white !important;
+}
+
+.btn-info:hover {
+    background-color: #248577 !important;
+    border-color: #248577 !important;
+}
+
+/* Warning buttons - Keep orange but adjust */
+.btn-warning {
+    background-color: #f59e0b !important;
+    border-color: #f59e0b !important;
+    color: white !important;
+}
+
+.btn-warning:hover {
+    background-color: #d97706 !important;
+    border-color: #d97706 !important;
+}
+
+/* Danger buttons - Keep red but adjust */
+.btn-danger {
+    background-color: #ef4444 !important;
+    border-color: #ef4444 !important;
+    color: white !important;
+}
+
+.btn-danger:hover {
+    background-color: #dc2626 !important;
+    border-color: #dc2626 !important;
+}
+
+/* Outline buttons */
+.btn-outline-primary {
+    border-color: #1e3a5f !important;
+    color: #1e3a5f !important;
+    background: transparent;
+}
+
+.btn-outline-primary:hover {
+    background-color: #1e3a5f !important;
+    border-color: #1e3a5f !important;
+    color: white !important;
+}
+
+.btn-outline-success {
+    border-color: #2d9e8e !important;
+    color: #2d9e8e !important;
+}
+
+.btn-outline-success:hover {
+    background-color: #2d9e8e !important;
+    color: white !important;
+}
+
+/* ============================================
+   BADGES - Force Consistent Colors
+   ============================================ */
+
+.badge {
+    border-radius: 6px;
+    padding: 0.35em 0.65em;
+    font-weight: 500;
+    font-size: 0.85em;
+}
+
+/* Primary badges - Purple (for visual distinction) */
+.badge.bg-primary,
+.badge-primary {
+    background-color: #6366f1 !important;
+    color: white !important;
+}
+
+/* Success badges - Green */
+.badge.bg-success,
+.badge-success {
+    background-color: #10b981 !important;
+    color: white !important;
+}
+
+/* Info badges - Teal */
+.badge.bg-info,
+.badge-info {
+    background-color: #2d9e8e !important;
+    color: white !important;
+}
+
+/* Warning badges - Orange */
+.badge.bg-warning,
+.badge-warning {
+    background-color: #f59e0b !important;
+    color: #92400e !important;
+}
+
+/* Danger badges - Red */
+.badge.bg-danger,
+.badge-danger {
+    background-color: #ef4444 !important;
+    color: white !important;
+}
+
+/* Secondary badges - Gray */
+.badge.bg-secondary,
+.badge-secondary {
+    background-color: #6b7280 !important;
+    color: white !important;
+}
+
+/* ============================================
+   CARDS - Consistent Styling
+   ============================================ */
+
+.card {
+    border: none;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    margin-bottom: 1.5rem;
+    background: white;
+}
+
+.card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 16px rgba(0,0,0,0.12);
+}
+
+.card-header {
+    background: #f7fafc !important;
+    border-bottom: 1px solid #e2e8f0;
+    padding: 1rem 1.5rem;
+    border-radius: 12px 12px 0 0 !important;
+}
+
+.card-header.bg-white {
+    background: white !important;
+    border-bottom: 2px solid #e2e8f0;
+}
+
+.card-header h5,
+.card-header h4,
+.card-header .mb-0 {
+    margin: 0;
+    color: #2d3748;
+    font-weight: 600;
+}
+
+.card-body {
+    padding: 1.5rem;
+}
+
+/* ============================================
+   TABLES - Clean Styling
+   ============================================ */
+
+.table {
+    background: white;
+    border-radius: 12px;
+    overflow: hidden;
+    margin-bottom: 0;
+}
+
+.table thead {
+    background: #f7fafc;
+}
+
+.table th {
+    font-weight: 600;
+    color: #4a5568;
+    border-bottom: 2px solid #e2e8f0;
+    padding: 1rem;
+    text-transform: uppercase;
+    font-size: 0.85rem;
+    letter-spacing: 0.5px;
+}
+
+.table td {
+    padding: 1rem;
+    vertical-align: middle;
+    color: #2d3748;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.table tbody tr {
+    transition: background-color 0.2s;
+}
+
+.table tbody tr:hover {
+    background-color: #f7fafc;
+}
+
+.table-responsive {
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+/* ============================================
+   ALERTS - Consistent Colors
+   ============================================ */
+
+.alert {
+    border-radius: 10px;
+    border: none;
+    animation: slideDown 0.3s ease;
+}
+
+.alert-success {
+    background-color: #d1fae5 !important;
+    color: #065f46 !important;
+    border-left: 4px solid #10b981;
+}
+
+.alert-danger {
+    background-color: #fee2e2 !important;
+    color: #991b1b !important;
+    border-left: 4px solid #ef4444;
+}
+
+.alert-warning {
+    background-color: #fef3c7 !important;
+    color: #92400e !important;
+    border-left: 4px solid #f59e0b;
+}
+
+.alert-info {
+    background-color: #dbeafe !important;
+    color: #1e40af !important;
+    border-left: 4px solid #3b82f6;
+}
+
+/* ============================================
+   FORMS - Consistent Styling
+   ============================================ */
+
+.form-label {
+    font-weight: 600;
+    color: #2d3748;
+    margin-bottom: 0.5rem;
+}
+
+.form-control,
+.form-select {
+    border: 2px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 0.6rem 1rem;
+    transition: all 0.3s ease;
+}
+
+.form-control:focus,
+.form-select:focus {
+    border-color: #2d9e8e !important;
+    box-shadow: 0 0 0 0.2rem rgba(45, 158, 142, 0.25) !important;
+}
+
+.input-group-text {
+    background: #f7fafc;
+    border: 2px solid #e2e8f0;
+    border-right: none;
+    color: #718096;
+}
+
+.input-group .form-control {
+    border-left: none;
+}
+
+.form-check-input:checked {
+    background-color: #2d9e8e !important;
+    border-color: #2d9e8e !important;
+}
+
+/* ============================================
+   PAGINATION - Navy Theme
+   ============================================ */
+
+.pagination .page-link {
+    color: #1e3a5f;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    margin: 0 2px;
+}
+
+.pagination .page-link:hover {
+    background: #2d9e8e;
+    color: white;
+    border-color: #2d9e8e;
+}
+
+.pagination .page-item.active .page-link {
+    background: #1e3a5f !important;
+    border-color: #1e3a5f !important;
+}
+
+/* ============================================
+   DROPDOWNS - Clean Design
+   ============================================ */
+
+.dropdown-menu {
+    border: none;
+    box-shadow: 0 8px 16px rgba(0,0,0,0.12);
+    border-radius: 10px;
+    padding: 0.5rem 0;
+}
+
+.dropdown-item {
+    padding: 0.75rem 1.25rem;
+    color: #2d3748;
+    transition: all 0.2s ease;
+}
+
+.dropdown-item:hover {
+    background: #f7fafc;
+    color: #1e3a5f;
+}
+
+.dropdown-item i {
+    width: 20px;
+    margin-right: 0.5rem;
+}
+
+/* ============================================
+   MODALS - Modern Style
+   ============================================ */
+
+.modal-content {
+    border: none;
+    border-radius: 12px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+}
+
+.modal-header {
+    background: linear-gradient(135deg, #1e3a5f 0%, #2d9e8e 100%);
+    color: white;
+    border-radius: 12px 12px 0 0;
+    border-bottom: none;
+}
+
+.modal-header .btn-close {
+    filter: brightness(0) invert(1);
+}
+
+.modal-footer {
+    border-top: 1px solid #e2e8f0;
+}
+
+/* ============================================
+   PROGRESS BARS - Themed
+   ============================================ */
+
+.progress {
+    height: 8px;
+    border-radius: 10px;
+    background: #e2e8f0;
+}
+
+.progress-bar {
+    background: linear-gradient(90deg, #1e3a5f 0%, #2d9e8e 100%);
+    border-radius: 10px;
+}
+
+/* ============================================
+   LIST GROUPS - Clean Style
+   ============================================ */
+
+.list-group-item {
+    border: 1px solid #e2e8f0;
+    transition: all 0.3s ease;
+}
+
+.list-group-item:hover {
+    background: #f7fafc;
+    border-color: #2d9e8e;
+}
+
+.list-group-item-action:hover {
+    background: #f7fafc;
+}
+
+/* ============================================
+   NAVS & TABS - Navy Theme
+   ============================================ */
+
+.nav-pills .nav-link {
+    border-radius: 8px;
+    color: #2d3748;
+    transition: all 0.3s ease;
+}
+
+.nav-pills .nav-link:hover {
+    background: #f7fafc;
+}
+
+.nav-pills .nav-link.active {
+    background: #1e3a5f !important;
+}
+
+.nav-tabs .nav-link {
+    border: none;
+    border-bottom: 3px solid transparent;
+    color: #718096;
+}
+
+.nav-tabs .nav-link:hover {
+    border-bottom-color: #2d9e8e;
+}
+
+.nav-tabs .nav-link.active {
+    border-bottom-color: #1e3a5f !important;
+    color: #1e3a5f !important;
+    font-weight: 600;
+}
+
+/* ============================================
+   BREADCRUMB - Navy Theme
+   ============================================ */
+
+.breadcrumb {
+    background: transparent;
+    padding: 0;
+    margin-bottom: 1rem;
+}
+
+.breadcrumb-item a {
+    color: #2d9e8e;
+    text-decoration: none;
+}
+
+.breadcrumb-item a:hover {
+    color: #1e3a5f;
+}
+
+.breadcrumb-item.active {
+    color: #718096;
+}
+
+/* ============================================
+   TEXT COLORS - Utility
+   ============================================ */
+
+.text-primary {
+    color: #1e3a5f !important;
+}
+
+.text-success {
+    color: #10b981 !important;
+}
+
+.text-info {
+    color: #2d9e8e !important;
+}
+
+.text-warning {
+    color: #f59e0b !important;
+}
+
+.text-danger {
+    color: #ef4444 !important;
+}
+
+/* ============================================
+   BACKGROUND COLORS - Utility
+   ============================================ */
+
+.bg-primary {
+    background-color: #1e3a5f !important;
+}
+
+.bg-success {
+    background-color: #10b981 !important;
+}
+
+.bg-info {
+    background-color: #2d9e8e !important;
+}
+
+.bg-warning {
+    background-color: #f59e0b !important;
+}
+
+.bg-danger {
+    background-color: #ef4444 !important;
+}
+
+/* ============================================
+   BORDER COLORS - Utility
+   ============================================ */
+
+.border-primary {
+    border-color: #1e3a5f !important;
+}
+
+.border-success {
+    border-color: #10b981 !important;
+}
+
+.border-info {
+    border-color: #2d9e8e !important;
+}
+
+.border-warning {
+    border-color: #f59e0b !important;
+}
+
+.border-danger {
+    border-color: #ef4444 !important;
+}
+
+/* ============================================
+   ANIMATIONS
+   ============================================ */
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* ============================================
+   CUSTOM COMPONENTS
+   ============================================ */
+
+/* Stats Cards in Dashboards */
+.dashboard-stat-card {
+    background: linear-gradient(135deg, #1e3a5f 0%, #2d9e8e 100%);
+    color: white;
+    padding: 1.5rem;
+    border-radius: 12px;
+    transition: transform 0.3s ease;
+}
+
+.dashboard-stat-card:hover {
+    transform: translateY(-3px);
+}
+
+/* Action Buttons Group */
+.action-buttons {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.action-buttons .btn {
+    padding: 0.4rem 0.8rem;
+    font-size: 0.9rem;
+}
+
+/* Empty State */
+.empty-state {
+    text-align: center;
+    padding: 3rem;
+    background: #f7fafc;
+    border-radius: 12px;
+}
+
+.empty-icon {
+    font-size: 4rem;
+    color: #cbd5e0;
+    margin-bottom: 1rem;
+}
+
+.empty-text {
+    color: #718096;
+    font-size: 1.1rem;
+}
+
+/* ============================================
+   RESPONSIVE
+   ============================================ */
+
+@media (max-width: 768px) {
+    .card {
+        margin-bottom: 1rem;
+    }
+    
+    .table th,
+    .table td {
+        padding: 0.75rem;
+        font-size: 0.9rem;
+    }
+    
+    .btn {
+        padding: 0.5rem 1rem;
+        font-size: 0.9rem;
+    }
+    
+    .action-buttons {
+        flex-direction: column;
+    }
+    
+    .action-buttons .btn {
+        width: 100%;
+    }
+}

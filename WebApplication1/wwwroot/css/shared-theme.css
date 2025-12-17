@@ -1,0 +1,561 @@
+/* ============================================
+   STUDENT MANAGEMENT SYSTEM - NAVY BLUE THEME
+   Shared Styles for All Views
+   ============================================ */
+
+:root {
+    /* Primary Colors - Navy Blue Theme */
+    --primary-navy: #1e3a5f;
+    --primary-teal: #2d9e8e;
+    --primary-navy-dark: #163354;
+    
+    /* Background Colors */
+    --bg-main: #f5f7fa;
+    --bg-card: #ffffff;
+    --bg-sidebar: #1e3a5f;
+    --bg-hover: rgba(255,255,255,0.08);
+    --bg-active: #2d9e8e;
+    
+    /* Text Colors */
+    --text-dark: #2d3748;
+    --text-gray: #4a5568;
+    --text-light: #718096;
+    --text-white: #ffffff;
+    
+    /* Accent Colors */
+    --accent-purple: #6366f1;
+    --accent-blue: #3b82f6;
+    --accent-teal: #2d9e8e;
+    --accent-orange: #f59e0b;
+    --accent-red: #ef4444;
+    --accent-green: #10b981;
+    --accent-pink: #ec4899;
+    
+    /* Border Colors */
+    --border-light: #e2e8f0;
+    --border-gray: #cbd5e0;
+    
+    /* Shadow */
+    --shadow-sm: 0 2px 4px rgba(0,0,0,0.06);
+    --shadow-md: 0 2px 8px rgba(0,0,0,0.08);
+    --shadow-lg: 0 8px 16px rgba(0,0,0,0.12);
+    --shadow-hover: 0 5px 15px rgba(30, 58, 95, 0.3);
+}
+
+/* ============================================
+   BUTTONS - Navy Blue Theme
+   ============================================ */
+
+.btn-primary {
+    background: var(--primary-navy) !important;
+    border: none !important;
+    border-radius: 8px;
+    padding: 0.6rem 1.5rem;
+    font-weight: 600;
+    color: white !important;
+    transition: all 0.3s ease;
+}
+
+.btn-primary:hover {
+    background: var(--primary-navy-dark) !important;
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-hover);
+}
+
+.btn-success {
+    background: var(--accent-teal) !important;
+    border: none !important;
+    color: white !important;
+}
+
+.btn-success:hover {
+    background: #248577 !important;
+}
+
+.btn-outline-primary {
+    border: 2px solid var(--primary-navy) !important;
+    color: var(--primary-navy) !important;
+    background: transparent;
+}
+
+.btn-outline-primary:hover {
+    background: var(--primary-navy) !important;
+    color: white !important;
+}
+
+/* ============================================
+   BADGES - Consistent Colors
+   ============================================ */
+
+.badge {
+    border-radius: 6px;
+    padding: 0.35em 0.65em;
+    font-weight: 500;
+}
+
+.badge.bg-primary {
+    background-color: var(--accent-purple) !important;
+}
+
+.badge.bg-info {
+    background-color: var(--accent-teal) !important;
+}
+
+.badge.bg-success {
+    background-color: var(--accent-green) !important;
+}
+
+.badge.bg-warning {
+    background-color: var(--accent-orange) !important;
+}
+
+.badge.bg-danger {
+    background-color: var(--accent-red) !important;
+}
+
+/* ============================================
+   CARDS - Modern Design
+   ============================================ */
+
+.card {
+    border: none;
+    border-radius: 12px;
+    box-shadow: var(--shadow-md);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    margin-bottom: 1.5rem;
+    background: var(--bg-card);
+}
+
+.card:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-lg);
+}
+
+.card-header {
+    background: #f7fafc;
+    border-bottom: 1px solid var(--border-light);
+    padding: 1rem 1.5rem;
+    border-radius: 12px 12px 0 0 !important;
+}
+
+.card-header h5, .card-header h4 {
+    margin: 0;
+    color: var(--text-dark);
+    font-weight: 600;
+}
+
+.card-body {
+    padding: 1.5rem;
+}
+
+/* Gradient Card Headers */
+.card-header-gradient {
+    background: linear-gradient(135deg, var(--primary-navy) 0%, var(--primary-teal) 100%);
+    color: white;
+}
+
+/* ============================================
+   TABLES - Clean & Modern
+   ============================================ */
+
+.table {
+    background: white;
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.table thead {
+    background: #f7fafc;
+}
+
+.table th {
+    font-weight: 600;
+    color: var(--text-gray);
+    border-bottom: 2px solid var(--border-light);
+    padding: 1rem;
+    text-transform: uppercase;
+    font-size: 0.85rem;
+    letter-spacing: 0.5px;
+}
+
+.table td {
+    padding: 1rem;
+    vertical-align: middle;
+    color: var(--text-dark);
+}
+
+.table tbody tr {
+    transition: background-color 0.2s;
+}
+
+.table tbody tr:hover {
+    background-color: #f7fafc;
+}
+
+.table-responsive {
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+/* ============================================
+   FORMS - Consistent Styling
+   ============================================ */
+
+.form-label {
+    font-weight: 600;
+    color: var(--text-dark);
+    margin-bottom: 0.5rem;
+}
+
+.form-control, .form-select {
+    border: 2px solid var(--border-light);
+    border-radius: 8px;
+    padding: 0.6rem 1rem;
+    transition: all 0.3s ease;
+}
+
+.form-control:focus, .form-select:focus {
+    border-color: var(--primary-teal);
+    box-shadow: 0 0 0 0.2rem rgba(45, 158, 142, 0.25);
+}
+
+.input-group-text {
+    background: #f7fafc;
+    border: 2px solid var(--border-light);
+    border-right: none;
+    color: var(--text-gray);
+}
+
+.input-group .form-control {
+    border-left: none;
+}
+
+/* ============================================
+   ALERTS - Animated Messages
+   ============================================ */
+
+.alert {
+    border-radius: 10px;
+    border: none;
+    animation: slideDown 0.3s ease;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.alert-success {
+    background-color: #d1fae5;
+    color: #065f46;
+}
+
+.alert-danger {
+    background-color: #fee2e2;
+    color: #991b1b;
+}
+
+.alert-warning {
+    background-color: #fef3c7;
+    color: #92400e;
+}
+
+.alert-info {
+    background-color: #dbeafe;
+    color: #1e40af;
+}
+
+/* ============================================
+   STATS CARDS - Dashboard
+   ============================================ */
+
+.stat-card {
+    background: linear-gradient(135deg, var(--primary-navy) 0%, var(--primary-teal) 100%);
+    color: white;
+    padding: 1.5rem;
+    border-radius: 12px;
+    transition: transform 0.3s ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-3px);
+}
+
+.stat-card h3 {
+    margin: 0;
+    font-size: 2rem;
+    font-weight: 700;
+}
+
+.stat-card p {
+    margin: 0.5rem 0 0 0;
+    opacity: 0.9;
+    font-size: 0.9rem;
+}
+
+/* ============================================
+   PAGINATION - Navy Theme
+   ============================================ */
+
+.pagination .page-link {
+    color: var(--primary-navy);
+    border: 1px solid var(--border-light);
+    border-radius: 6px;
+    margin: 0 2px;
+}
+
+.pagination .page-link:hover {
+    background: var(--primary-teal);
+    color: white;
+    border-color: var(--primary-teal);
+}
+
+.pagination .page-item.active .page-link {
+    background: var(--primary-navy);
+    border-color: var(--primary-navy);
+}
+
+/* ============================================
+   DROPDOWNS - Clean Design
+   ============================================ */
+
+.dropdown-menu {
+    border: none;
+    box-shadow: var(--shadow-lg);
+    border-radius: 10px;
+    padding: 0.5rem 0;
+}
+
+.dropdown-item {
+    padding: 0.75rem 1.25rem;
+    color: var(--text-dark);
+    transition: all 0.2s ease;
+}
+
+.dropdown-item:hover {
+    background: #f7fafc;
+    color: var(--primary-navy);
+}
+
+.dropdown-item i {
+    width: 20px;
+    margin-right: 0.5rem;
+}
+
+/* ============================================
+   MODALS - Modern Style
+   ============================================ */
+
+.modal-content {
+    border: none;
+    border-radius: 12px;
+    box-shadow: var(--shadow-lg);
+}
+
+.modal-header {
+    background: linear-gradient(135deg, var(--primary-navy) 0%, var(--primary-teal) 100%);
+    color: white;
+    border-radius: 12px 12px 0 0;
+    border-bottom: none;
+}
+
+.modal-header .btn-close {
+    filter: brightness(0) invert(1);
+}
+
+.modal-footer {
+    border-top: 1px solid var(--border-light);
+}
+
+/* ============================================
+   PROGRESS BARS - Themed
+   ============================================ */
+
+.progress {
+    height: 8px;
+    border-radius: 10px;
+    background: #e2e8f0;
+}
+
+.progress-bar {
+    background: linear-gradient(90deg, var(--primary-navy) 0%, var(--primary-teal) 100%);
+    border-radius: 10px;
+}
+
+/* ============================================
+   BREADCRUMB - Navy Theme
+   ============================================ */
+
+.breadcrumb {
+    background: transparent;
+    padding: 0;
+    margin-bottom: 1rem;
+}
+
+.breadcrumb-item a {
+    color: var(--primary-teal);
+    text-decoration: none;
+}
+
+.breadcrumb-item a:hover {
+    color: var(--primary-navy);
+}
+
+.breadcrumb-item.active {
+    color: var(--text-gray);
+}
+
+/* ============================================
+   LIST GROUPS - Clean Style
+   ============================================ */
+
+.list-group-item {
+    border: 1px solid var(--border-light);
+    transition: all 0.3s ease;
+}
+
+.list-group-item:hover {
+    background: #f7fafc;
+    border-color: var(--primary-teal);
+}
+
+.list-group-item-action:hover {
+    background: #f7fafc;
+}
+
+/* ============================================
+   NAVS & TABS - Navy Theme
+   ============================================ */
+
+.nav-pills .nav-link {
+    border-radius: 8px;
+    color: var(--text-dark);
+    transition: all 0.3s ease;
+}
+
+.nav-pills .nav-link:hover {
+    background: #f7fafc;
+}
+
+.nav-pills .nav-link.active {
+    background: var(--primary-navy);
+}
+
+.nav-tabs .nav-link {
+    border: none;
+    border-bottom: 3px solid transparent;
+    color: var(--text-gray);
+}
+
+.nav-tabs .nav-link:hover {
+    border-bottom-color: var(--primary-teal);
+}
+
+.nav-tabs .nav-link.active {
+    border-bottom-color: var(--primary-navy);
+    color: var(--primary-navy);
+    font-weight: 600;
+}
+
+/* ============================================
+   UTILITY CLASSES
+   ============================================ */
+
+.text-navy {
+    color: var(--primary-navy) !important;
+}
+
+.text-teal {
+    color: var(--primary-teal) !important;
+}
+
+.bg-navy {
+    background-color: var(--primary-navy) !important;
+}
+
+.bg-teal {
+    background-color: var(--primary-teal) !important;
+}
+
+.border-navy {
+    border-color: var(--primary-navy) !important;
+}
+
+.border-teal {
+    border-color: var(--primary-teal) !important;
+}
+
+/* ============================================
+   ANIMATIONS
+   ============================================ */
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.fade-in {
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes scaleIn {
+    from {
+        opacity: 0;
+        transform: scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+.scale-in {
+    animation: scaleIn 0.3s ease;
+}
+
+/* ============================================
+   RESPONSIVE UTILITIES
+   ============================================ */
+
+@media (max-width: 768px) {
+    .card {
+        margin-bottom: 1rem;
+    }
+    
+    .table th, .table td {
+        padding: 0.75rem;
+        font-size: 0.9rem;
+    }
+    
+    .btn {
+        padding: 0.5rem 1rem;
+        font-size: 0.9rem;
+    }
+}
+
+/* ============================================
+   PRINT STYLES
+   ============================================ */
+
+@media print {
+    .card {
+        box-shadow: none;
+        border: 1px solid var(--border-light);
+    }
+    
+    .btn, .sidebar, .top-header {
+        display: none !important;
+    }
+}

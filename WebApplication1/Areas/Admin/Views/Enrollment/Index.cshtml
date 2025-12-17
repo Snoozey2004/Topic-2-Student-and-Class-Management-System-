@@ -1,0 +1,144 @@
+﻿@model List<WebApplication1.ViewModels.EnrollmentListViewModel>
+@{
+    ViewData["Title"] = "Enrollment Management";
+    ViewData["PageTitle"] = "Enrollment Management";
+    Layout = "~/Views/Shared/_DashboardLayout.cshtml";
+}
+
+@section SidebarMenu {
+    @await Html.PartialAsync("_AdminSidebar")
+}
+
+<div class="mb-3">
+    <div class="btn-group" role="group">
+        <a asp-action="Index" class="btn @(string.IsNullOrEmpty(ViewBag.CurrentStatus) ? "btn-primary" : "btn-outline-primary")">
+            All
+        </a>
+        <a asp-action="Index" asp-route-status="Pending" class="btn @(ViewBag.CurrentStatus == "Pending" ? "btn-warning" : "btn-outline-warning")">
+            Pending
+        </a>
+        <a asp-action="Index" asp-route-status="Approved" class="btn @(ViewBag.CurrentStatus == "Approved" ? "btn-success" : "btn-outline-success")">
+            Approved
+        </a>
+        <a asp-action="Index" asp-route-status="Rejected" class="btn @(ViewBag.CurrentStatus == "Rejected" ? "btn-danger" : "btn-outline-danger")">
+            Rejected
+        </a>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header bg-white">
+        <h5 class="mb-0"><i class="bi bi-list me-2"></i>Enrollment List</h5>
+    </div>
+    <div class="card-body">
+        @if (Model.Any())
+        {
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Student Code</th>
+                            <th>Student Name</th>
+                            <th>Class Code</th>
+                            <th>Subject</th>
+                            <th>Semester</th>
+                            <th>Enrollment Date</th>
+                            <th>Status</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var enrollment in Model)
+                        {
+                            <tr>
+                                <td><span class="badge bg-primary">@enrollment.StudentCode</span></td>
+                                <td>@enrollment.StudentName</td>
+                                <td><span class="badge bg-info">@enrollment.ClassCode</span></td>
+                                <td>@enrollment.SubjectName</td>
+                                <td>@enrollment.Semester</td>
+                                <td>@enrollment.EnrollmentDate.ToString("dd/MM/yyyy")</td>
+                                <td>
+                                    @switch (enrollment.Status)
+                                    {
+                                        case "Pending":
+                                            <span class="badge bg-warning">Pending</span>
+                                            break;
+                                        case "Approved":
+                                            <span class="badge bg-success">Approved</span>
+                                            break;
+                                        case "Rejected":
+                                            <span class="badge bg-danger">Rejected</span>
+                                            break;
+                                        case "Dropped":
+                                            <span class="badge bg-secondary">Dropped</span>
+                                            break;
+                                    }
+                                </td>
+                                <td>
+                                    @if (enrollment.Status == "Pending")
+                                    {
+                                        <form asp-action="Approve" method="post" class="d-inline">
+                                            <input type="hidden" name="id" value="@enrollment.Id" />
+                                            <button type="submit" class="btn btn-sm btn-success" title="Approve">
+                                                <i class="bi bi-check-circle"></i>
+                                            </button>
+                                        </form>
+                                        <button type="button" class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#rejectModal@(enrollment.Id)" title="Reject">
+                                            <i class="bi bi-x-circle"></i>
+                                        </button>
+
+                                        <!-- Reject Modal -->
+                                        <div class="modal fade" id="rejectModal@(enrollment.Id)" tabindex="-1">
+                                            <div class="modal-dialog">
+                                                <div class="modal-content">
+                                                    <form asp-action="Reject" method="post">
+                                                        <div class="modal-header">
+                                                            <h5 class="modal-title">Reject Enrollment</h5>
+                                                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                                        </div>
+                                                        <div class="modal-body">
+                                                            <input type="hidden" name="id" value="@enrollment.Id" />
+                                                            <div class="mb-3">
+                                                                <label class="form-label">Rejection Reason</label>
+                                                                <textarea name="reason" class="form-control" rows="3" required></textarea>
+                                                            </div>
+                                                        </div>
+                                                        <div class="modal-footer">
+                                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                                            <button type="submit" class="btn btn-danger">Reject</button>
+                                                        </div>
+                                                    </form>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    }
+                                    @if (enrollment.Status == "Rejected" && !string.IsNullOrEmpty(enrollment.RejectionReason))
+                                    {
+                                        <button class="btn btn-sm btn-info" data-bs-toggle="tooltip" title="@enrollment.RejectionReason">
+                                            <i class="bi bi-info-circle"></i>
+                                        </button>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+        else
+        {
+            <div class="alert alert-info mb-0">
+                <i class="bi bi-info-circle me-2"></i>No enrollments found
+            </div>
+        }
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl)
+        })
+    </script>
+}

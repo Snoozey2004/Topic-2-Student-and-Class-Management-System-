@@ -1,0 +1,542 @@
+﻿@{
+    ViewData["Title"] = "Home";
+    Layout = "_PublicLayout";
+}
+
+<style>
+    /* Hero Section */
+    .hero-section {
+        text-align: center;
+        padding: 3rem 0 2rem 0;
+        animation: fadeIn 0.8s ease;
+    }
+    
+    .hero-badge {
+        display: inline-block;
+        background: rgba(45, 158, 142, 0.1);
+        color: white;
+        padding: 0.5rem 1.5rem;
+        border-radius: 30px;
+        font-size: 0.9rem;
+        font-weight: 600;
+        margin-bottom: 1.5rem;
+        border: 1px solid rgba(255, 255, 255, 0.3);
+    }
+    
+    .hero-title {
+        font-size: 3.5rem;
+        font-weight: 800;
+        color: white;
+        margin-bottom: 1rem;
+        line-height: 1.2;
+        text-shadow: 0 2px 10px rgba(0,0,0,0.2);
+    }
+    
+    .hero-subtitle {
+        font-size: 1.25rem;
+        color: rgba(255, 255, 255, 0.95);
+        margin-bottom: 2.5rem;
+        max-width: 700px;
+        margin-left: auto;
+        margin-right: auto;
+        line-height: 1.6;
+    }
+    
+    /* Action Buttons */
+    .hero-actions {
+        display: flex;
+        gap: 1.5rem;
+        justify-content: center;
+        margin-bottom: 3rem;
+    }
+    
+    .btn-hero {
+        padding: 1rem 2.5rem;
+        border-radius: 12px;
+        font-weight: 600;
+        font-size: 1.05rem;
+        text-decoration: none;
+        transition: all 0.3s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.75rem;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    }
+    
+    .btn-hero-primary {
+        background: white;
+        color: #1e3a5f;
+    }
+    
+    .btn-hero-primary:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 25px rgba(255,255,255,0.3);
+        color: #1e3a5f;
+    }
+    
+    .btn-hero-secondary {
+        background: rgba(255, 255, 255, 0.1);
+        color: white;
+        border: 2px solid rgba(255, 255, 255, 0.3);
+    }
+    
+    .btn-hero-secondary:hover {
+        background: rgba(255, 255, 255, 0.2);
+        border-color: rgba(255, 255, 255, 0.5);
+        transform: translateY(-3px);
+        color: white;
+    }
+    
+    /* Stats Section */
+    .stats-section {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 2rem;
+        margin-bottom: 3rem;
+    }
+    
+    .stat-card {
+        background: rgba(255, 255, 255, 0.95);
+        padding: 2rem;
+        border-radius: 15px;
+        text-align: center;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    }
+    
+    .stat-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+    }
+    
+    .stat-icon {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+        color: #1e3a5f;
+    }
+    
+    .stat-number {
+        font-size: 2.5rem;
+        font-weight: 800;
+        color: #1e3a5f;
+        margin-bottom: 0.5rem;
+    }
+    
+    .stat-label {
+        color: #718096;
+        font-weight: 500;
+        font-size: 0.95rem;
+    }
+    
+    /* Features Section */
+    .features-section {
+        background: white;
+        padding: 3rem;
+        border-radius: 20px;
+        margin-bottom: 2rem;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+    }
+    
+    .features-header {
+        text-align: center;
+        margin-bottom: 3rem;
+    }
+    
+    .features-header h2 {
+        font-size: 2.5rem;
+        font-weight: 700;
+        color: #1e3a5f;
+        margin-bottom: 1rem;
+    }
+    
+    .features-header p {
+        color: #718096;
+        font-size: 1.1rem;
+    }
+    
+    .features-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 2.5rem;
+    }
+    
+    .feature-item {
+        text-align: center;
+        padding: 2rem;
+        border-radius: 15px;
+        transition: all 0.3s ease;
+        border: 2px solid transparent;
+    }
+    
+    .feature-item:hover {
+        border-color: #2d9e8e;
+        transform: translateY(-5px);
+        box-shadow: 0 10px 30px rgba(45, 158, 142, 0.1);
+    }
+    
+    .feature-icon {
+        width: 80px;
+        height: 80px;
+        background: linear-gradient(135deg, #1e3a5f 0%, #2d9e8e 100%);
+        border-radius: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 1.5rem auto;
+        font-size: 2.5rem;
+        color: white;
+        box-shadow: 0 8px 20px rgba(30, 58, 95, 0.3);
+    }
+    
+    .feature-item h3 {
+        font-size: 1.35rem;
+        font-weight: 700;
+        color: #1e3a5f;
+        margin-bottom: 1rem;
+    }
+    
+    .feature-item p {
+        color: #718096;
+        line-height: 1.6;
+        font-size: 0.95rem;
+    }
+    
+    /* Roles Section */
+    .roles-section {
+        background: white;
+        padding: 3rem;
+        border-radius: 20px;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+    }
+    
+    .roles-header {
+        text-align: center;
+        margin-bottom: 3rem;
+    }
+    
+    .roles-header h2 {
+        font-size: 2.5rem;
+        font-weight: 700;
+        color: #1e3a5f;
+        margin-bottom: 1rem;
+    }
+    
+    .roles-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 2rem;
+    }
+    
+    .role-card {
+        background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
+        padding: 2.5rem;
+        border-radius: 15px;
+        text-align: center;
+        transition: all 0.3s ease;
+        border: 2px solid transparent;
+    }
+    
+    .role-card:hover {
+        border-color: #2d9e8e;
+        transform: translateY(-5px);
+        box-shadow: 0 10px 30px rgba(45, 158, 142, 0.15);
+    }
+    
+    .role-icon {
+        width: 100px;
+        height: 100px;
+        background: white;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 1.5rem auto;
+        font-size: 3rem;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+    }
+    
+    .role-icon.admin {
+        color: #ef4444;
+    }
+    
+    .role-icon.lecturer {
+        color: #3b82f6;
+    }
+    
+    .role-icon.student {
+        color: #10b981;
+    }
+    
+    .role-card h3 {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #1e3a5f;
+        margin-bottom: 1rem;
+    }
+    
+    .role-card ul {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        text-align: left;
+    }
+    
+    .role-card ul li {
+        padding: 0.5rem 0;
+        color: #4a5568;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+    
+    .role-card ul li i {
+        color: #2d9e8e;
+        font-size: 1.1rem;
+    }
+    
+    /* Responsive */
+    @@media (max-width: 1024px) {
+        .stats-section {
+            grid-template-columns: repeat(2, 1fr);
+        }
+        
+        .features-grid,
+        .roles-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+    
+    @@media (max-width: 768px) {
+        .hero-title {
+            font-size: 2.5rem;
+        }
+        
+        .hero-actions {
+            flex-direction: column;
+            align-items: stretch;
+        }
+        
+        .stats-section {
+            grid-template-columns: 1fr;
+        }
+    }
+    
+    @@keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+</style>
+
+<!-- Hero Section -->
+<div class="hero-section">
+    <div class="hero-badge">
+        <i class="bi bi-star-fill me-2"></i>Welcome to SCMS Platform
+    </div>
+    
+    <h1 class="hero-title">
+        Student & Class<br/>Management System
+    </h1>
+    
+    <p class="hero-subtitle">
+        A comprehensive platform for managing students, courses, schedules, and grades.
+        Streamline your academic administration with powerful tools and intuitive interface.
+    </p>
+    
+    <div class="hero-actions">
+        <a asp-controller="Account" asp-action="Login" class="btn-hero btn-hero-primary">
+            <i class="bi bi-box-arrow-in-right"></i>
+            Sign In
+        </a>
+        <a asp-controller="Account" asp-action="Register" class="btn-hero btn-hero-secondary">
+            <i class="bi bi-person-plus"></i>
+            Create Account
+        </a>
+    </div>
+</div>
+
+<!-- Stats Section -->
+<div class="stats-section">
+    <div class="stat-card">
+        <div class="stat-icon">
+            <i class="bi bi-people-fill"></i>
+        </div>
+        <div class="stat-number">500+</div>
+        <div class="stat-label">Students</div>
+    </div>
+    
+    <div class="stat-card">
+        <div class="stat-icon">
+            <i class="bi bi-person-badge"></i>
+        </div>
+        <div class="stat-number">50+</div>
+        <div class="stat-label">Lecturers</div>
+    </div>
+    
+    <div class="stat-card">
+        <div class="stat-icon">
+            <i class="bi bi-journal-text"></i>
+        </div>
+        <div class="stat-number">100+</div>
+        <div class="stat-label">Courses</div>
+    </div>
+    
+    <div class="stat-card">
+        <div class="stat-icon">
+            <i class="bi bi-calendar-event"></i>
+        </div>
+        <div class="stat-number">200+</div>
+        <div class="stat-label">Classes</div>
+    </div>
+</div>
+
+<!-- Features Section -->
+<div class="features-section">
+    <div class="features-header">
+        <h2>Powerful Features</h2>
+        <p>Everything you need to manage your academic institution efficiently</p>
+    </div>
+    
+    <div class="features-grid">
+        <div class="feature-item">
+            <div class="feature-icon">
+                <i class="bi bi-calendar-check"></i>
+            </div>
+            <h3>Smart Scheduling</h3>
+            <p>Automated class scheduling with conflict detection and room assignment optimization</p>
+        </div>
+        
+        <div class="feature-item">
+            <div class="feature-icon">
+                <i class="bi bi-clipboard-data"></i>
+            </div>
+            <h3>Grade Management</h3>
+            <p>Comprehensive grading system with GPA calculation and academic performance tracking</p>
+        </div>
+        
+        <div class="feature-item">
+            <div class="feature-icon">
+                <i class="bi bi-card-checklist"></i>
+            </div>
+            <h3>Course Registration</h3>
+            <p>Online course registration with prerequisite checking and capacity management</p>
+        </div>
+        
+        <div class="feature-item">
+            <div class="feature-icon">
+                <i class="bi bi-bell"></i>
+            </div>
+            <h3>Real-time Notifications</h3>
+            <p>Instant notifications for grades, schedule changes, and important announcements</p>
+        </div>
+        
+        <div class="feature-item">
+            <div class="feature-icon">
+                <i class="bi bi-graph-up"></i>
+            </div>
+            <h3>Analytics & Reports</h3>
+            <p>Detailed analytics and reports for administrators, lecturers, and students</p>
+        </div>
+        
+        <div class="feature-item">
+            <div class="feature-icon">
+                <i class="bi bi-shield-check"></i>
+            </div>
+            <h3>Secure & Reliable</h3>
+            <p>Role-based access control with secure authentication and data protection</p>
+        </div>
+    </div>
+</div>
+
+<!-- Roles Section -->
+<div class="roles-section">
+    <div class="roles-header">
+        <h2>System Roles</h2>
+        <p>Tailored features for every user type</p>
+    </div>
+    
+    <div class="roles-grid">
+        <!-- Admin Role -->
+        <div class="role-card">
+            <div class="role-icon admin">
+                <i class="bi bi-shield-fill-check"></i>
+            </div>
+            <h3>Administrator</h3>
+            <ul>
+                <li>
+                    <i class="bi bi-check-circle-fill"></i>
+                    <span>Manage users & accounts</span>
+                </li>
+                <li>
+                    <i class="bi bi-check-circle-fill"></i>
+                    <span>Configure courses & classes</span>
+                </li>
+                <li>
+                    <i class="bi bi-check-circle-fill"></i>
+                    <span>Oversee enrollments</span>
+                </li>
+                <li>
+                    <i class="bi bi-check-circle-fill"></i>
+                    <span>View system analytics</span>
+                </li>
+            </ul>
+        </div>
+        
+        <!-- Lecturer Role -->
+        <div class="role-card">
+            <div class="role-icon lecturer">
+                <i class="bi bi-person-workspace"></i>
+            </div>
+            <h3>Lecturer</h3>
+            <ul>
+                <li>
+                    <i class="bi bi-check-circle-fill"></i>
+                    <span>Manage assigned classes</span>
+                </li>
+                <li>
+                    <i class="bi bi-check-circle-fill"></i>
+                    <span>Input & update grades</span>
+                </li>
+                <li>
+                    <i class="bi bi-check-circle-fill"></i>
+                    <span>View student progress</span>
+                </li>
+                <li>
+                    <i class="bi bi-check-circle-fill"></i>
+                    <span>Send announcements</span>
+                </li>
+            </ul>
+        </div>
+        
+        <!-- Student Role -->
+        <div class="role-card">
+            <div class="role-icon student">
+                <i class="bi bi-mortarboard-fill"></i>
+            </div>
+            <h3>Student</h3>
+            <ul>
+                <li>
+                    <i class="bi bi-check-circle-fill"></i>
+                    <span>Register for courses</span>
+                </li>
+                <li>
+                    <i class="bi bi-check-circle-fill"></i>
+                    <span>View class schedules</span>
+                </li>
+                <li>
+                    <i class="bi bi-check-circle-fill"></i>
+                    <span>Check grades & GPA</span>
+                </li>
+                <li>
+                    <i class="bi bi-check-circle-fill"></i>
+                    <span>Receive notifications</span>
+                </li>
+            </ul>
+        </div>
+    </div>
+</div>

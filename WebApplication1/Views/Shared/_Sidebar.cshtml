@@ -1,0 +1,49 @@
+﻿@* Centralized sidebar partial to avoid RenderSection issues *@
+@using Microsoft.AspNetCore.Mvc.Localization
+<ul class="nav flex-column">
+    <li class="nav-item">
+        <a class="nav-link" asp-area="Admin" asp-controller="Dashboard" asp-action="Index">
+            <i class="bi bi-speedometer2"></i>Dashboard
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" asp-area="Admin" asp-controller="User" asp-action="Index">
+            <i class="bi bi-people"></i>User Management
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" asp-area="Admin" asp-controller="Student" asp-action="Index">
+            <i class="bi bi-person-badge"></i>Student Management
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" asp-area="Admin" asp-controller="Lecturer" asp-action="Index">
+            <i class="bi bi-person-workspace"></i>Lecturer Management
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" asp-area="Admin" asp-controller="Subject" asp-action="Index">
+            <i class="bi bi-book"></i>Subject Management
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" asp-area="Admin" asp-controller="CourseClass" asp-action="Index">
+            <i class="bi bi-journal-text"></i>Course Class Management
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" asp-area="Admin" asp-controller="Schedule" asp-action="Index">
+            <i class="bi bi-calendar3"></i>Schedule Management
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" asp-area="Admin" asp-controller="Enrollment" asp-action="Index">
+            <i class="bi bi-clipboard-check"></i>Enrollment Management
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" asp-area="Admin" asp-controller="Grade" asp-action="Index">
+            <i class="bi bi-award"></i>Grade Management
+        </a>
+    </li>
+</ul>
