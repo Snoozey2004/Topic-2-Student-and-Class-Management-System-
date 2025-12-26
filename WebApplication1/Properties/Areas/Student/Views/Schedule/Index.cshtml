@@ -1,0 +1,168 @@
+﻿@model WebApplication1.ViewModels.TimetableViewModel
+@{
+    ViewData["Title"] = "My Schedule";
+    ViewData["PageTitle"] = "My Timetable";
+    Layout = "~/Views/Shared/_DashboardLayout.cshtml";
+}
+
+@section SidebarMenu {
+    @await Html.PartialAsync("_StudentSidebar")
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/portal-common.css" />
+}
+
+<!-- Filter Bar -->
+<div class="portal-filter-bar">
+    <div class="portal-filter-controls">
+        <select class="portal-select">
+            <option value="">@Model.SemesterLabel</option>
+        </select>
+        <select class="portal-select">
+            <option value="">@Model.WeekLabel</option>
+        </select>
+    </div>
+    <div class="portal-nav-arrows">
+        <button type="button" class="portal-nav-btn" title="Previous week">
+            <i class="bi bi-chevron-left"></i>
+        </button>
+        <button type="button" class="portal-nav-btn" title="Next week">
+            <i class="bi bi-chevron-right"></i>
+        </button>
+        <button type="button" class="portal-btn portal-btn-outline portal-btn-sm" style="margin-left: 0.5rem;">
+            <i class="bi bi-printer"></i> Print
+        </button>
+    </div>
+</div>
+
+<!-- Timetable -->
+<div class="portal-timetable">
+    <!-- Day Headers -->
+    <div class="portal-day-headers">
+        <div class="portal-time-header">Period</div>
+        @foreach (var day in Model.DayHeaders)
+        {
+            <div class="portal-day-header">
+                <div class="portal-day-name">@day.DayName</div>
+                <div class="portal-day-date">@day.DateDisplay</div>
+            </div>
+        }
+    </div>
+
+    <!-- Timetable Grid -->
+    <div class="portal-timetable-grid">
+        @{
+            var periods = new[] {
+                new { Name = "Period 1-3", Time = "07:00 - 09:30" },
+                new { Name = "Period 4-6", Time = "09:45 - 12:15" },
+                new { Name = "Period 7-9", Time = "13:00 - 15:30" }
+            };
+            
+            var dayOfWeeks = new[] { 
+                DayOfWeek.Monday, DayOfWeek.Tuesday, DayOfWeek.Wednesday, 
+                DayOfWeek.Thursday, DayOfWeek.Friday, DayOfWeek.Saturday, DayOfWeek.Sunday
+            };
+            
+            foreach (var period in periods)
+            {
+                <div class="portal-timetable-row">
+                    <div class="portal-time-label">
+                        @period.Name<br/>
+                        <small style="font-weight: 400; opacity: 0.7;">@period.Time</small>
+                    </div>
+                    
+                    @foreach (var dayOfWeek in dayOfWeeks)
+                    {
+                        var hasSchedule = Model.Schedule.ContainsKey(dayOfWeek) && 
+                                         Model.Schedule[dayOfWeek].Any(s => s.Period == period.Name);
+                        
+                        <div class="portal-time-cell @(!hasSchedule ? "empty" : "")">
+                            @if (Model.Schedule.ContainsKey(dayOfWeek))
+                            {
+                                var slots = Model.Schedule[dayOfWeek].Where(s => s.Period == period.Name).ToList();
+                                foreach (var slot in slots)
+                                {
+                                    <div class="portal-class-card" onclick="showClassModal(this)"
+                                         data-subject="@slot.SubjectName"
+                                         data-code="@slot.ClassCode"
+                                         data-room="@slot.Room"
+                                         data-lecturer="@slot.LecturerName"
+                                         data-time="@slot.TimeRange">
+                                        <div class="portal-class-title">@slot.SubjectName</div>
+                                        <div class="portal-class-code">@slot.ClassCode</div>
+                                        <div class="portal-class-detail">
+                                            <i class="bi bi-door-open"></i> @slot.Room
+                                        </div>
+                                        <div class="portal-class-detail">
+                                            <i class="bi bi-person"></i> @slot.LecturerName
+                                        </div>
+                                    </div>
+                                }
+                            }
+                        </div>
+                    }
+                </div>
+            }
+        }
+    </div>
+</div>
+
+<!-- Modal for Class Details -->
+<div class="portal-modal" id="classModal">
+    <div class="portal-modal-overlay" onclick="closeClassModal()"></div>
+    <div class="portal-modal-content">
+        <div class="portal-modal-header">
+            <h5><i class="bi bi-journal-text me-2"></i>Class Details</h5>
+            <button type="button" class="portal-modal-close" onclick="closeClassModal()">
+                <i class="bi bi-x-lg"></i>
+            </button>
+        </div>
+        <div class="portal-modal-body">
+            <div class="portal-detail-row">
+                <span class="portal-detail-label">Subject</span>
+                <span class="portal-detail-value" id="modalSubject"></span>
+            </div>
+            <div class="portal-detail-row">
+                <span class="portal-detail-label">Class Code</span>
+                <span class="portal-detail-value" id="modalCode"></span>
+            </div>
+            <div class="portal-detail-row">
+                <span class="portal-detail-label">Room</span>
+                <span class="portal-detail-value" id="modalRoom"></span>
+            </div>
+            <div class="portal-detail-row">
+                <span class="portal-detail-label">Lecturer</span>
+                <span class="portal-detail-value" id="modalLecturer"></span>
+            </div>
+            <div class="portal-detail-row">
+                <span class="portal-detail-label">Time</span>
+                <span class="portal-detail-value" id="modalTime"></span>
+            </div>
+        </div>
+        <div class="portal-modal-footer">
+            <button type="button" class="portal-btn portal-btn-outline" onclick="closeClassModal()">Close</button>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function showClassModal(element) {
+            document.getElementById('modalSubject').textContent = element.dataset.subject;
+            document.getElementById('modalCode').textContent = element.dataset.code;
+            document.getElementById('modalRoom').textContent = element.dataset.room;
+            document.getElementById('modalLecturer').textContent = element.dataset.lecturer || '-';
+            document.getElementById('modalTime').textContent = element.dataset.time;
+            document.getElementById('classModal').classList.add('show');
+        }
+        
+        function closeClassModal() {
+            document.getElementById('classModal').classList.remove('show');
+        }
+        
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') closeClassModal();
+        });
+    </script>
+}

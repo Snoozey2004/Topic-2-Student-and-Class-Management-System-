@@ -1,0 +1,117 @@
+﻿@model WebApplication1.ViewModels.LecturerDetailViewModel
+@{
+    ViewData["Title"] = "Lecturer Details";
+    ViewData["PageTitle"] = "Lecturer Details";
+    Layout = "~/Views/Shared/_DashboardLayout.cshtml";
+}
+
+@section SidebarMenu {
+    @await Html.PartialAsync("_AdminSidebar")
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/admin-crud.css" />
+}
+
+<a asp-action="Index" class="admin-back-link">
+    <i class="bi bi-arrow-left"></i> Back to Lecturer List
+</a>
+
+<div class="row">
+    <div class="col-lg-5">
+        <div class="admin-card mb-4">
+            <div class="admin-card-header">
+                <h5><i class="bi bi-person"></i> Lecturer Information</h5>
+                <div class="d-flex gap-2">
+                    <a asp-action="Edit" asp-route-id="@Model.Id" class="btn-admin-outline btn-sm">
+                        <i class="bi bi-pencil me-1"></i>Edit
+                    </a>
+                    <a asp-action="Delete" asp-route-id="@Model.Id" class="btn-admin-danger btn-sm">
+                        <i class="bi bi-trash me-1"></i>Delete
+                    </a>
+                </div>
+            </div>
+            <div class="admin-card-body">
+                <div class="admin-detail-row">
+                    <div class="admin-detail-label">Lecturer Code</div>
+                    <div class="admin-detail-value">
+                        <span class="badge-admin badge-admin-primary">@Model.LecturerCode</span>
+                    </div>
+                </div>
+                <div class="admin-detail-row">
+                    <div class="admin-detail-label">Full Name</div>
+                    <div class="admin-detail-value"><strong>@Model.FullName</strong></div>
+                </div>
+                <div class="admin-detail-row">
+                    <div class="admin-detail-label">Email</div>
+                    <div class="admin-detail-value">@Model.Email</div>
+                </div>
+                <div class="admin-detail-row">
+                    <div class="admin-detail-label">Date of Birth</div>
+                    <div class="admin-detail-value">@Model.DateOfBirth.ToString("dd/MM/yyyy")</div>
+                </div>
+                <div class="admin-detail-row">
+                    <div class="admin-detail-label">Phone</div>
+                    <div class="admin-detail-value">@(Model.PhoneNumber ?? "-")</div>
+                </div>
+                <div class="admin-detail-row">
+                    <div class="admin-detail-label">Department</div>
+                    <div class="admin-detail-value">@(Model.Department ?? "-")</div>
+                </div>
+                <div class="admin-detail-row">
+                    <div class="admin-detail-label">Title</div>
+                    <div class="admin-detail-value">@(Model.Title ?? "-")</div>
+                </div>
+                <div class="admin-detail-row">
+                    <div class="admin-detail-label">Specialization</div>
+                    <div class="admin-detail-value">@(Model.Specialization ?? "-")</div>
+                </div>
+                <div class="admin-detail-row">
+                    <div class="admin-detail-label">Join Date</div>
+                    <div class="admin-detail-value">@Model.JoinDate.ToString("dd/MM/yyyy")</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-7">
+        <div class="admin-card">
+            <div class="admin-card-header">
+                <h5><i class="bi bi-journal-text"></i> Teaching Classes</h5>
+            </div>
+            <div class="admin-card-body">
+                @if (Model.TeachingClasses != null && Model.TeachingClasses.Any())
+                {
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th>Class Code</th>
+                                <th>Subject</th>
+                                <th>Semester</th>
+                                <th>Students</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var c in Model.TeachingClasses)
+                            {
+                                <tr>
+                                    <td><span class="badge-admin badge-admin-accent">@c.ClassCode</span></td>
+                                    <td>@c.SubjectName</td>
+                                    <td>@c.Semester</td>
+                                    <td>@c.CurrentStudents / @c.MaxStudents</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                }
+                else
+                {
+                    <div class="admin-empty">
+                        <i class="bi bi-journal-x"></i>
+                        <p>No teaching classes assigned</p>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>

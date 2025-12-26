@@ -1,0 +1,161 @@
+/* Admin Schedule Index Styles - Areas/Admin/Views/Schedule/Index.cshtml */
+
+.schedule-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+}
+
+.filter-tabs {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+}
+
+.filter-tab {
+    padding: 0.5rem 1.25rem;
+    border-radius: 8px;
+    border: 2px solid #e2e8f0;
+    background: white;
+    color: #4a5568;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.filter-tab:hover {
+    border-color: #2d9e8e;
+    color: #2d9e8e;
+}
+
+.filter-tab.active {
+    background: #2d9e8e;
+    border-color: #2d9e8e;
+    color: white;
+}
+
+.filter-tab.weekend {
+    border-color: #1e3a5f;
+}
+
+.filter-tab.weekend:hover {
+    border-color: #2d9e8e;
+    color: #2d9e8e;
+}
+
+.filter-tab.weekend.active {
+    background: #1e3a5f;
+    border-color: #1e3a5f;
+}
+
+/* Schedule Cards Grid */
+.schedule-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 1.5rem;
+}
+
+.schedule-card {
+    background: white;
+    border-radius: 12px;
+    border-left: 4px solid var(--card-color, #2d9e8e);
+    padding: 1.25rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    transition: all 0.3s ease;
+}
+
+.schedule-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 16px rgba(0,0,0,0.12);
+}
+
+.schedule-card.monday { --card-color: #2d9e8e; }
+.schedule-card.tuesday { --card-color: #3b82f6; }
+.schedule-card.wednesday { --card-color: #8b5cf6; }
+.schedule-card.thursday { --card-color: #f59e0b; }
+.schedule-card.friday { --card-color: #ef4444; }
+.schedule-card.saturday { --card-color: #10b981; }
+.schedule-card.sunday { --card-color: #ec4899; }
+
+.schedule-header-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: start;
+    margin-bottom: 1rem;
+}
+
+.class-code-badge {
+    font-weight: 700;
+    color: #1e3a5f;
+    font-size: 1.1rem;
+}
+
+.day-badge {
+    padding: 0.35rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    background: var(--card-color, #2d9e8e);
+    color: white;
+}
+
+.schedule-details {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.detail-row {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-size: 0.9rem;
+    color: #4a5568;
+}
+
+.detail-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    background: #f7fafc;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--card-color, #2d9e8e);
+}
+
+.detail-text {
+    flex: 1;
+}
+
+.detail-label {
+    font-size: 0.75rem;
+    color: #718096;
+    margin-bottom: 0.15rem;
+}
+
+.detail-value {
+    font-weight: 600;
+    color: #2d3748;
+}
+
+/* Empty State */
+.empty-state {
+    text-align: center;
+    padding: 3rem;
+    background: #f7fafc;
+    border-radius: 12px;
+}
+
+.empty-icon {
+    font-size: 4rem;
+    color: #cbd5e0;
+    margin-bottom: 1rem;
+}
+
+.empty-text {
+    color: #718096;
+    font-size: 1.1rem;
+}

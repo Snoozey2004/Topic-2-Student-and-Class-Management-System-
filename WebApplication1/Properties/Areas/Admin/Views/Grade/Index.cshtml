@@ -1,0 +1,137 @@
+﻿@model List<WebApplication1.ViewModels.GradeListViewModel>
+@{
+    ViewData["Title"] = "Grade Management";
+    ViewData["PageTitle"] = "Grade Management";
+    Layout = "~/Views/Shared/_DashboardLayout.cshtml";
+}
+
+@section SidebarMenu {
+    @await Html.PartialAsync("_AdminSidebar")
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/admin-crud.css" />
+}
+
+<div class="admin-page-header">
+    <div class="admin-search-box">
+        <i class="bi bi-search"></i>
+        <input type="text" id="searchInput" placeholder="Search by student, class code..." onkeyup="filterTable()">
+    </div>
+    <div class="admin-header-actions">
+        <a asp-action="Create" class="btn-admin-outline">
+            <i class="bi bi-plus-circle"></i> Add Grade
+        </a>
+    </div>
+</div>
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="admin-alert admin-alert-success mb-3">
+        <i class="bi bi-check-circle"></i>
+        <span>@TempData["SuccessMessage"]</span>
+    </div>
+}
+
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="admin-alert admin-alert-danger mb-3">
+        <i class="bi bi-exclamation-circle"></i>
+        <span>@TempData["ErrorMessage"]</span>
+    </div>
+}
+
+<div class="admin-card">
+    <div class="admin-card-body p-0">
+        @if (Model != null && Model.Any())
+        {
+            <table class="admin-table" id="dataTable">
+                <thead>
+                    <tr>
+                        <th>Student</th>
+                        <th>Course Class</th>
+                        <th>Total Score</th>
+                        <th>Letter Grade</th>
+                        <th style="width: 100px;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var g in Model)
+                    {
+                        <tr>
+                            <td><strong>@g.StudentName</strong></td>
+                            <td><span class="badge-admin badge-admin-accent">@g.CourseClassCode</span></td>
+                            <td>
+                                @if (g.TotalScore.HasValue)
+                                {
+                                    <strong>@g.TotalScore.Value.ToString("0.00")</strong>
+                                }
+                                else
+                                {
+                                    <span class="text-muted">-</span>
+                                }
+                            </td>
+                            <td>
+                                @if (!string.IsNullOrEmpty(g.LetterGrade))
+                                {
+                                    var badgeClass = g.LetterGrade == "F" ? "badge-admin-danger" :
+                                                    g.LetterGrade.StartsWith("A") ? "badge-admin-success" :
+                                                    g.LetterGrade.StartsWith("B") ? "badge-admin-primary" :
+                                                    g.LetterGrade.StartsWith("C") ? "badge-admin-warning" : "badge-admin-accent";
+                                    <span class="badge-admin @badgeClass">@g.LetterGrade</span>
+                                }
+                                else
+                                {
+                                    <span class="text-muted">-</span>
+                                }
+                            </td>
+                            <td>
+                                <div class="admin-actions">
+                                    <a asp-action="Details" asp-route-id="@g.Id" class="btn-action btn-action-view" title="View">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                    <a asp-action="Edit" asp-route-id="@g.Id" class="btn-action btn-action-edit" title="Edit">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                    <a asp-action="Delete" asp-route-id="@g.Id" class="btn-action btn-action-delete" title="Delete">
+                                        <i class="bi bi-trash"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+        else
+        {
+            <div class="admin-empty">
+                <i class="bi bi-award"></i>
+                <p>No grades found</p>
+            </div>
+        }
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function filterTable() {
+            var input = document.getElementById("searchInput");
+            var filter = input.value.toLowerCase();
+            var table = document.getElementById("dataTable");
+            var tr = table.getElementsByTagName("tr");
+
+            for (var i = 1; i < tr.length; i++) {
+                var td = tr[i].getElementsByTagName("td");
+                var found = false;
+                for (var j = 0; j < td.length - 1; j++) {
+                    if (td[j] && td[j].textContent.toLowerCase().indexOf(filter) > -1) {
+                        found = true;
+                        break;
+                    }
+                }
+                tr[i].style.display = found ? "" : "none";
+            }
+        }
+    </script>
+}

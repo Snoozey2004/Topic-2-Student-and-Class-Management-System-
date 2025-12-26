@@ -1,0 +1,183 @@
+@model WebApplication1.ViewModels.ClassGradeListViewModel
+@{
+    ViewData["Title"] = "Enter Grades";
+    ViewData["PageTitle"] = $"Enter Grades - {Model.ClassCode}";
+    Layout = "~/Views/Shared/_DashboardLayout.cshtml";
+}
+
+@section SidebarMenu {
+    @await Html.PartialAsync("_LecturerSidebar")
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/portal-common.css" />
+    <style>
+        .portal-input {
+            width: 100%;
+            padding: 0.5rem 0.75rem;
+            border: 2px solid var(--portal-border);
+            border-radius: 6px;
+            font-size: 0.875rem;
+            text-align: center;
+            transition: border-color 0.2s;
+        }
+        .portal-input:focus {
+            outline: none;
+            border-color: var(--portal-accent);
+        }
+        .portal-input::placeholder {
+            color: var(--portal-text-muted);
+            font-size: 0.75rem;
+        }
+    </style>
+}
+
+<!-- Header -->
+<div class="portal-filter-bar">
+    <div>
+        <h6 style="margin: 0; color: var(--portal-primary); font-weight: 600;">
+            <i class="bi bi-journal-text me-2" style="color: var(--portal-accent);"></i>@Model.SubjectName
+        </h6>
+        <small style="color: var(--portal-text-muted);">Class: @Model.ClassCode</small>
+    </div>
+    <a asp-area="Lecturer" asp-controller="Grade" asp-action="Index" class="portal-btn portal-btn-outline portal-btn-sm">
+        <i class="bi bi-arrow-left"></i> Back
+    </a>
+</div>
+
+<!-- Formula Info -->
+<div class="portal-alert portal-alert-success" style="margin-bottom: 1rem;">
+    <i class="bi bi-calculator"></i>
+    <span><strong>Formula:</strong> Attendance (10%) + Midterm (30%) + Final (60%) = Total Score</span>
+</div>
+
+<!-- Grades Table -->
+<div class="portal-card">
+    <div class="portal-card-body p-0">
+        @if (Model.Grades.Any())
+        {
+            <form asp-area="Lecturer" asp-controller="Grade" asp-action="UpdateGrades" method="post">
+                <input type="hidden" name="courseClassId" value="@Model.CourseClassId" />
+                
+                <div class="table-responsive">
+                    <table class="portal-grades-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 50px;">#</th>
+                                <th style="width: 110px;">Student Code</th>
+                                <th>Student Name</th>
+                                <th style="width: 100px; text-align: center;">Attend (10%)</th>
+                                <th style="width: 100px; text-align: center;">Midterm (30%)</th>
+                                <th style="width: 100px; text-align: center;">Final (60%)</th>
+                                <th style="width: 80px; text-align: center;">Total</th>
+                                <th style="width: 70px; text-align: center;">Grade</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @for (int i = 0; i < Model.Grades.Count; i++)
+                            {
+                                var grade = Model.Grades[i];
+                                var total = (grade.AttendanceScore ?? 0) * 0.1 + (grade.MidtermScore ?? 0) * 0.3 + (grade.FinalScore ?? 0) * 0.6;
+                                var letterGrade = total >= 8.5 ? "A" : total >= 8.0 ? "B+" : total >= 7.0 ? "B" : total >= 6.5 ? "C+" : total >= 5.5 ? "C" : total >= 5.0 ? "D+" : total >= 4.0 ? "D" : "F";
+                                var gradeClass = letterGrade.StartsWith("A") ? "portal-grade-a" : 
+                                               letterGrade.StartsWith("B") ? "portal-grade-b" : 
+                                               letterGrade.StartsWith("C") ? "portal-grade-c" : "portal-grade-d";
+                                
+                                <tr>
+                                    <td style="text-align: center;">@(i + 1)</td>
+                                    <td>
+                                        <span class="portal-badge portal-badge-primary">@grade.StudentCode</span>
+                                        <input type="hidden" name="grades[@i].GradeId" value="@grade.GradeId" />
+                                        <input type="hidden" name="grades[@i].EnrollmentId" value="@grade.EnrollmentId" />
+                                        <input type="hidden" name="grades[@i].StudentId" value="@grade.StudentId" />
+                                    </td>
+                                    <td><strong>@grade.StudentName</strong></td>
+                                    <td>
+                                        <input type="number" 
+                                               class="portal-input" 
+                                               name="grades[@i].AttendanceScore" 
+                                               value="@grade.AttendanceScore" 
+                                               step="0.1" min="0" max="10" 
+                                               placeholder="0-10" />
+                                    </td>
+                                    <td>
+                                        <input type="number" 
+                                               class="portal-input" 
+                                               name="grades[@i].MidtermScore" 
+                                               value="@grade.MidtermScore" 
+                                               step="0.1" min="0" max="10" 
+                                               placeholder="0-10" />
+                                    </td>
+                                    <td>
+                                        <input type="number" 
+                                               class="portal-input" 
+                                               name="grades[@i].FinalScore" 
+                                               value="@grade.FinalScore" 
+                                               step="0.1" min="0" max="10" 
+                                               placeholder="0-10" />
+                                    </td>
+                                    <td style="text-align: center;">
+                                        @if (grade.AttendanceScore.HasValue || grade.MidtermScore.HasValue || grade.FinalScore.HasValue)
+                                        {
+                                            <span class="portal-score" style="font-size: 1rem;">@total.ToString("F2")</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="portal-no-score">-</span>
+                                        }
+                                    </td>
+                                    <td style="text-align: center;">
+                                        @if (grade.AttendanceScore.HasValue || grade.MidtermScore.HasValue || grade.FinalScore.HasValue)
+                                        {
+                                            <span class="portal-grade-badge @gradeClass">@letterGrade</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="portal-no-score">-</span>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+
+                <div style="padding: 1rem 1.25rem; border-top: 1px solid var(--portal-border); display: flex; gap: 0.75rem;">
+                    <button type="submit" class="portal-btn portal-btn-accent">
+                        <i class="bi bi-check-circle"></i> Save Grades
+                    </button>
+                    <a asp-area="Lecturer" asp-controller="Grade" asp-action="Index" class="portal-btn portal-btn-outline">
+                        <i class="bi bi-x-circle"></i> Cancel
+                    </a>
+                </div>
+            </form>
+        }
+        else
+        {
+            <div class="portal-empty">
+                <i class="bi bi-people"></i>
+                <p>No students enrolled in this class yet</p>
+            </div>
+        }
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.querySelectorAll('input[type="number"]').forEach(input => {
+            input.addEventListener('input', function() {
+                const row = this.closest('tr');
+                const attendance = parseFloat(row.querySelector('[name$=".AttendanceScore"]').value) || 0;
+                const midterm = parseFloat(row.querySelector('[name$=".MidtermScore"]').value) || 0;
+                const final = parseFloat(row.querySelector('[name$=".FinalScore"]').value) || 0;
+                
+                const total = (attendance * 0.1) + (midterm * 0.3) + (final * 0.6);
+                const letterGrade = total >= 8.5 ? "A" : total >= 8.0 ? "B+" : total >= 7.0 ? "B" : total >= 6.5 ? "C+" : total >= 5.5 ? "C" : total >= 5.0 ? "D+" : total >= 4.0 ? "D" : "F";
+                const gradeClass = letterGrade.startsWith("A") ? "portal-grade-a" : letterGrade.startsWith("B") ? "portal-grade-b" : letterGrade.startsWith("C") ? "portal-grade-c" : "portal-grade-d";
+                
+                row.cells[6].innerHTML = `<span class="portal-score" style="font-size: 1rem;">${total.toFixed(2)}</span>`;
+                row.cells[7].innerHTML = `<span class="portal-grade-badge ${gradeClass}">${letterGrade}</span>`;
+            });
+        });
+    </script>
+}

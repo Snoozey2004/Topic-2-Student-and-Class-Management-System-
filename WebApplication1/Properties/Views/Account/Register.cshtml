@@ -1,0 +1,116 @@
+﻿@model WebApplication1.ViewModels.RegisterViewModel
+@{
+    ViewData["Title"] = "Register";
+    Layout = "_PublicLayout";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/account-register.css" />
+}
+
+<div class="auth-container">
+    <div class="auth-wrapper">
+        <!-- Left Side - Info -->
+        <div class="auth-left">
+            <div class="logo">
+                <div class="logo-icon">
+                    <i class="bi bi-mortarboard-fill"></i>
+                </div>
+                <div class="logo-text">
+                    <h3>SCMS</h3>
+                    <p>Student Portal</p>
+                </div>
+            </div>
+            
+            <h1>Join now</h1>
+            
+            <p style="font-size: 1.05rem; opacity: 0.95; margin-bottom: 2rem;">
+                Register a student account to access the comprehensive academic management system.
+            </p>
+            
+            <div class="features">
+                <div class="feature-item">
+                    <i class="bi bi-check-circle-fill"></i>
+                    <span>View class schedules and timetables</span>
+                </div>
+                <div class="feature-item">
+                    <i class="bi bi-check-circle-fill"></i>
+                    <span>Register for courses online</span>
+                </div>
+                <div class="feature-item">
+                    <i class="bi bi-check-circle-fill"></i>
+                    <span>Track grades and GPA</span>
+                </div>
+                <div class="feature-item">
+                    <i class="bi bi-check-circle-fill"></i>
+                    <span>Receive instant notifications</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Right Side - Register Form -->
+        <div class="auth-card">
+            <h2>Create Account</h2>
+            <p class="subtitle">Create a new student account</p>
+            
+            <form asp-action="Register" method="post">
+                <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+
+                <div class="mb-3">
+                    <label class="form-label">Full Name</label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="bi bi-person"></i></span>
+                        <input asp-for="FullName" class="form-control" placeholder="Nguyen Van A" />
+                    </div>
+                    <span asp-validation-for="FullName" class="text-danger small"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Email (@@scms.edu)</label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="bi bi-envelope"></i></span>
+                        <input asp-for="Email" class="form-control" placeholder="email@scms.edu" />
+                    </div>
+                    <span asp-validation-for="Email" class="text-danger small"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Password</label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="bi bi-lock"></i></span>
+                        <input asp-for="Password" class="form-control" placeholder="At least 6 characters" type="password" />
+                    </div>
+                    <span asp-validation-for="Password" class="text-danger small"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Confirm Password</label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="bi bi-lock-fill"></i></span>
+                        <input asp-for="ConfirmPassword" class="form-control" placeholder="Re-enter password" type="password" />
+                    </div>
+                    <span asp-validation-for="ConfirmPassword" class="text-danger small"></span>
+                </div>
+
+                <div class="mb-3 form-check">
+                    <input type="checkbox" class="form-check-input" id="termsCheck" required />
+                    <label class="form-check-label" for="termsCheck">
+                        I agree to the <a href="#" class="text-decoration-none">Terms of Service</a> and <a href="#" class="text-decoration-none">Privacy Policy</a>
+                    </label>
+                </div>
+
+                <button type="submit" class="btn btn-auth">
+                    Sign Up <i class="bi bi-arrow-right ms-2"></i>
+                </button>
+                
+                <div class="login-link">
+                    Already have an account? <a asp-action="Login">Sign in now</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

@@ -1,0 +1,83 @@
+@model WebApplication1.ViewModels.LoginViewModel
+@{
+    ViewData["Title"] = "Login";
+    Layout = "_PublicLayout";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/account-login.css" />
+}
+
+<div class="auth-container">
+    <div class="auth-wrapper">
+        <!-- Left Side - Info -->
+        <div class="auth-left">
+            <div class="logo">
+                <div class="logo-icon">
+                    <i class="bi bi-mortarboard-fill"></i>
+                </div>
+                <div class="logo-text">
+                    <h3>SCMS</h3>
+                    <p>Admin Portal</p>
+                </div>
+            </div>
+            
+            <h1>Student & Class<br/>Management System</h1>
+            
+            <div class="description">
+                <p class="mb-0">
+                    <i class="bi bi-check-circle-fill me-2"></i>
+                    Complete management system for students, lecturers and classes with automated grading and scheduling.
+                </p>
+            </div>
+        </div>
+        
+        <!-- Right Side - Login Form -->
+        <div class="auth-card">
+            <h2>Sign In</h2>
+            <p class="subtitle">Login to SCMS system</p>
+            
+            <form asp-action="Login" method="post">
+                <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+
+                <div class="mb-3">
+                    <label class="form-label">Email</label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="bi bi-envelope"></i></span>
+                        <input asp-for="Email" class="form-control" placeholder="email@scms.edu" />
+                    </div>
+                    <span asp-validation-for="Email" class="text-danger small"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Password</label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="bi bi-lock"></i></span>
+                        <input asp-for="Password" class="form-control" placeholder="Enter password" type="password" />
+                    </div>
+                    <span asp-validation-for="Password" class="text-danger small"></span>
+                </div>
+
+                <div class="mb-3 d-flex justify-content-between align-items-center">
+                    <div class="form-check">
+                        <input asp-for="RememberMe" class="form-check-input" type="checkbox" />
+                        <label asp-for="RememberMe" class="form-check-label">Remember me</label>
+                    </div>
+                    <a asp-action="ForgotPassword" class="forgot-link">Forgot password?</a>
+                </div>
+
+                <button type="submit" class="btn btn-auth">
+                    Sign In <i class="bi bi-arrow-right ms-2"></i>
+                </button>
+                
+                <div class="register-link">
+                    Don't have an account? <a asp-action="Register">Sign up now</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

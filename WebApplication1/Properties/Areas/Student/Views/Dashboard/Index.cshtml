@@ -1,0 +1,108 @@
+﻿@{
+    ViewData["Title"] = "Dashboard";
+    ViewData["PageTitle"] = "Student Dashboard";
+    Layout = "~/Views/Shared/_DashboardLayout.cshtml";
+    var student = ViewBag.StudentInfo as WebApplication1.Models.Student;
+}
+
+@section SidebarMenu {
+    @await Html.PartialAsync("_StudentSidebar")
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/portal-common.css" />
+}
+
+<div class="portal-stats">
+    <div class="portal-stat-card">
+        <div class="portal-stat-icon accent">
+            <i class="bi bi-journal-check"></i>
+        </div>
+        <div class="portal-stat-info">
+            <h4>@ViewBag.EnrollmentCount</h4>
+            <p>Enrolled Courses</p>
+        </div>
+    </div>
+    <div class="portal-stat-card">
+        <div class="portal-stat-icon primary">
+            <i class="bi bi-graph-up-arrow"></i>
+        </div>
+        <div class="portal-stat-info">
+            <h4>@(ViewBag.GPA != null ? ViewBag.GPA.ToString("F2") : "N/A")</h4>
+            <p>GPA</p>
+        </div>
+    </div>
+    <div class="portal-stat-card">
+        <div class="portal-stat-icon accent">
+            <i class="bi bi-bell"></i>
+        </div>
+        <div class="portal-stat-info">
+            <h4>@ViewBag.UnreadNotifications</h4>
+            <p>Notifications</p>
+        </div>
+    </div>
+</div>
+
+@if (student != null)
+{
+    <div class="row g-4">
+        <div class="col-lg-8">
+            <div class="portal-card">
+                <div class="portal-card-header">
+                    <h5><i class="bi bi-person-circle"></i> Personal Information</h5>
+                </div>
+                <div class="portal-card-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="small" style="color: var(--portal-text-muted);">Student Code</label>
+                            <p class="fw-semibold mb-0">
+                                <span class="portal-badge portal-badge-primary">@student.StudentCode</span>
+                            </p>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="small" style="color: var(--portal-text-muted);">Full Name</label>
+                            <p class="fw-semibold mb-0">@student.FullName</p>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="small" style="color: var(--portal-text-muted);">Email</label>
+                            <p class="fw-semibold mb-0">@student.Email</p>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="small" style="color: var(--portal-text-muted);">Major</label>
+                            <p class="fw-semibold mb-0">@student.Major</p>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="small" style="color: var(--portal-text-muted);">Admission Year</label>
+                            <p class="fw-semibold mb-0">@student.AdmissionYear</p>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="small" style="color: var(--portal-text-muted);">Phone Number</label>
+                            <p class="fw-semibold mb-0">@student.PhoneNumber</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="portal-card">
+                <div class="portal-card-header">
+                    <h5><i class="bi bi-list-check"></i> Quick Actions</h5>
+                </div>
+                <div class="portal-card-body">
+                    <div class="d-grid gap-2">
+                        <a asp-area="Student" asp-controller="Enrollment" asp-action="Index" class="portal-btn portal-btn-primary">
+                            <i class="bi bi-plus-circle"></i> Course Registration
+                        </a>
+                        <a asp-area="Student" asp-controller="Schedule" asp-action="Index" class="portal-btn portal-btn-outline">
+                            <i class="bi bi-calendar"></i> View Schedule
+                        </a>
+                        <a asp-area="Student" asp-controller="Grade" asp-action="Index" class="portal-btn portal-btn-outline">
+                            <i class="bi bi-trophy"></i> View Grades
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}

@@ -1,0 +1,16 @@
+/* Lecturer Attendance TakeAttendance Styles - Areas/Lecturer/Views/Attendance/TakeAttendance.cshtml */
+
+.table tbody tr:hover {
+    background-color: #f8f9fa;
+}
+
+.form-check-input {
+    width: 1.5em;
+    height: 1.5em;
+    cursor: pointer;
+}
+
+.form-check-input:checked {
+    background-color: #198754;
+    border-color: #198754;
+}

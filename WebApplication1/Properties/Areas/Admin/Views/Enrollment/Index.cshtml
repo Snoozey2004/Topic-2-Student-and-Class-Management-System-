@@ -1,0 +1,184 @@
+﻿@model List<WebApplication1.ViewModels.EnrollmentListViewModel>
+@{
+    ViewData["Title"] = "Enrollment Management";
+    ViewData["PageTitle"] = "Enrollment Management";
+    Layout = "~/Views/Shared/_DashboardLayout.cshtml";
+}
+
+@section SidebarMenu {
+    @await Html.PartialAsync("_AdminSidebar")
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/admin-crud.css" />
+}
+
+<div class="admin-page-header">
+    <div class="admin-search-box">
+        <i class="bi bi-search"></i>
+        <input type="text" id="searchInput" placeholder="Search by student, class code..." onkeyup="filterTable()">
+    </div>
+    <div class="admin-header-actions">
+        <a asp-action="Create" class="btn-admin-outline">
+            <i class="bi bi-plus-circle"></i> Add enroll
+        </a>
+    </div>
+</div>
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="admin-alert admin-alert-success mb-3">
+        <i class="bi bi-check-circle"></i>
+        <span>@TempData["SuccessMessage"]</span>
+    </div>
+}
+
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="admin-alert admin-alert-danger mb-3">
+        <i class="bi bi-exclamation-circle"></i>
+        <span>@TempData["ErrorMessage"]</span>
+    </div>
+}
+
+<div class="admin-filter-tabs">
+    <a asp-action="Index" class="admin-filter-tab @(string.IsNullOrEmpty(ViewBag.CurrentStatus) ? "active" : "")">All</a>
+    <a asp-action="Index" asp-route-status="Pending" class="admin-filter-tab @(ViewBag.CurrentStatus == "Pending" ? "active-warning" : "")">Pending</a>
+    <a asp-action="Index" asp-route-status="Approved" class="admin-filter-tab @(ViewBag.CurrentStatus == "Approved" ? "active-success" : "")">Approved</a>
+    <a asp-action="Index" asp-route-status="Rejected" class="admin-filter-tab @(ViewBag.CurrentStatus == "Rejected" ? "active-danger" : "")">Rejected</a>
+</div>
+
+<div class="admin-card">
+    <div class="admin-card-body p-0">
+        @if (Model.Any())
+        {
+            <table class="admin-table" id="dataTable">
+                <thead>
+                    <tr>
+                        <th>Student</th>
+                        <th>Class</th>
+                        <th>Subject</th>
+                        <th>Semester</th>
+                        <th>Date</th>
+                        <th>Status</th>
+                        <th style="width: 130px;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var enrollment in Model)
+                    {
+                        <tr>
+                            <td>
+                                <span class="badge-admin badge-admin-primary">@enrollment.StudentCode</span>
+                                <div class="small text-muted">@enrollment.StudentName</div>
+                            </td>
+                            <td><span class="badge-admin badge-admin-accent">@enrollment.ClassCode</span></td>
+                            <td>@enrollment.SubjectName</td>
+                            <td>@enrollment.Semester</td>
+                            <td>@enrollment.EnrollmentDate.ToString("dd/MM/yy")</td>
+                            <td>
+                                @switch (enrollment.Status)
+                                {
+                                    case "Pending":
+                                        <span class="badge-admin badge-admin-warning">Pending</span>
+                                        break;
+                                    case "Approved":
+                                        <span class="badge-admin badge-admin-success">Approved</span>
+                                        break;
+                                    case "Rejected":
+                                        <span class="badge-admin badge-admin-danger">Rejected</span>
+                                        break;
+                                    case "Dropped":
+                                        <span class="badge-admin" style="background: #6c757d20; color: #6c757d;">Dropped</span>
+                                        break;
+                                }
+                            </td>
+                            <td>
+                                <div class="admin-actions">
+                                    @if (enrollment.Status == "Pending")
+                                    {
+                                        <form asp-action="Approve" method="post" class="d-inline">
+                                            <input type="hidden" name="id" value="@enrollment.Id" />
+                                            <button type="submit" class="btn-action btn-action-success" title="Approve">
+                                                <i class="bi bi-check-lg"></i>
+                                            </button>
+                                        </form>
+                                        <button type="button" class="btn-action btn-action-delete" data-bs-toggle="modal" data-bs-target="#rejectModal@(enrollment.Id)" title="Reject">
+                                            <i class="bi bi-x-lg"></i>
+                                        </button>
+                                    }
+                                    <a asp-action="Details" asp-route-id="@enrollment.Id" class="btn-action btn-action-view" title="View">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                    <a asp-action="Edit" asp-route-id="@enrollment.Id" class="btn-action btn-action-edit" title="Edit">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                    <a asp-action="Delete" asp-route-id="@enrollment.Id" class="btn-action btn-action-delete" title="Delete">
+                                        <i class="bi bi-trash"></i>
+                                    </a>
+                                </div>
+
+                                @if (enrollment.Status == "Pending")
+                                {
+                                    <div class="modal fade" id="rejectModal@(enrollment.Id)" tabindex="-1">
+                                        <div class="modal-dialog">
+                                            <div class="modal-content">
+                                                <form asp-action="Reject" method="post">
+                                                    <div class="modal-header">
+                                                        <h5 class="modal-title">Reject Enrollment</h5>
+                                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                                    </div>
+                                                    <div class="modal-body">
+                                                        <input type="hidden" name="id" value="@enrollment.Id" />
+                                                        <div class="mb-3">
+                                                            <label class="form-label">Rejection Reason</label>
+                                                            <textarea name="reason" class="form-control" rows="3" required></textarea>
+                                                        </div>
+                                                    </div>
+                                                    <div class="modal-footer">
+                                                        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+                                                        <button type="submit" class="btn btn-danger btn-sm">Reject</button>
+                                                    </div>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+        else
+        {
+            <div class="admin-empty">
+                <i class="bi bi-clipboard-check"></i>
+                <p>No enrollments found</p>
+            </div>
+        }
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function filterTable() {
+            var input = document.getElementById("searchInput");
+            var filter = input.value.toLowerCase();
+            var table = document.getElementById("dataTable");
+            var tr = table.getElementsByTagName("tr");
+
+            for (var i = 1; i < tr.length; i++) {
+                var td = tr[i].getElementsByTagName("td");
+                var found = false;
+                for (var j = 0; j < td.length - 1; j++) {
+                    if (td[j] && td[j].textContent.toLowerCase().indexOf(filter) > -1) {
+                        found = true;
+                        break;
+                    }
+                }
+                tr[i].style.display = found ? "" : "none";
+            }
+        }
+    </script>
+}

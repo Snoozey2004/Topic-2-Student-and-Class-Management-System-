@@ -1,0 +1,60 @@
+@* Dashboard Header Partial - Notification and User Profile Dropdowns *@
+@* Variables notificationBadge, fullName, and role are expected from parent layout *@
+
+<div class="top-header">
+    <div class="header-title"><h4>@ViewData["PageTitle"]</h4></div>
+    <div class="header-actions">
+        <div class="dropdown">
+            <button class="notification-btn" type="button" data-bs-toggle="dropdown">
+                <i class="bi bi-bell-fill"></i>
+                @if (ViewBag.NotificationBadge != null && ViewBag.NotificationBadge.UnreadCount > 0)
+                {
+                    <span class="notification-badge">@ViewBag.NotificationBadge.UnreadCount</span>
+                }
+            </button>
+            <div class="dropdown-menu dropdown-menu-end p-0" style="width: 320px;">
+                <div class="p-3 border-bottom"><h6 class="mb-0">Notifications</h6></div>
+                @if (ViewBag.NotificationBadge != null && ((IEnumerable<dynamic>)ViewBag.NotificationBadge.RecentNotifications).Any())
+                {
+                    @foreach (var notification in ViewBag.NotificationBadge.RecentNotifications)
+                    {
+                        <a href="@notification.LinkUrl" class="dropdown-item py-3 @(!notification.IsRead ? "bg-light" : "")">
+                            <div class="d-flex">
+                                <div class="flex-grow-1">
+                                    <strong class="d-block">@notification.Title</strong>
+                                    <small class="text-muted">@notification.Message</small>
+                                    <small class="d-block text-muted mt-1">@notification.TimeAgo</small>
+                                </div>
+                            </div>
+                        </a>
+                    }
+                }
+                else
+                {
+                    <div class="p-3 text-center text-muted">No new notifications</div>
+                }
+            </div>
+        </div>
+        <div class="dropdown">
+            <button class="btn btn-link text-decoration-none p-0" type="button" data-bs-toggle="dropdown">
+                <div class="user-profile">
+                    <div class="user-avatar">@ViewBag.UserInitial</div>
+                    <div class="user-info">
+                        <span class="user-name">@ViewBag.FullName</span>
+                        <span class="user-role">@ViewBag.Role</span>
+                    </div>
+                </div>
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end">
+                <li><a class="dropdown-item" asp-area="" asp-controller="Profile" asp-action="Index"><i class="bi bi-person me-2"></i>Profile</a></li>
+                <li><a class="dropdown-item" asp-area="" asp-controller="Profile" asp-action="ChangePassword"><i class="bi bi-key me-2"></i>Change Password</a></li>
+                <li><hr class="dropdown-divider"></li>
+                <li>
+                    <form asp-area="" asp-controller="Account" asp-action="Logout" method="post">
+                        <button type="submit" class="dropdown-item"><i class="bi bi-box-arrow-right me-2"></i>Logout</button>
+                    </form>
+                </li>
+            </ul>
+        </div>
+    </div>
+</div>

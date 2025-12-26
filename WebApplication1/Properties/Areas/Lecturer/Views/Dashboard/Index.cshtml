@@ -1,0 +1,102 @@
+﻿@{
+    ViewData["Title"] = "Dashboard";
+    ViewData["PageTitle"] = "Lecturer Home";
+    Layout = "~/Views/Shared/_DashboardLayout.cshtml";
+    var lecturer = ViewBag.LecturerInfo as WebApplication1.Models.Lecturer;
+}
+
+@section SidebarMenu {
+    @await Html.PartialAsync("_LecturerSidebar")
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/portal-common.css" />
+}
+
+<div class="portal-stats">
+    <div class="portal-stat-card">
+        <div class="portal-stat-icon accent">
+            <i class="bi bi-journal-text"></i>
+        </div>
+        <div class="portal-stat-info">
+            <h4>@ViewBag.TeachingClasses</h4>
+            <p>Teaching Classes</p>
+        </div>
+    </div>
+    <div class="portal-stat-card">
+        <div class="portal-stat-icon primary">
+            <i class="bi bi-people"></i>
+        </div>
+        <div class="portal-stat-info">
+            <h4>@(ViewBag.TotalStudents ?? 0)</h4>
+            <p>Total Students</p>
+        </div>
+    </div>
+</div>
+
+@if (lecturer != null)
+{
+    <div class="row g-4">
+        <div class="col-lg-8">
+            <div class="portal-card">
+                <div class="portal-card-header">
+                    <h5><i class="bi bi-person-circle"></i> Lecturer Information</h5>
+                </div>
+                <div class="portal-card-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="small" style="color: var(--portal-text-muted);">Lecturer Code</label>
+                            <p class="fw-semibold mb-0">
+                                <span class="portal-badge portal-badge-primary">@lecturer.LecturerCode</span>
+                            </p>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="small" style="color: var(--portal-text-muted);">Full Name</label>
+                            <p class="fw-semibold mb-0">@lecturer.FullName</p>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="small" style="color: var(--portal-text-muted);">Email</label>
+                            <p class="fw-semibold mb-0">@lecturer.Email</p>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="small" style="color: var(--portal-text-muted);">Title</label>
+                            <p class="fw-semibold mb-0">@lecturer.Title</p>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="small" style="color: var(--portal-text-muted);">Department</label>
+                            <p class="fw-semibold mb-0">@lecturer.Department</p>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="small" style="color: var(--portal-text-muted);">Specialization</label>
+                            <p class="fw-semibold mb-0">@lecturer.Specialization</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="portal-card">
+                <div class="portal-card-header">
+                    <h5><i class="bi bi-list-check"></i> Quick Actions</h5>
+                </div>
+                <div class="portal-card-body">
+                    <div class="d-grid gap-2">
+                        <a asp-area="Lecturer" asp-controller="CourseClass" asp-action="Index" class="portal-btn portal-btn-primary">
+                            <i class="bi bi-journal"></i> View Course Classes
+                        </a>
+                        <a asp-area="Lecturer" asp-controller="Schedule" asp-action="Index" class="portal-btn portal-btn-outline">
+                            <i class="bi bi-calendar"></i> Teaching Schedule
+                        </a>
+                        <a asp-area="Lecturer" asp-controller="Attendance" asp-action="Index" class="portal-btn portal-btn-outline">
+                            <i class="bi bi-clipboard-check"></i> Take Attendance
+                        </a>
+                        <a asp-area="Lecturer" asp-controller="Grade" asp-action="Index" class="portal-btn portal-btn-outline">
+                            <i class="bi bi-award"></i> Manage Grades
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}

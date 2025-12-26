@@ -1,0 +1,60 @@
+@model List<WebApplication1.ViewModels.CourseClassListViewModel>
+@{
+    ViewData["Title"] = "Manage Grades";
+    ViewData["PageTitle"] = "Manage Grades";
+    Layout = "~/Views/Shared/_DashboardLayout.cshtml";
+}
+
+@section SidebarMenu {
+    @await Html.PartialAsync("_LecturerSidebar")
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/portal-common.css" />
+}
+
+<div class="portal-filter-bar">
+    <div class="portal-filter-controls">
+        <select class="portal-select">
+            <option value="">All Semesters</option>
+            <option value="HK1-2024" selected>HK1-2024</option>
+        </select>
+    </div>
+</div>
+
+@if (Model.Any())
+{
+    <div class="portal-class-list">
+        @foreach (var courseClass in Model)
+        {
+            <div class="portal-course-card">
+                <div class="portal-course-card-header">
+                    <h6>@courseClass.SubjectName</h6>
+                    <div>
+                        <span class="portal-badge" style="background: rgba(255,255,255,0.2); color: white;">@courseClass.ClassCode</span>
+                        <span class="portal-badge" style="background: rgba(255,255,255,0.2); color: white;">@courseClass.Semester</span>
+                    </div>
+                </div>
+                <div class="portal-course-card-body">
+                    <div class="portal-course-info">
+                        <div><i class="bi bi-code-square"></i> <span>Subject: @courseClass.SubjectCode</span></div>
+                        <div><i class="bi bi-door-open"></i> <span>Room: @courseClass.Room</span></div>
+                        <div><i class="bi bi-people"></i> <span>Students: @courseClass.CurrentStudents / @courseClass.MaxStudents</span></div>
+                    </div>
+                    <a asp-action="CourseClass" asp-route-id="@courseClass.Id" class="portal-btn portal-btn-accent" style="width: 100%; justify-content: center;">
+                        <i class="bi bi-pencil-square"></i> Enter/Update Grades
+                    </a>
+                </div>
+            </div>
+        }
+    </div>
+}
+else
+{
+    <div class="portal-card">
+        <div class="portal-empty">
+            <i class="bi bi-journal-x"></i>
+            <p>You have no course classes assigned</p>
+        </div>
+    </div>
+}

@@ -1,0 +1,88 @@
+﻿@model WebApplication1.ViewModels.SubjectFormViewModel
+@{
+    ViewData["Title"] = "Edit Subject";
+    ViewData["PageTitle"] = "Edit Subject";
+    Layout = "~/Views/Shared/_DashboardLayout.cshtml";
+    var allSubjects = ViewBag.AllSubjects as List<WebApplication1.ViewModels.SubjectListViewModel> ?? new List<WebApplication1.ViewModels.SubjectListViewModel>();
+}
+
+@section SidebarMenu {
+    @await Html.PartialAsync("_AdminSidebar")
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/admin-crud.css" />
+}
+
+<a asp-action="Index" class="admin-back-link">
+    <i class="bi bi-arrow-left"></i> Back to Subject List
+</a>
+
+<div class="admin-card">
+    <div class="admin-card-header">
+        <h5><i class="bi bi-pencil"></i> Edit Subject</h5>
+    </div>
+    <div class="admin-card-body">
+        <form asp-action="Edit" method="post" class="admin-form">
+            <input type="hidden" asp-for="Id" />
+            
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label asp-for="SubjectCode" class="form-label">Subject Code *</label>
+                    <input asp-for="SubjectCode" class="form-control" placeholder="e.g. IT001" />
+                    <span asp-validation-for="SubjectCode" class="text-danger small"></span>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label asp-for="SubjectName" class="form-label">Subject Name *</label>
+                    <input asp-for="SubjectName" class="form-control" placeholder="Enter subject name" />
+                    <span asp-validation-for="SubjectName" class="text-danger small"></span>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label asp-for="Credits" class="form-label">Credits *</label>
+                    <input asp-for="Credits" class="form-control" type="number" min="1" max="10" placeholder="e.g. 3" />
+                    <span asp-validation-for="Credits" class="text-danger small"></span>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label asp-for="Department" class="form-label">Department</label>
+                    <input asp-for="Department" class="form-control" placeholder="e.g. Information Technology" />
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-12 mb-3">
+                    <label asp-for="Description" class="form-label">Description</label>
+                    <textarea asp-for="Description" class="form-control" rows="3" placeholder="Enter subject description"></textarea>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Prerequisites</label>
+                    <select asp-for="PrerequisiteSubjectIds" class="form-select" multiple size="4">
+                        @foreach (var s in allSubjects)
+                        {
+                            <option value="@s.Id">@s.SubjectCode - @s.SubjectName</option>
+                        }
+                    </select>
+                    <small class="text-muted">Hold Ctrl to select multiple</small>
+                </div>
+            </div>
+
+            <hr class="my-4">
+
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn-admin-primary">
+                    <i class="bi bi-check-circle me-2"></i>Update Subject
+                </button>
+                <a asp-action="Index" class="btn-admin-outline">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

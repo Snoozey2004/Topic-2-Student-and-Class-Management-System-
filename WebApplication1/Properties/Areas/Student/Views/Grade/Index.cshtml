@@ -1,0 +1,187 @@
+﻿@model WebApplication1.ViewModels.StudentGradeViewModel
+@using Microsoft.AspNetCore.Mvc.Rendering
+@{
+    ViewData["Title"] = "My Grades";
+    ViewData["PageTitle"] = "My Grades";
+    Layout = "~/Views/Shared/_DashboardLayout.cshtml";
+    
+    var semesters = ViewBag.Semesters as SelectList;
+    var currentSemester = ViewBag.CurrentSemester as string;
+}
+
+@section SidebarMenu {
+    @await Html.PartialAsync("_StudentSidebar")
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/portal-common.css" />
+}
+
+@if (Model != null)
+{
+    <!-- Stats Cards -->
+    <div class="portal-stats">
+        <div class="portal-stat-card">
+            <div class="portal-stat-icon accent">
+                <i class="bi bi-award"></i>
+            </div>
+            <div class="portal-stat-info">
+                <h4>@(Model.GPA.HasValue ? Model.GPA.Value.ToString("F2") : "N/A")</h4>
+                <p>Current GPA</p>
+            </div>
+        </div>
+
+        <div class="portal-stat-card">
+            <div class="portal-stat-icon primary">
+                <i class="bi bi-bookmark-check"></i>
+            </div>
+            <div class="portal-stat-info">
+                <h4>@Model.PassedCredits</h4>
+                <p>Credits Completed</p>
+            </div>
+        </div>
+
+        <div class="portal-stat-card">
+            <div class="portal-stat-icon accent">
+                <i class="bi bi-clock-history"></i>
+            </div>
+            <div class="portal-stat-info">
+                <h4>@(Model.TotalCredits - Model.PassedCredits)</h4>
+                <p>In Progress</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filter -->
+    <div class="portal-filter-bar">
+        <div class="portal-filter-controls">
+            <!-- Semester dropdown from Controller/Service -->
+            <form method="get" id="filterForm">
+                <select name="semester" class="portal-select" onchange="document.getElementById('filterForm').submit();">
+                    <option value="">All Semesters</option>
+                    @if (semesters != null)
+                    {
+                        @foreach (var sem in semesters)
+                        {
+                            <option value="@sem.Value" selected="@(sem.Value == currentSemester)">@sem.Text</option>
+                        }
+                    }
+                </select>
+            </form>
+        </div>
+    </div>
+
+    <!-- Grades Table -->
+    <div class="portal-card">
+        <div class="portal-card-body p-0">
+            @if (Model.Grades.Any())
+            {
+                <div class="table-responsive">
+                    <table class="portal-grades-table">
+                        <thead>
+                            <tr>
+                                <th>Subject Code</th>
+                                <th>Subject Name</th>
+                                <th style="text-align: center;">Credits</th>
+                                <th style="text-align: center;">Midterm</th>
+                                <th style="text-align: center;">Final</th>
+                                <th style="text-align: center;">Average</th>
+                                <th style="text-align: center;">Grade</th>
+                                <th style="text-align: center;">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var grade in Model.Grades)
+                            {
+                                var letterGrade = grade.LetterGrade ?? "";
+                                var gradeClass = letterGrade.StartsWith("A") ? "portal-grade-a" : 
+                                               letterGrade.StartsWith("B") ? "portal-grade-b" : 
+                                               letterGrade.StartsWith("C") ? "portal-grade-c" : "portal-grade-d";
+                                var hasGrades = grade.TotalScore.HasValue;
+                                
+                                <tr>
+                                    <td><span class="portal-badge portal-badge-primary">@grade.SubjectCode</span></td>
+                                    <td><strong>@grade.SubjectName</strong></td>
+                                    <td style="text-align: center;"><span class="portal-badge portal-badge-accent">@grade.Credits</span></td>
+                                    <td style="text-align: center;">
+                                        @if (grade.MidtermScore.HasValue)
+                                        {
+                                            <span class="portal-score">@grade.MidtermScore.Value.ToString("F1")</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="portal-no-score">-</span>
+                                        }
+                                    </td>
+                                    <td style="text-align: center;">
+                                        @if (grade.FinalScore.HasValue)
+                                        {
+                                            <span class="portal-score">@grade.FinalScore.Value.ToString("F1")</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="portal-no-score">-</span>
+                                        }
+                                    </td>
+                                    <td style="text-align: center;">
+                                        @if (hasGrades)
+                                        {
+                                            <span class="portal-score" style="font-size: 1rem;">@grade.TotalScore.Value.ToString("F2")</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="portal-no-score">-</span>
+                                        }
+                                    </td>
+                                    <td style="text-align: center;">
+                                        @if (!string.IsNullOrEmpty(letterGrade))
+                                        {
+                                            <span class="portal-grade-badge @gradeClass">@letterGrade</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="portal-no-score">-</span>
+                                        }
+                                    </td>
+                                    <td style="text-align: center;">
+                                        @if (hasGrades)
+                                        {
+                                            @if (grade.IsPassed)
+                                            {
+                                                <span class="portal-badge portal-badge-success">Passed</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="portal-badge portal-badge-danger">Failed</span>
+                                            }
+                                        }
+                                        else
+                                        {
+                                            <span class="portal-badge portal-badge-warning">In Progress</span>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+            else
+            {
+                <div class="portal-empty">
+                    <i class="bi bi-inbox"></i>
+                    <p>No grades available to display</p>
+                </div>
+            }
+        </div>
+    </div>
+}
+else
+{
+    <div class="portal-card">
+        <div class="portal-empty">
+            <i class="bi bi-exclamation-triangle"></i>
+            <p>Student information not found</p>
+        </div>
+    </div>
+}

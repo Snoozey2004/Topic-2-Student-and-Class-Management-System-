@@ -1,0 +1,24 @@
+@{
+    var controller = ViewContext.RouteData.Values["controller"]?.ToString() ?? "";
+}
+
+<li class="nav-item">
+    <a class="nav-link @(controller == "Dashboard" ? "active" : "")" asp-area="Student" asp-controller="Dashboard" asp-action="Index">
+        <i class="bi bi-house-door"></i>Home
+    </a>
+</li>
+<li class="nav-item">
+    <a class="nav-link @(controller == "Enrollment" ? "active" : "")" asp-area="Student" asp-controller="Enrollment" asp-action="Index">
+        <i class="bi bi-clipboard-check"></i>Course Registration
+    </a>
+</li>
+<li class="nav-item">
+    <a class="nav-link @(controller == "Schedule" ? "active" : "")" asp-area="Student" asp-controller="Schedule" asp-action="Index">
+        <i class="bi bi-calendar3"></i>Schedule
+    </a>
+</li>
+<li class="nav-item">
+    <a class="nav-link @(controller == "Grade" ? "active" : "")" asp-area="Student" asp-controller="Grade" asp-action="Index">
+        <i class="bi bi-award"></i>View Grades
+    </a>
+</li>

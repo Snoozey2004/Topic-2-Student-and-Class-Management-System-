@@ -1,0 +1,216 @@
+﻿@{
+    ViewData["Title"] = "Home";
+    Layout = "_PublicLayout";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/home-index.css" />
+}
+
+<!-- Hero Section -->
+<div class="hero-section">
+    <div class="hero-badge">
+        <i class="bi bi-star-fill me-2"></i>Welcome to SCMS Platform
+    </div>
+    
+    <h1 class="hero-title">
+        Student & Class<br/>Management System
+    </h1>
+    
+    <p class="hero-subtitle">
+        A comprehensive platform for managing students, courses, schedules, and grades.
+        Streamline your academic administration with powerful tools and intuitive interface.
+    </p>
+    
+    <div class="hero-actions">
+        <a asp-controller="Account" asp-action="Login" class="btn-hero btn-hero-primary">
+            <i class="bi bi-box-arrow-in-right"></i>
+            Sign In
+        </a>
+        <a asp-controller="Account" asp-action="Register" class="btn-hero btn-hero-secondary">
+            <i class="bi bi-person-plus"></i>
+            Create Account
+        </a>
+    </div>
+</div>
+
+<!-- Stats Section -->
+<div class="stats-section">
+    <div class="stat-card">
+        <div class="stat-icon">
+            <i class="bi bi-people-fill"></i>
+        </div>
+        <div class="stat-number">500+</div>
+        <div class="stat-label">Students</div>
+    </div>
+    
+    <div class="stat-card">
+        <div class="stat-icon">
+            <i class="bi bi-person-badge"></i>
+        </div>
+        <div class="stat-number">50+</div>
+        <div class="stat-label">Lecturers</div>
+    </div>
+    
+    <div class="stat-card">
+        <div class="stat-icon">
+            <i class="bi bi-journal-text"></i>
+        </div>
+        <div class="stat-number">100+</div>
+        <div class="stat-label">Courses</div>
+    </div>
+    
+    <div class="stat-card">
+        <div class="stat-icon">
+            <i class="bi bi-calendar-event"></i>
+        </div>
+        <div class="stat-number">200+</div>
+        <div class="stat-label">Classes</div>
+    </div>
+</div>
+
+<!-- Features Section -->
+<div class="features-section">
+    <div class="features-header">
+        <h2>Powerful Features</h2>
+        <p>Everything you need to manage your academic institution efficiently</p>
+    </div>
+    
+    <div class="features-grid">
+        <div class="feature-item">
+            <div class="feature-icon">
+                <i class="bi bi-calendar-check"></i>
+            </div>
+            <h3>Smart Scheduling</h3>
+            <p>Automated class scheduling with conflict detection and room assignment optimization</p>
+        </div>
+        
+        <div class="feature-item">
+            <div class="feature-icon">
+                <i class="bi bi-clipboard-data"></i>
+            </div>
+            <h3>Grade Management</h3>
+            <p>Comprehensive grading system with GPA calculation and academic performance tracking</p>
+        </div>
+        
+        <div class="feature-item">
+            <div class="feature-icon">
+                <i class="bi bi-card-checklist"></i>
+            </div>
+            <h3>Course Registration</h3>
+            <p>Online course registration with prerequisite checking and capacity management</p>
+        </div>
+        
+        <div class="feature-item">
+            <div class="feature-icon">
+                <i class="bi bi-bell"></i>
+            </div>
+            <h3>Real-time Notifications</h3>
+            <p>Instant notifications for grades, schedule changes, and important announcements</p>
+        </div>
+        
+        <div class="feature-item">
+            <div class="feature-icon">
+                <i class="bi bi-graph-up"></i>
+            </div>
+            <h3>Analytics & Reports</h3>
+            <p>Detailed analytics and reports for administrators, lecturers, and students</p>
+        </div>
+        
+        <div class="feature-item">
+            <div class="feature-icon">
+                <i class="bi bi-shield-check"></i>
+            </div>
+            <h3>Secure & Reliable</h3>
+            <p>Role-based access control with secure authentication and data protection</p>
+        </div>
+    </div>
+</div>
+
+<!-- Roles Section -->
+<div class="roles-section">
+    <div class="roles-header">
+        <h2>System Roles</h2>
+        <p>Tailored features for every user type</p>
+    </div>
+    
+    <div class="roles-grid">
+        <!-- Admin Role -->
+        <div class="role-card">
+            <div class="role-icon admin">
+                <i class="bi bi-shield-fill-check"></i>
+            </div>
+            <h3>Administrator</h3>
+            <ul>
+                <li>
+                    <i class="bi bi-check-circle-fill"></i>
+                    <span>Manage users & accounts</span>
+                </li>
+                <li>
+                    <i class="bi bi-check-circle-fill"></i>
+                    <span>Configure courses & classes</span>
+                </li>
+                <li>
+                    <i class="bi bi-check-circle-fill"></i>
+                    <span>Oversee enrollments</span>
+                </li>
+                <li>
+                    <i class="bi bi-check-circle-fill"></i>
+                    <span>View system analytics</span>
+                </li>
+            </ul>
+        </div>
+        
+        <!-- Lecturer Role -->
+        <div class="role-card">
+            <div class="role-icon lecturer">
+                <i class="bi bi-person-workspace"></i>
+            </div>
+            <h3>Lecturer</h3>
+            <ul>
+                <li>
+                    <i class="bi bi-check-circle-fill"></i>
+                    <span>Manage assigned classes</span>
+                </li>
+                <li>
+                    <i class="bi bi-check-circle-fill"></i>
+                    <span>Input & update grades</span>
+                </li>
+                <li>
+                    <i class="bi bi-check-circle-fill"></i>
+                    <span>View student progress</span>
+                </li>
+                <li>
+                    <i class="bi bi-check-circle-fill"></i>
+                    <span>Send announcements</span>
+                </li>
+            </ul>
+        </div>
+        
+        <!-- Student Role -->
+        <div class="role-card">
+            <div class="role-icon student">
+                <i class="bi bi-mortarboard-fill"></i>
+            </div>
+            <h3>Student</h3>
+            <ul>
+                <li>
+                    <i class="bi bi-check-circle-fill"></i>
+                    <span>Register for courses</span>
+                </li>
+                <li>
+                    <i class="bi bi-check-circle-fill"></i>
+                    <span>View class schedules</span>
+                </li>
+                <li>
+                    <i class="bi bi-check-circle-fill"></i>
+                    <span>Check grades & GPA</span>
+                </li>
+                <li>
+                    <i class="bi bi-check-circle-fill"></i>
+                    <span>Receive notifications</span>
+                </li>
+            </ul>
+        </div>
+    </div>
+</div>

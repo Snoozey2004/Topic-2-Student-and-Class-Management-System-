@@ -1,0 +1,117 @@
+@model WebApplication1.ViewModels.ProfileViewModel
+@{
+    ViewData["Title"] = "Personal Information";
+    ViewData["PageTitle"] = "Personal Information";
+    Layout = "~/Views/Shared/_DashboardLayout.cshtml";
+}
+
+@section SidebarMenu {
+    @if (User.IsInRole("Student"))
+    {
+        @await Html.PartialAsync("~/Areas/Student/Views/Shared/_StudentSidebar.cshtml")
+    }
+    else if (User.IsInRole("Lecturer"))
+    {
+        @await Html.PartialAsync("~/Areas/Lecturer/Views/Shared/_LecturerSidebar.cshtml")
+    }
+    else if (User.IsInRole("Admin"))
+    {
+        @await Html.PartialAsync("~/Areas/Admin/Views/Shared/_AdminSidebar.cshtml")
+    }
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/profile-index.css" />
+}
+
+<div class="profile-container">
+    
+    <div class="profile-card">
+        <div class="profile-avatar-section">
+            <div class="profile-avatar">
+                @Model.FullName.Substring(0, 1).ToUpper()
+            </div>
+            <div class="profile-name">@Model.FullName</div>
+            <div class="profile-role">@Model.Role</div>
+        </div>
+        
+        <div class="profile-body">
+            <div class="info-group">
+                <div class="info-label">Full Name</div>
+                <div class="info-value">
+                    <i class="bi bi-person"></i>
+                    <span>@Model.FullName</span>
+                </div>
+            </div>
+            
+            <div class="info-group">
+                <div class="info-label">Email Address</div>
+                <div class="info-value">
+                    <i class="bi bi-envelope"></i>
+                    <span>@Model.Email</span>
+                </div>
+            </div>
+            
+            <div class="info-group">
+                <div class="info-label">Account ID</div>
+                <div class="info-value">
+                    <i class="bi bi-credit-card"></i>
+                    <span>@Model.AccountId</span>
+                </div>
+            </div>
+            
+            <div class="info-group">
+                <div class="info-label">Role</div>
+                <div class="info-value">
+                    <i class="bi bi-shield-check"></i>
+                    <span>@Model.Role</span>
+                </div>
+            </div>
+            
+            @if (Model.Role == "Student" && !string.IsNullOrEmpty(Model.StudentCode))
+            {
+                <div class="info-group">
+                    <div class="info-label">Major</div>
+                    <div class="info-value">
+                        <i class="bi bi-book"></i>
+                        <span>@Model.Major</span>
+                    </div>
+                </div>
+                
+                <div class="info-group">
+                    <div class="info-label">Admission Year</div>
+                    <div class="info-value">
+                        <i class="bi bi-calendar"></i>
+                        <span>@Model.AdmissionYear</span>
+                    </div>
+                </div>
+            }
+            
+            @if (Model.Role == "Lecturer" && !string.IsNullOrEmpty(Model.LecturerCode))
+            {
+                <div class="info-group">
+                    <div class="info-label">Department</div>
+                    <div class="info-value">
+                        <i class="bi bi-building"></i>
+                        <span>@Model.Department</span>
+                    </div>
+                </div>
+                
+                <div class="info-group">
+                    <div class="info-label">Specialization</div>
+                    <div class="info-value">
+                        <i class="bi bi-star"></i>
+                        <span>@Model.Specialization</span>
+                    </div>
+                </div>
+            }
+            
+            <div class="action-buttons">
+                <a asp-action="ChangePassword" class="btn btn-primary btn-edit">
+                    <i class="bi bi-key me-2"></i>
+                    Change Password
+                </a>
+            </div>
+        </div>
+    </div>
+</div>

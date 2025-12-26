@@ -1,0 +1,124 @@
+﻿@model List<WebApplication1.ViewModels.UserListViewModel>
+@{
+    ViewData["Title"] = "User Management";
+    ViewData["PageTitle"] = "User Management";
+    Layout = "~/Views/Shared/_DashboardLayout.cshtml";
+}
+
+@section SidebarMenu {
+    @await Html.PartialAsync("_AdminSidebar")
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/admin-crud.css" />
+}
+
+<div class="admin-page-header">
+    <div class="admin-search-box">
+        <i class="bi bi-search"></i>
+        <input type="text" id="searchInput" placeholder="Search users by name, email..." onkeyup="filterTable()">
+    </div>
+    <div class="admin-header-actions">
+        <a asp-action="Create" class="btn-admin-outline">
+            <i class="bi bi-plus-circle"></i> Add User
+        </a>
+    </div>
+</div>
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="admin-alert admin-alert-success mb-3">
+        <i class="bi bi-check-circle"></i>
+        <span>@TempData["SuccessMessage"]</span>
+    </div>
+}
+
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="admin-alert admin-alert-danger mb-3">
+        <i class="bi bi-exclamation-circle"></i>
+        <span>@TempData["ErrorMessage"]</span>
+    </div>
+}
+
+<div class="admin-card">
+    <div class="admin-card-body p-0">
+        @if (Model != null && Model.Any())
+        {
+            <table class="admin-table" id="dataTable">
+                <thead>
+                    <tr>
+                        <th>Email</th>
+                        <th>Full Name</th>
+                        <th>Role</th>
+                        <th>Status</th>
+                        <th style="width: 100px;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var user in Model)
+                    {
+                        <tr>
+                            <td>@user.Email</td>
+                            <td><strong>@user.FullName</strong></td>
+                            <td><span class="badge-admin badge-admin-primary">@user.Role</span></td>
+                            <td>
+                                @if (user.Status == WebApplication1.Models.UserStatus.Active)
+                                {
+                                    <span class="badge-admin badge-admin-success">Active</span>
+                                }
+                                else
+                                {
+                                    <span class="badge-admin badge-admin-danger">Inactive</span>
+                                }
+                            </td>
+                            <td>
+                                <div class="admin-actions">
+                                    <a asp-action="Details" asp-route-id="@user.Id" class="btn-action btn-action-view" title="View">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                    <a asp-action="Edit" asp-route-id="@user.Id" class="btn-action btn-action-edit" title="Edit">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                    <a asp-action="Delete" asp-route-id="@user.Id" class="btn-action btn-action-delete" title="Delete">
+                                        <i class="bi bi-trash"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+        else
+        {
+            <div class="admin-empty">
+                <i class="bi bi-people"></i>
+                <p>No users found</p>
+            </div>
+        }
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function filterTable() {
+            var input = document.getElementById("searchInput");
+            var filter = input.value.toLowerCase();
+            var table = document.getElementById("dataTable");
+            var tr = table.getElementsByTagName("tr");
+
+            for (var i = 1; i < tr.length; i++) {
+                var td = tr[i].getElementsByTagName("td");
+                var found = false;
+                for (var j = 0; j < td.length - 1; j++) {
+                    if (td[j] && td[j].textContent.toLowerCase().indexOf(filter) > -1) {
+                        found = true;
+                        break;
+                    }
+                }
+                tr[i].style.display = found ? "" : "none";
+            }
+        }
+    </script>
+}

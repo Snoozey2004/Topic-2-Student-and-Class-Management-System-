@@ -1,0 +1,107 @@
+﻿@model WebApplication1.ViewModels.StudentFormViewModel
+@{
+    ViewData["Title"] = "Edit Student";
+    ViewData["PageTitle"] = "Edit Student";
+    Layout = "~/Views/Shared/_DashboardLayout.cshtml";
+    var adminClasses = (ViewBag.AdministrativeClasses as List<WebApplication1.Models.AdministrativeClass>) ?? new List<WebApplication1.Models.AdministrativeClass>();
+}
+
+@section SidebarMenu {
+    @await Html.PartialAsync("_AdminSidebar")
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/admin-crud.css" />
+}
+
+<a asp-action="Index" class="admin-back-link">
+    <i class="bi bi-arrow-left"></i> Back to Student List
+</a>
+
+<div class="admin-card">
+    <div class="admin-card-header">
+        <h5><i class="bi bi-pencil"></i> Edit Student</h5>
+    </div>
+    <div class="admin-card-body">
+        <form asp-action="Edit" method="post" class="admin-form">
+            <input type="hidden" asp-for="Id" />
+            
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label asp-for="StudentCode" class="form-label">Student Code *</label>
+                    <input asp-for="StudentCode" class="form-control" placeholder="e.g. SV001" />
+                    <span asp-validation-for="StudentCode" class="text-danger small"></span>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label asp-for="FullName" class="form-label">Full Name *</label>
+                    <input asp-for="FullName" class="form-control" placeholder="Enter full name" />
+                    <span asp-validation-for="FullName" class="text-danger small"></span>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label asp-for="Email" class="form-label">Email *</label>
+                    <input asp-for="Email" class="form-control" placeholder="student@example.com" />
+                    <span asp-validation-for="Email" class="text-danger small"></span>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label asp-for="DateOfBirth" class="form-label">Date of Birth *</label>
+                    <input asp-for="DateOfBirth" class="form-control" type="date" />
+                    <span asp-validation-for="DateOfBirth" class="text-danger small"></span>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label asp-for="PhoneNumber" class="form-label">Phone Number *</label>
+                    <input asp-for="PhoneNumber" class="form-control" placeholder="0901234567" />
+                    <span asp-validation-for="PhoneNumber" class="text-danger small"></span>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label asp-for="Address" class="form-label">Address</label>
+                    <input asp-for="Address" class="form-control" placeholder="Enter address" />
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label asp-for="Major" class="form-label">Major *</label>
+                    <input asp-for="Major" class="form-control" placeholder="e.g. Information Technology" />
+                    <span asp-validation-for="Major" class="text-danger small"></span>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label asp-for="AdmissionYear" class="form-label">Admission Year *</label>
+                    <input asp-for="AdmissionYear" class="form-control" type="number" placeholder="e.g. 2024" />
+                    <span asp-validation-for="AdmissionYear" class="text-danger small"></span>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label asp-for="AdministrativeClassId" class="form-label">Administrative Class</label>
+                    <select asp-for="AdministrativeClassId" class="form-select">
+                        <option value="">-- Select Class --</option>
+                        @foreach (var c in adminClasses)
+                        {
+                            <option value="@c.Id">@c.ClassName</option>
+                        }
+                    </select>
+                </div>
+            </div>
+
+            <hr class="my-4">
+
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn-admin-primary">
+                    <i class="bi bi-check-circle me-2"></i>Update Student
+                </button>
+                <a asp-action="Index" class="btn-admin-outline">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

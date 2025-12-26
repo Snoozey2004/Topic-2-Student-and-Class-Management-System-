@@ -1,0 +1,108 @@
+@model List<WebApplication1.ViewModels.AttendanceClassListViewModel>
+@using Microsoft.AspNetCore.Mvc.Rendering
+@{
+    ViewData["Title"] = "Attendance Management";
+    ViewData["PageTitle"] = "Attendance Management";
+    Layout = "~/Views/Shared/_DashboardLayout.cshtml";
+    
+    var semesters = ViewBag.Semesters as SelectList;
+    var currentSemester = ViewBag.CurrentSemester as string;
+}
+
+@section SidebarMenu {
+    @await Html.PartialAsync("_LecturerSidebar")
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/portal-common.css" />
+}
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="portal-alert portal-alert-success">
+        <i class="bi bi-check-circle"></i>
+        <span>@TempData["SuccessMessage"]</span>
+    </div>
+}
+
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="portal-alert portal-alert-danger">
+        <i class="bi bi-exclamation-circle"></i>
+        <span>@TempData["ErrorMessage"]</span>
+    </div>
+}
+
+<div class="portal-filter-bar">
+    <div class="portal-filter-controls">
+        <!-- Semester dropdown from Controller/Service -->
+        <form method="get" id="filterForm">
+            <select name="semester" class="portal-select" onchange="document.getElementById('filterForm').submit();">
+                <option value="">All Semesters</option>
+                @if (semesters != null)
+                {
+                    @foreach (var sem in semesters)
+                    {
+                        <option value="@sem.Value" selected="@(sem.Value == currentSemester)">@sem.Text</option>
+                    }
+                }
+            </select>
+        </form>
+    </div>
+</div>
+
+@if (Model != null && Model.Any())
+{
+    <div class="portal-class-list">
+        @foreach (var classItem in Model)
+        {
+            <div class="portal-course-card">
+                <div class="portal-course-card-header">
+                    <h6>@classItem.SubjectName</h6>
+                    <div>
+                        <span class="portal-badge" style="background: rgba(255,255,255,0.2); color: white;">@classItem.ClassCode</span>
+                    </div>
+                </div>
+                <div class="portal-course-card-body">
+                    <div class="portal-course-info">
+                        <div><i class="bi bi-calendar"></i> <span>@classItem.Semester</span></div>
+                        <div><i class="bi bi-door-open"></i> <span>Room: @classItem.Room</span></div>
+                        <div><i class="bi bi-people"></i> <span>Students: @classItem.TotalStudents</span></div>
+                        <div><i class="bi bi-list-check"></i> <span>Sessions: @classItem.TotalSessions</span></div>
+                    </div>
+
+                    @if (classItem.TotalSessions > 0)
+                    {
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between small mb-1">
+                                <span style="color: var(--portal-text-muted);">Attendance Rate</span>
+                                <span style="color: var(--portal-accent); font-weight: 600;">@classItem.AverageAttendanceRate.ToString("F1")%</span>
+                            </div>
+                            <div class="portal-progress">
+                                <div class="portal-progress-bar" style="width: @classItem.AverageAttendanceRate.ToString("F1")%"></div>
+                            </div>
+                        </div>
+                    }
+
+                    <div class="portal-course-actions">
+                        <a asp-action="TakeAttendance" asp-route-id="@classItem.Id" class="portal-btn portal-btn-primary portal-btn-sm">
+                            <i class="bi bi-clipboard-check"></i> Take
+                        </a>
+                        <a asp-action="History" asp-route-id="@classItem.Id" class="portal-btn portal-btn-outline portal-btn-sm">
+                            <i class="bi bi-clock-history"></i> History
+                        </a>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}
+else
+{
+    <div class="portal-card">
+        <div class="portal-empty">
+            <i class="bi bi-clipboard-x"></i>
+            <p>You are not teaching any classes this semester</p>
+        </div>
+    </div>
+}

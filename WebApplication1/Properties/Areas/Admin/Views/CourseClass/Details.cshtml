@@ -1,0 +1,159 @@
+﻿@model WebApplication1.ViewModels.CourseClassDetailViewModel
+@{
+    ViewData["Title"] = "Course Class Details";
+    ViewData["PageTitle"] = "Course Class Details";
+    Layout = "~/Views/Shared/_DashboardLayout.cshtml";
+}
+
+@section SidebarMenu {
+    @await Html.PartialAsync("_AdminSidebar")
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/admin-crud.css" />
+}
+
+<a asp-action="Index" class="admin-back-link">
+    <i class="bi bi-arrow-left"></i> Back to Course Class List
+</a>
+
+<div class="row">
+    <div class="col-lg-5">
+        <div class="admin-card mb-4">
+            <div class="admin-card-header">
+                <h5><i class="bi bi-journal-text"></i> Course Class Information</h5>
+                <div class="d-flex gap-2">
+                    <a asp-action="Edit" asp-route-id="@Model.Id" class="btn-admin-outline btn-sm">
+                        <i class="bi bi-pencil me-1"></i>Edit
+                    </a>
+                    <a asp-action="Delete" asp-route-id="@Model.Id" class="btn-admin-danger btn-sm">
+                        <i class="bi bi-trash me-1"></i>Delete
+                    </a>
+                </div>
+            </div>
+            <div class="admin-card-body">
+                <div class="admin-detail-row">
+                    <div class="admin-detail-label">Class Code</div>
+                    <div class="admin-detail-value">
+                        <span class="badge-admin badge-admin-primary">@Model.ClassCode</span>
+                    </div>
+                </div>
+                <div class="admin-detail-row">
+                    <div class="admin-detail-label">Subject</div>
+                    <div class="admin-detail-value">
+                        <strong>@Model.SubjectName</strong>
+                        <small class="text-muted">(@Model.SubjectCode)</small>
+                    </div>
+                </div>
+                <div class="admin-detail-row">
+                    <div class="admin-detail-label">Lecturer</div>
+                    <div class="admin-detail-value">@Model.LecturerName</div>
+                </div>
+                <div class="admin-detail-row">
+                    <div class="admin-detail-label">Semester</div>
+                    <div class="admin-detail-value">@Model.Semester</div>
+                </div>
+                <div class="admin-detail-row">
+                    <div class="admin-detail-label">Capacity</div>
+                    <div class="admin-detail-value">
+                        <span class="badge-admin badge-admin-accent">@Model.CurrentStudents / @Model.MaxStudents</span>
+                    </div>
+                </div>
+                <div class="admin-detail-row">
+                    <div class="admin-detail-label">Room</div>
+                    <div class="admin-detail-value">@(Model.Room ?? "-")</div>
+                </div>
+                <div class="admin-detail-row">
+                    <div class="admin-detail-label">Status</div>
+                    <div class="admin-detail-value">
+                        <span class="badge-admin badge-admin-accent">@Model.Status</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="admin-card mb-4">
+            <div class="admin-card-header">
+                <h5><i class="bi bi-calendar3"></i> Schedules</h5>
+            </div>
+            <div class="admin-card-body">
+                @if (Model.Schedules.Any())
+                {
+                    <ul class="list-group list-group-flush">
+                        @foreach (var s in Model.Schedules)
+                        {
+                            <li class="list-group-item px-0 d-flex justify-content-between align-items-center">
+                                <div>
+                                    <strong>@s.DayOfWeek</strong>
+                                    <span class="text-muted">@s.TimeRange</span>
+                                </div>
+                                <span class="badge-admin badge-admin-accent">@s.Room</span>
+                            </li>
+                        }
+                    </ul>
+                }
+                else
+                {
+                    <div class="admin-empty">
+                        <i class="bi bi-calendar-x"></i>
+                        <p>No schedules defined</p>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-7">
+        <div class="admin-card">
+            <div class="admin-card-header">
+                <h5><i class="bi bi-people"></i> Enrolled Students</h5>
+            </div>
+            <div class="admin-card-body">
+                @if (Model.Students.Any())
+                {
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th>Code</th>
+                                <th>Name</th>
+                                <th>Email</th>
+                                <th>Score</th>
+                                <th>Grade</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var st in Model.Students)
+                            {
+                                <tr>
+                                    <td><span class="badge-admin badge-admin-primary">@st.StudentCode</span></td>
+                                    <td><strong>@st.FullName</strong></td>
+                                    <td>@st.Email</td>
+                                    <td>@(st.TotalScore?.ToString("0.00") ?? "-")</td>
+                                    <td>
+                                        @if (!string.IsNullOrEmpty(st.LetterGrade))
+                                        {
+                                            var badgeClass = st.LetterGrade == "F" ? "background: rgba(220,53,69,0.1); color: #dc3545;" :
+                                                            st.LetterGrade.StartsWith("A") ? "" : "";
+                                            <span class="badge-admin badge-admin-accent">@st.LetterGrade</span>
+                                        }
+                                        else
+                                        {
+                                            <span>-</span>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                }
+                else
+                {
+                    <div class="admin-empty">
+                        <i class="bi bi-person-x"></i>
+                        <p>No students enrolled</p>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
