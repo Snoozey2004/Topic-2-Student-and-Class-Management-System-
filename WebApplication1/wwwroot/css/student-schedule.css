@@ -1,0 +1,406 @@
+/* Student Schedule Page - Clean Grid Layout */
+
+:root {
+    --navy: #1E3A5F;
+    --teal: #2D9E8E;
+    --light-gray: #E2E8F0;
+    --white: #FFFFFF;
+    --text-dark: #1F2937;
+    --text-muted: #6B7280;
+    --border: #D1D5DB;
+}
+
+/* Filter Bar */
+.schedule-filter-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    padding: 1rem;
+    background: var(--white);
+    border: 1px solid var(--light-gray);
+    border-radius: 12px;
+}
+
+.filter-controls {
+    display: flex;
+    gap: 1rem;
+    flex: 1;
+}
+
+.filter-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.filter-dropdown {
+    flex: 1;
+    padding: 0.625rem 1rem;
+    border: 1px solid var(--light-gray);
+    background: var(--white);
+    color: var(--text-dark);
+    font-size: 0.875rem;
+    border-radius: 8px;
+}
+
+.filter-dropdown:focus {
+    outline: none;
+    border-color: var(--teal);
+}
+
+.icon-btn {
+    padding: 0.625rem 1rem;
+    background: var(--white);
+    border: 1px solid var(--light-gray);
+    color: var(--text-dark);
+    font-size: 0.875rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    white-space: nowrap;
+    border-radius: 8px;
+}
+
+.icon-btn:hover {
+    background: var(--light-gray);
+}
+
+.icon-btn-primary {
+    background: var(--navy);
+    color: var(--white);
+    border-color: var(--navy);
+}
+
+.icon-btn-primary:hover {
+    background: #152a42;
+}
+
+/* Timetable Container */
+.timetable-container {
+    background: var(--white);
+    border: 1px solid var(--light-gray);
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+/* Header with Navigation and Days */
+.timetable-header {
+    display: grid;
+    grid-template-columns: 120px repeat(7, 1fr);
+    border-bottom: 2px solid var(--light-gray);
+    background: #F9FAFB;
+}
+
+.nav-arrows {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 1rem;
+    border-right: 1px solid var(--light-gray);
+}
+
+.arrow-btn {
+    width: 36px;
+    height: 36px;
+    border: 1px solid var(--light-gray);
+    background: var(--white);
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.arrow-btn:hover {
+    background: var(--light-gray);
+}
+
+.day-column-header {
+    text-align: center;
+    padding: 1rem 0.5rem;
+    border-right: 1px solid var(--light-gray);
+}
+
+.day-column-header:last-child {
+    border-right: none;
+}
+
+.day-name {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--navy);
+    margin-bottom: 0.25rem;
+}
+
+.day-date {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+}
+
+/* Timetable Body */
+.timetable-body {
+    display: flex;
+    flex-direction: column;
+}
+
+.timetable-row {
+    display: grid;
+    grid-template-columns: 120px repeat(7, 1fr);
+    min-height: 140px;
+    border-bottom: 1px solid var(--light-gray);
+}
+
+.timetable-row:last-child {
+    border-bottom: none;
+}
+
+/* Period Label Column */
+.period-label {
+    background: var(--teal);
+    color: var(--white);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: 0.95rem;
+    border-right: 1px solid var(--light-gray);
+}
+
+/* Time Cells */
+.time-cell {
+    border-right: 1px solid var(--light-gray);
+    padding: 0.5rem;
+    position: relative;
+    background: var(--white);
+}
+
+.time-cell:last-child {
+    border-right: none;
+}
+
+.time-cell.empty-cell {
+    background: #FAFAFA;
+}
+
+/* Class Cards - Rectangular, No Rounded Corners */
+.class-card {
+    border: 2px solid var(--teal);
+    background: var(--white);
+    padding: 0.75rem;
+    height: 100%;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.class-card:hover {
+    background: #F0FDFA;
+    box-shadow: 0 2px 8px rgba(45, 158, 142, 0.15);
+}
+
+.card-title {
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: var(--teal);
+    margin-bottom: 0.25rem;
+    line-height: 1.3;
+}
+
+.card-code {
+    font-size: 0.85rem;
+    color: var(--teal);
+    margin-bottom: 0.5rem;
+}
+
+.card-detail {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    margin-bottom: 0.2rem;
+    line-height: 1.4;
+}
+
+/* Footer */
+.timetable-footer {
+    text-align: center;
+    padding: 1rem;
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    border-top: 1px solid var(--light-gray);
+    background: #F9FAFB;
+}
+
+/* Modal Styles */
+.schedule-modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 1000;
+}
+
+.schedule-modal.active {
+    display: block;
+}
+
+.modal-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+}
+
+.modal-content-box {
+    position: relative;
+    max-width: 500px;
+    margin: 5rem auto;
+    background: var(--white);
+    border-radius: 12px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+    z-index: 1001;
+}
+
+.modal-indicator {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, var(--navy) 0%, var(--teal) 100%);
+    border-radius: 12px 12px 0 0;
+}
+
+.modal-header-bar {
+    position: relative;
+    padding: 1.5rem;
+    border-bottom: 1px solid var(--light-gray);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.modal-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--navy);
+    margin: 0;
+}
+
+.modal-close-btn {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    padding: 0.5rem;
+    font-size: 1.25rem;
+    line-height: 1;
+}
+
+.modal-close-btn:hover {
+    color: var(--text-dark);
+}
+
+.modal-body-content {
+    padding: 1.5rem;
+}
+
+.modal-detail-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid var(--light-gray);
+}
+
+.modal-detail-row:last-child {
+    border-bottom: none;
+}
+
+.detail-label {
+    font-weight: 600;
+    color: var(--text-dark);
+    font-size: 0.9rem;
+}
+
+.detail-value {
+    color: var(--teal);
+    font-weight: 500;
+    font-size: 0.9rem;
+    text-align: right;
+}
+
+.modal-footer-bar {
+    padding: 1rem 1.5rem;
+    border-top: 1px solid var(--light-gray);
+    text-align: right;
+}
+
+.modal-action-btn {
+    background: var(--navy);
+    color: var(--white);
+    border: none;
+    padding: 0.75rem 2rem;
+    font-weight: 500;
+    cursor: pointer;
+    border-radius: 6px;
+    transition: background 0.2s;
+}
+
+.modal-action-btn:hover {
+    background: #152a42;
+}
+
+/* Responsive Design */
+@media (max-width: 1200px) {
+    .timetable-header,
+    .timetable-row {
+        grid-template-columns: 100px repeat(7, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    .timetable-wrapper {
+        overflow-x: auto;
+    }
+    
+    .timetable-header,
+    .timetable-row {
+        grid-template-columns: 80px repeat(7, minmax(120px, 1fr));
+        min-width: 900px;
+    }
+    
+    .timetable-row {
+        min-height: 120px;
+    }
+    
+    .period-label {
+        font-size: 0.85rem;
+    }
+    
+    .day-name {
+        font-size: 0.85rem;
+    }
+    
+    .day-date {
+        font-size: 0.75rem;
+    }
+    
+    .card-title {
+        font-size: 0.85rem;
+    }
+    
+    .card-code,
+    .card-detail {
+        font-size: 0.7rem;
+    }
+    
+    .modal-content-box {
+        margin: 2rem 1rem;
+    }
+}

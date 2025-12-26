@@ -1,146 +1,108 @@
 @model List<WebApplication1.ViewModels.AttendanceClassListViewModel>
+@using Microsoft.AspNetCore.Mvc.Rendering
 @{
     ViewData["Title"] = "Attendance Management";
     ViewData["PageTitle"] = "Attendance Management";
     Layout = "~/Views/Shared/_DashboardLayout.cshtml";
+    
+    var semesters = ViewBag.Semesters as SelectList;
+    var currentSemester = ViewBag.CurrentSemester as string;
 }
 
 @section SidebarMenu {
-    <li class="nav-item">
-        <a class="nav-link" asp-area="Lecturer" asp-controller="Dashboard" asp-action="Index">
-            <i class="bi bi-house-door me-2"></i>Home
-        </a>
-    </li>
-    <li class="nav-item">
-        <a class="nav-link" asp-area="Lecturer" asp-controller="CourseClass" asp-action="Index">
-            <i class="bi bi-journal-text me-2"></i>Course Classes
-        </a>
-    </li>
-    <li class="nav-item">
-        <a class="nav-link" asp-area="Lecturer" asp-controller="Grade" asp-action="Index">
-            <i class="bi bi-pencil-square me-2"></i>Manage Grades
-        </a>
-    </li>
-    <li class="nav-item">
-        <a class="nav-link active" asp-area="Lecturer" asp-controller="Attendance" asp-action="Index">
-            <i class="bi bi-clipboard-check me-2"></i>Attendance
-        </a>
-    </li>
-    <li class="nav-item">
-        <a class="nav-link" asp-area="Lecturer" asp-controller="Schedule" asp-action="Index">
-            <i class="bi bi-calendar3 me-2"></i>Teaching Schedule
-        </a>
-    </li>
+    @await Html.PartialAsync("_LecturerSidebar")
 }
 
-<div class="card">
-    <div class="card-header bg-white">
-        <h5 class="mb-0"><i class="bi bi-clipboard-check me-2"></i>Select a Class for Attendance</h5>
+@section Styles {
+    <link rel="stylesheet" href="~/css/portal-common.css" />
+}
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="portal-alert portal-alert-success">
+        <i class="bi bi-check-circle"></i>
+        <span>@TempData["SuccessMessage"]</span>
     </div>
-    <div class="card-body">
-        @if (TempData["SuccessMessage"] != null)
-        {
-            <div class="alert alert-success alert-dismissible fade show" role="alert">
-                <i class="bi bi-check-circle me-2"></i>@TempData["SuccessMessage"]
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            </div>
-        }
+}
 
-        @if (TempData["ErrorMessage"] != null)
-        {
-            <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                <i class="bi bi-exclamation-triangle me-2"></i>@TempData["ErrorMessage"]
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            </div>
-        }
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="portal-alert portal-alert-danger">
+        <i class="bi bi-exclamation-circle"></i>
+        <span>@TempData["ErrorMessage"]</span>
+    </div>
+}
 
-        <div class="alert alert-info">
-            <i class="bi bi-info-circle me-2"></i>
-            <strong>Instructions:</strong> Select a class below to take attendance or view attendance history.
-        </div>
-
-        @if (Model != null && Model.Any())
-        {
-            <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
-                @foreach (var classItem in Model)
+<div class="portal-filter-bar">
+    <div class="portal-filter-controls">
+        <!-- Semester dropdown from Controller/Service -->
+        <form method="get" id="filterForm">
+            <select name="semester" class="portal-select" onchange="document.getElementById('filterForm').submit();">
+                <option value="">All Semesters</option>
+                @if (semesters != null)
                 {
-                    <div class="col">
-                        <div class="card h-100 shadow-sm hover-card">
-                            <div class="card-body">
-                                <h5 class="card-title">
-                                    <i class="bi bi-journal-text text-primary me-2"></i>@classItem.ClassCode
-                                </h5>
-                                <h6 class="card-subtitle mb-3 text-muted">@classItem.SubjectName</h6>
-                                
-                                <div class="mb-2">
-                                    <small class="text-muted">
-                                        <i class="bi bi-calendar me-1"></i>@classItem.Semester
-                                    </small>
-                                </div>
-                                <div class="mb-2">
-                                    <small class="text-muted">
-                                        <i class="bi bi-door-open me-1"></i>Room: @classItem.Room
-                                    </small>
-                                </div>
-                                <div class="mb-2">
-                                    <small class="text-muted">
-                                        <i class="bi bi-people me-1"></i>Students: @classItem.TotalStudents
-                                    </small>
-                                </div>
-                                <div class="mb-3">
-                                    <small class="text-muted">
-                                        <i class="bi bi-list-check me-1"></i>Sessions: @classItem.TotalSessions
-                                    </small>
-                                </div>
-
-                                @if (classItem.TotalSessions > 0)
-                                {
-                                    <div class="mb-3">
-                                        <small class="text-muted d-block mb-1">Average Attendance Rate:</small>
-                                        <div class="progress" style="height: 20px;">
-                                            <div class="progress-bar bg-success" role="progressbar" 
-                                                 style="width: @classItem.AverageAttendanceRate.ToString("F1")%"
-                                                 aria-valuenow="@classItem.AverageAttendanceRate" aria-valuemin="0" aria-valuemax="100">
-                                                @classItem.AverageAttendanceRate.ToString("F1")%
-                                            </div>
-                                        </div>
-                                    </div>
-                                }
-                            </div>
-                            <div class="card-footer bg-white border-top-0">
-                                <div class="d-grid gap-2">
-                                    <a asp-action="TakeAttendance" asp-route-id="@classItem.Id" class="btn btn-primary btn-sm">
-                                        <i class="bi bi-clipboard-check me-1"></i>Take Attendance
-                                    </a>
-                                    <a asp-action="History" asp-route-id="@classItem.Id" class="btn btn-outline-secondary btn-sm">
-                                        <i class="bi bi-clock-history me-1"></i>View History
-                                    </a>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                    @foreach (var sem in semesters)
+                    {
+                        <option value="@sem.Value" selected="@(sem.Value == currentSemester)">@sem.Text</option>
+                    }
                 }
-            </div>
-        }
-        else
-        {
-            <div class="alert alert-warning text-center">
-                <i class="bi bi-exclamation-triangle me-2"></i>
-                You are not teaching any classes this semester.
-            </div>
-        }
+            </select>
+        </form>
     </div>
 </div>
 
-@section Styles {
-<style>
-    .hover-card {
-        transition: transform 0.2s, box-shadow 0.2s;
-    }
+@if (Model != null && Model.Any())
+{
+    <div class="portal-class-list">
+        @foreach (var classItem in Model)
+        {
+            <div class="portal-course-card">
+                <div class="portal-course-card-header">
+                    <h6>@classItem.SubjectName</h6>
+                    <div>
+                        <span class="portal-badge" style="background: rgba(255,255,255,0.2); color: white;">@classItem.ClassCode</span>
+                    </div>
+                </div>
+                <div class="portal-course-card-body">
+                    <div class="portal-course-info">
+                        <div><i class="bi bi-calendar"></i> <span>@classItem.Semester</span></div>
+                        <div><i class="bi bi-door-open"></i> <span>Room: @classItem.Room</span></div>
+                        <div><i class="bi bi-people"></i> <span>Students: @classItem.TotalStudents</span></div>
+                        <div><i class="bi bi-list-check"></i> <span>Sessions: @classItem.TotalSessions</span></div>
+                    </div>
 
-    .hover-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
-    }
-</style>
+                    @if (classItem.TotalSessions > 0)
+                    {
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between small mb-1">
+                                <span style="color: var(--portal-text-muted);">Attendance Rate</span>
+                                <span style="color: var(--portal-accent); font-weight: 600;">@classItem.AverageAttendanceRate.ToString("F1")%</span>
+                            </div>
+                            <div class="portal-progress">
+                                <div class="portal-progress-bar" style="width: @classItem.AverageAttendanceRate.ToString("F1")%"></div>
+                            </div>
+                        </div>
+                    }
+
+                    <div class="portal-course-actions">
+                        <a asp-action="TakeAttendance" asp-route-id="@classItem.Id" class="portal-btn portal-btn-primary portal-btn-sm">
+                            <i class="bi bi-clipboard-check"></i> Take
+                        </a>
+                        <a asp-action="History" asp-route-id="@classItem.Id" class="portal-btn portal-btn-outline portal-btn-sm">
+                            <i class="bi bi-clock-history"></i> History
+                        </a>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}
+else
+{
+    <div class="portal-card">
+        <div class="portal-empty">
+            <i class="bi bi-clipboard-x"></i>
+            <p>You are not teaching any classes this semester</p>
+        </div>
+    </div>
 }

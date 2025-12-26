@@ -55,11 +55,43 @@ namespace WebApplication1.ViewModels
     }
 
     /// <summary>
+    /// ViewModel cho chi tiết Schedule
+    /// </summary>
+    public class ScheduleDetailViewModel
+    {
+        public int Id { get; set; }
+        public string ClassCode { get; set; } = string.Empty;
+        public string SubjectName { get; set; } = string.Empty;
+        public string LecturerName { get; set; } = string.Empty;
+        public string DayOfWeek { get; set; } = string.Empty;
+        public string Session { get; set; } = string.Empty;
+        public string Period { get; set; } = string.Empty;
+        public string StartTime { get; set; } = string.Empty;
+        public string EndTime { get; set; } = string.Empty;
+        public string Room { get; set; } = string.Empty;
+        public DateTime EffectiveDate { get; set; }
+        public DateTime? EndDate { get; set; }
+    }
+
+    /// <summary>
+    /// ViewModel cho day header trong th?i khóa bi?u
+    /// </summary>
+    public class DayHeaderViewModel
+    {
+        public string DayName { get; set; } = string.Empty;
+        public string DateDisplay { get; set; } = string.Empty;
+        public DayOfWeek DayOfWeek { get; set; }
+    }
+
+    /// <summary>
     /// ViewModel cho th?i khóa bi?u
     /// </summary>
     public class TimetableViewModel
     {
         public string Semester { get; set; } = string.Empty;
+        public string SemesterLabel { get; set; } = string.Empty;
+        public string WeekLabel { get; set; } = string.Empty;
+        public List<DayHeaderViewModel> DayHeaders { get; set; } = new List<DayHeaderViewModel>();
         public Dictionary<DayOfWeek, List<TimetableSlot>> Schedule { get; set; } = new Dictionary<DayOfWeek, List<TimetableSlot>>();
     }
 

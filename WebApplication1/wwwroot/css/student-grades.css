@@ -1,0 +1,249 @@
+/* Student Grades Page - Figma Design Match */
+
+/* Page Header */
+.grades-header {
+    margin-bottom: 2.5rem;
+}
+
+.grades-title {
+    font-size: 2rem;
+    font-weight: 600;
+    color: #1E3A5F;
+    margin-bottom: 0.5rem;
+}
+
+.grades-subtitle {
+    font-size: 0.95rem;
+    color: #6B7280;
+}
+
+/* Stats Cards */
+.stats-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2.5rem;
+}
+
+.stat-card {
+    background: white;
+    border: 1px solid #E2E8F0;
+    border-radius: 16px;
+    padding: 2rem;
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    transition: all 0.3s ease;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.stat-icon {
+    width: 56px;
+    height: 56px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.75rem;
+    flex-shrink: 0;
+}
+
+.stat-icon.gpa {
+    background: #D1FAE5;
+    color: #2D9E8E;
+}
+
+.stat-icon.credits {
+    background: #DBEAFE;
+    color: #3B82F6;
+}
+
+.stat-icon.progress {
+    background: #FEF3C7;
+    color: #F59E0B;
+}
+
+.stat-content {
+    flex: 1;
+}
+
+.stat-label {
+    font-size: 0.875rem;
+    color: #6B7280;
+    margin-bottom: 0.25rem;
+}
+
+.stat-value {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #1E3A5F;
+    line-height: 1;
+}
+
+/* Grades Table Card */
+.grades-card {
+    background: white;
+    border: 1px solid #E2E8F0;
+    border-radius: 16px;
+    padding: 2rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+/* Table Styling */
+.grades-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+.grades-table thead th {
+    background: #F9FAFB;
+    color: #1E3A5F;
+    font-weight: 600;
+    font-size: 0.875rem;
+    padding: 1rem;
+    border-bottom: 2px solid #E2E8F0;
+    text-align: left;
+}
+
+.grades-table thead th:first-child {
+    border-top-left-radius: 8px;
+}
+
+.grades-table thead th:last-child {
+    border-top-right-radius: 8px;
+}
+
+.grades-table tbody tr {
+    border-bottom: 1px solid #F3F4F6;
+    transition: background 0.2s ease;
+}
+
+.grades-table tbody tr:hover {
+    background: #F9FAFB;
+}
+
+.grades-table tbody tr:last-child {
+    border-bottom: none;
+}
+
+.grades-table tbody td {
+    padding: 1.25rem 1rem;
+    font-size: 0.9rem;
+    color: #374151;
+}
+
+/* Subject Code */
+.subject-code {
+    display: inline-block;
+    font-weight: 600;
+    color: #1E3A5F;
+}
+
+/* Subject Name */
+.subject-name {
+    font-weight: 600;
+    color: #1E3A5F;
+    display: block;
+    margin-bottom: 0.25rem;
+}
+
+/* Credits Badge */
+.credits-badge {
+    display: inline-block;
+    background: #E0E7FF;
+    color: #4F46E5;
+    padding: 0.25rem 0.75rem;
+    border-radius: 12px;
+    font-weight: 600;
+    font-size: 0.85rem;
+}
+
+/* Score Display */
+.score-value {
+    font-weight: 600;
+    color: #1E3A5F;
+}
+
+/* Average Score */
+.average-score {
+    font-weight: 700;
+    font-size: 1.05rem;
+}
+
+/* Grade Badge */
+.grade-badge {
+    display: inline-block;
+    padding: 0.35rem 0.85rem;
+    border-radius: 8px;
+    font-weight: 700;
+    font-size: 0.875rem;
+}
+
+.grade-badge.grade-a {
+    background: #D1FAE5;
+    color: #2D9E8E;
+}
+
+.grade-badge.grade-b {
+    background: #DBEAFE;
+    color: #3B82F6;
+}
+
+.grade-badge.grade-c {
+    background: #FEF3C7;
+    color: #F59E0B;
+}
+
+.grade-badge.grade-d {
+    background: #FEE2E2;
+    color: #DC2626;
+}
+
+/* Status Badge */
+.status-badge {
+    display: inline-block;
+    padding: 0.35rem 0.85rem;
+    border-radius: 12px;
+    font-weight: 600;
+    font-size: 0.85rem;
+}
+
+.status-badge.completed {
+    background: #D1FAE5;
+    color: #2D9E8E;
+}
+
+.status-badge.in-progress {
+    background: #FEF3C7;
+    color: #D97706;
+}
+
+/* Dash for No Grade */
+.no-grade {
+    color: #9CA3AF;
+    font-size: 1.25rem;
+}
+
+/* Empty State */
+.empty-state {
+    text-align: center;
+    padding: 4rem 1rem;
+    color: #9CA3AF;
+}
+
+.empty-state i {
+    font-size: 4rem;
+    margin-bottom: 1rem;
+    opacity: 0.5;
+}
+
+.empty-state p {
+    font-size: 1rem;
+    margin: 0;
+}

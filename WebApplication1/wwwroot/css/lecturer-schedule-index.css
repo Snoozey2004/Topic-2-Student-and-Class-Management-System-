@@ -1,0 +1,271 @@
+/* Lecturer Schedule Styles - Areas/Lecturer/Views/Schedule/Index.cshtml */
+
+/* Modern Timetable Styles */
+.timetable-card {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    overflow: hidden;
+}
+
+.timetable-header {
+    background: linear-gradient(135deg, #1e3a5f 0%, #2d9e8e 100%);
+    color: white;
+    padding: 1.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.timetable-title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin: 0;
+}
+
+.semester-badge {
+    background: rgba(255,255,255,0.2);
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-weight: 500;
+}
+
+.timetable-wrapper {
+    padding: 1.5rem;
+    overflow-x: auto;
+}
+
+.timetable-grid {
+    display: grid;
+    grid-template-columns: 120px repeat(7, 1fr);
+    gap: 1px;
+    background: #e2e8f0;
+    border-radius: 8px;
+    overflow: hidden;
+    min-width: 1000px;
+}
+
+/* Header cells */
+.time-header {
+    background: #f7fafc;
+    padding: 1rem;
+    font-weight: 600;
+    color: #4a5568;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 60px;
+}
+
+.day-header {
+    background: #1e3a5f;
+    color: white;
+    padding: 1rem;
+    font-weight: 600;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 60px;
+}
+
+.day-name {
+    font-size: 1rem;
+    margin-bottom: 0.25rem;
+}
+
+/* Time slot cells */
+.time-slot {
+    background: #f7fafc;
+    padding: 0.75rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    color: #4a5568;
+    border-right: 1px solid #e2e8f0;
+}
+
+.time-info {
+    text-align: center;
+}
+
+.period-name {
+    display: block;
+    font-size: 0.9rem;
+    color: #2d3748;
+}
+
+.time-range {
+    display: block;
+    font-size: 0.75rem;
+    color: #718096;
+    margin-top: 0.25rem;
+}
+
+/* Schedule cells */
+.schedule-cell {
+    background: white;
+    padding: 0.5rem;
+    min-height: 100px;
+    display: flex;
+    align-items: stretch;
+    position: relative;
+}
+
+.schedule-cell.empty {
+    background: #fafbfc;
+}
+
+.class-card {
+    width: 100%;
+    padding: 0.75rem;
+    border-radius: 8px;
+    border-left: 4px solid var(--class-color, #2d9e8e);
+    background: linear-gradient(135deg, rgba(45, 158, 142, 0.05) 0%, rgba(45, 158, 142, 0.02) 100%);
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.class-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(45, 158, 142, 0.2);
+}
+
+.class-code {
+    font-weight: 700;
+    color: #1e3a5f;
+    font-size: 0.9rem;
+    margin-bottom: 0.25rem;
+}
+
+.subject-name {
+    font-size: 0.85rem;
+    color: #2d3748;
+    margin-bottom: 0.5rem;
+    line-height: 1.3;
+}
+
+.class-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.info-item {
+    font-size: 0.75rem;
+    color: #718096;
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+}
+
+.info-item i {
+    font-size: 0.85rem;
+    color: #2d9e8e;
+}
+
+/* Color variations for different classes */
+.class-card.color-1 { border-left-color: #2d9e8e; }
+.class-card.color-1 { background: linear-gradient(135deg, rgba(45, 158, 142, 0.05) 0%, rgba(45, 158, 142, 0.02) 100%); }
+
+.class-card.color-2 { border-left-color: #3b82f6; }
+.class-card.color-2 { background: linear-gradient(135deg, rgba(59, 130, 246, 0.05) 0%, rgba(59, 130, 246, 0.02) 100%); }
+
+.class-card.color-3 { border-left-color: #8b5cf6; }
+.class-card.color-3 { background: linear-gradient(135deg, rgba(139, 92, 246, 0.05) 0%, rgba(139, 92, 246, 0.02) 100%); }
+
+.class-card.color-4 { border-left-color: #f59e0b; }
+.class-card.color-4 { background: linear-gradient(135deg, rgba(245, 158, 11, 0.05) 0%, rgba(245, 158, 11, 0.02) 100%); }
+
+.class-card.color-5 { border-left-color: #ef4444; }
+.class-card.color-5 { background: linear-gradient(135deg, rgba(239, 68, 68, 0.05) 0%, rgba(239, 68, 68, 0.02) 100%); }
+
+/* Summary Stats */
+.schedule-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.stat-card {
+    background: linear-gradient(135deg, #1e3a5f 0%, #2d9e8e 100%);
+    color: white;
+    padding: 1.25rem;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.stat-icon {
+    font-size: 2rem;
+    opacity: 0.8;
+}
+
+.stat-info h4 {
+    margin: 0;
+    font-size: 1.75rem;
+    font-weight: 700;
+}
+
+.stat-info p {
+    margin: 0;
+    font-size: 0.85rem;
+    opacity: 0.9;
+}
+
+/* Legend */
+.legend {
+    display: flex;
+    gap: 1.5rem;
+    margin-top: 1.5rem;
+    padding: 1rem;
+    background: #f7fafc;
+    border-radius: 8px;
+    flex-wrap: wrap;
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.85rem;
+    color: #4a5568;
+}
+
+.legend-color {
+    width: 20px;
+    height: 20px;
+    border-radius: 4px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .timetable-wrapper {
+        padding: 1rem;
+    }
+    
+    .timetable-grid {
+        grid-template-columns: 100px repeat(7, 1fr);
+    }
+    
+    .time-slot, .day-header {
+        padding: 0.5rem;
+        font-size: 0.85rem;
+    }
+    
+    .class-card {
+        padding: 0.5rem;
+    }
+    
+    .class-code {
+        font-size: 0.8rem;
+    }
+    
+    .subject-name {
+        font-size: 0.75rem;
+    }
+}

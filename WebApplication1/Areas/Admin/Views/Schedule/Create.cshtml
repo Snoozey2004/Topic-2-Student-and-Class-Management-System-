@@ -1,0 +1,112 @@
+@model WebApplication1.ViewModels.ScheduleFormViewModel
+@{
+    ViewData["Title"] = "Create Schedule";
+    ViewData["PageTitle"] = "Create Schedule";
+    Layout = "~/Views/Shared/_DashboardLayout.cshtml";
+}
+
+@section SidebarMenu {
+    @await Html.PartialAsync("_AdminSidebar")
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/admin-crud.css" />
+}
+
+<a asp-action="Index" class="admin-back-link">
+    <i class="bi bi-arrow-left"></i> Back to Schedule List
+</a>
+
+<div class="admin-card">
+    <div class="admin-card-header">
+        <h5><i class="bi bi-calendar-plus"></i> Create New Schedule</h5>
+    </div>
+    <div class="admin-card-body">
+        <form asp-action="Create" method="post" class="admin-form">
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label asp-for="CourseClassId" class="form-label">Course Class *</label>
+                    <select asp-for="CourseClassId" asp-items="ViewBag.CourseClasses" class="form-select">
+                        <option value="">-- Select Course Class --</option>
+                    </select>
+                    <span asp-validation-for="CourseClassId" class="text-danger small"></span>
+                </div>
+
+                <div class="col-md-6 mb-3">
+                    <label asp-for="DayOfWeek" class="form-label">Day of Week *</label>
+                    <select asp-for="DayOfWeek" asp-items="ViewBag.Days" class="form-select">
+                        <option value="">-- Select Day --</option>
+                    </select>
+                    <span asp-validation-for="DayOfWeek" class="text-danger small"></span>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label asp-for="Session" class="form-label">Session *</label>
+                    <select asp-for="Session" asp-items="ViewBag.Sessions" class="form-select">
+                        <option value="">-- Select Session --</option>
+                    </select>
+                    <span asp-validation-for="Session" class="text-danger small"></span>
+                </div>
+
+                <div class="col-md-6 mb-3">
+                    <label asp-for="Period" class="form-label">Period *</label>
+                    <select asp-for="Period" asp-items="ViewBag.Periods" class="form-select">
+                        <option value="">-- Select Period --</option>
+                    </select>
+                    <span asp-validation-for="Period" class="text-danger small"></span>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <label asp-for="StartTime" class="form-label">Start Time *</label>
+                    <input asp-for="StartTime" class="form-control" placeholder="07:00" />
+                    <span asp-validation-for="StartTime" class="text-danger small"></span>
+                </div>
+
+                <div class="col-md-4 mb-3">
+                    <label asp-for="EndTime" class="form-label">End Time *</label>
+                    <input asp-for="EndTime" class="form-control" placeholder="09:30" />
+                    <span asp-validation-for="EndTime" class="text-danger small"></span>
+                </div>
+
+                <div class="col-md-4 mb-3">
+                    <label asp-for="Room" class="form-label">Room *</label>
+                    <select asp-for="Room" asp-items="ViewBag.Rooms" class="form-select">
+                        <option value="">-- Select Room --</option>
+                    </select>
+                    <span asp-validation-for="Room" class="text-danger small"></span>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label asp-for="EffectiveDate" class="form-label">Effective Date *</label>
+                    <input asp-for="EffectiveDate" type="date" class="form-control" />
+                    <span asp-validation-for="EffectiveDate" class="text-danger small"></span>
+                </div>
+
+                <div class="col-md-6 mb-3">
+                    <label asp-for="EndDate" class="form-label">End Date</label>
+                    <input asp-for="EndDate" type="date" class="form-control" />
+                    <span asp-validation-for="EndDate" class="text-danger small"></span>
+                </div>
+            </div>
+
+            <hr class="my-4">
+
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn-admin-primary">
+                    <i class="bi bi-check-circle"></i> Create Schedule
+                </button>
+                <a asp-action="Index" class="btn-admin-outline">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

@@ -1,0 +1,85 @@
+@model WebApplication1.ViewModels.GradeFormViewModel
+@{
+    ViewData["Title"] = "Create Grade";
+    ViewData["PageTitle"] = "Create Grade";
+    Layout = "~/Views/Shared/_DashboardLayout.cshtml";
+}
+
+@section SidebarMenu {
+    @await Html.PartialAsync("_AdminSidebar")
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/admin-crud.css" />
+}
+
+<a asp-action="Index" class="admin-back-link">
+    <i class="bi bi-arrow-left"></i> Back to Grade List
+</a>
+
+<div class="admin-card">
+    <div class="admin-card-header">
+        <h5><i class="bi bi-award"></i> Create New Grade</h5>
+    </div>
+    <div class="admin-card-body">
+        @if (((List<Microsoft.AspNetCore.Mvc.Rendering.SelectListItem>)ViewBag.Enrollments).Any())
+        {
+            <form asp-action="Create" method="post" class="admin-form">
+                <div class="row">
+                    <div class="col-md-12 mb-3">
+                        <label asp-for="EnrollmentId" class="form-label">Enrollment (Student - Course) *</label>
+                        <select asp-for="EnrollmentId" asp-items="ViewBag.Enrollments" class="form-select">
+                            <option value="">-- Select Enrollment --</option>
+                        </select>
+                        <span asp-validation-for="EnrollmentId" class="text-danger small"></span>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label asp-for="AttendanceScore" class="form-label">Attendance (10%)</label>
+                        <input asp-for="AttendanceScore" type="number" step="0.1" min="0" max="10" class="form-control" placeholder="0-10" />
+                        <span asp-validation-for="AttendanceScore" class="text-danger small"></span>
+                    </div>
+
+                    <div class="col-md-4 mb-3">
+                        <label asp-for="MidtermScore" class="form-label">Midterm (30%)</label>
+                        <input asp-for="MidtermScore" type="number" step="0.1" min="0" max="10" class="form-control" placeholder="0-10" />
+                        <span asp-validation-for="MidtermScore" class="text-danger small"></span>
+                    </div>
+
+                    <div class="col-md-4 mb-3">
+                        <label asp-for="FinalScore" class="form-label">Final (60%)</label>
+                        <input asp-for="FinalScore" type="number" step="0.1" min="0" max="10" class="form-control" placeholder="0-10" />
+                        <span asp-validation-for="FinalScore" class="text-danger small"></span>
+                    </div>
+                </div>
+
+                <div class="admin-alert admin-alert-info mb-3">
+                    <i class="bi bi-info-circle"></i>
+                    <span>Total = Attendance × 10% + Midterm × 30% + Final × 60%</span>
+                </div>
+
+                <hr class="my-4">
+
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn-admin-primary">
+                        <i class="bi bi-check-circle"></i> Create Grade
+                    </button>
+                    <a asp-action="Index" class="btn-admin-outline">Cancel</a>
+                </div>
+            </form>
+        }
+        else
+        {
+            <div class="admin-alert admin-alert-info">
+                <i class="bi bi-info-circle"></i>
+                <span>No enrollments available for grading. All approved enrollments already have grades.</span>
+            </div>
+        }
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

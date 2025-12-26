@@ -1,0 +1,183 @@
+@model WebApplication1.ViewModels.GradeDetailAdminViewModel
+@{
+    ViewData["Title"] = "Grade Details";
+    ViewData["PageTitle"] = "Grade Details";
+    Layout = "~/Views/Shared/_DashboardLayout.cshtml";
+}
+
+@section SidebarMenu {
+    @await Html.PartialAsync("_AdminSidebar")
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/admin-crud.css" />
+}
+
+<a asp-action="Index" class="admin-back-link">
+    <i class="bi bi-arrow-left"></i> Back to Grade List
+</a>
+
+<div class="row">
+    <div class="col-lg-8">
+        <div class="admin-card">
+            <div class="admin-card-header">
+                <h5><i class="bi bi-award"></i> Grade Details</h5>
+                <div class="d-flex gap-2">
+                    <a asp-action="Edit" asp-route-id="@Model.Id" class="btn-admin-outline btn-sm">
+                        <i class="bi bi-pencil"></i> Edit
+                    </a>
+                    <a asp-action="Delete" asp-route-id="@Model.Id" class="btn-admin-danger btn-sm">
+                        <i class="bi bi-trash"></i> Delete
+                    </a>
+                </div>
+            </div>
+            <div class="admin-card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="admin-detail-row">
+                            <div class="admin-detail-label">Student Code</div>
+                            <div class="admin-detail-value">
+                                <span class="badge-admin badge-admin-primary">@Model.StudentCode</span>
+                            </div>
+                        </div>
+                        <div class="admin-detail-row">
+                            <div class="admin-detail-label">Student Name</div>
+                            <div class="admin-detail-value"><strong>@Model.StudentName</strong></div>
+                        </div>
+                        <div class="admin-detail-row">
+                            <div class="admin-detail-label">Course Class</div>
+                            <div class="admin-detail-value">
+                                <span class="badge-admin badge-admin-accent">@Model.ClassCode</span>
+                            </div>
+                        </div>
+                        <div class="admin-detail-row">
+                            <div class="admin-detail-label">Subject</div>
+                            <div class="admin-detail-value">@Model.SubjectName</div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="admin-detail-row">
+                            <div class="admin-detail-label">Attendance (10%)</div>
+                            <div class="admin-detail-value">@(Model.AttendanceScore?.ToString("0.00") ?? "-")</div>
+                        </div>
+                        <div class="admin-detail-row">
+                            <div class="admin-detail-label">Midterm (30%)</div>
+                            <div class="admin-detail-value">@(Model.MidtermScore?.ToString("0.00") ?? "-")</div>
+                        </div>
+                        <div class="admin-detail-row">
+                            <div class="admin-detail-label">Final (60%)</div>
+                            <div class="admin-detail-value">@(Model.FinalScore?.ToString("0.00") ?? "-")</div>
+                        </div>
+                        <div class="admin-detail-row">
+                            <div class="admin-detail-label">Total Score</div>
+                            <div class="admin-detail-value">
+                                @if (Model.TotalScore.HasValue)
+                                {
+                                    <strong style="font-size: 1.25rem;">@Model.TotalScore.Value.ToString("0.00")</strong>
+                                }
+                                else
+                                {
+                                    <span class="text-muted">-</span>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <hr class="my-3">
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="admin-detail-row">
+                            <div class="admin-detail-label">Letter Grade</div>
+                            <div class="admin-detail-value">
+                                @if (!string.IsNullOrEmpty(Model.LetterGrade))
+                                {
+                                    var badgeClass = Model.LetterGrade == "F" ? "badge-admin-danger" :
+                                                    Model.LetterGrade.StartsWith("A") ? "badge-admin-success" :
+                                                    Model.LetterGrade.StartsWith("B") ? "badge-admin-primary" :
+                                                    Model.LetterGrade.StartsWith("C") ? "badge-admin-warning" : "badge-admin-accent";
+                                    <span class="badge-admin @badgeClass" style="font-size: 1rem;">@Model.LetterGrade</span>
+                                }
+                                else
+                                {
+                                    <span class="text-muted">-</span>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="admin-detail-row">
+                            <div class="admin-detail-label">Status</div>
+                            <div class="admin-detail-value">
+                                @if (Model.TotalScore.HasValue)
+                                {
+                                    if (Model.IsPassed)
+                                    {
+                                        <span class="badge-admin badge-admin-success">
+                                            <i class="bi bi-check-circle me-1"></i>Passed
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge-admin badge-admin-danger">
+                                            <i class="bi bi-x-circle me-1"></i>Failed
+                                        </span>
+                                    }
+                                }
+                                else
+                                {
+                                    <span class="badge-admin" style="background: #6c757d20; color: #6c757d;">Pending</span>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <div class="admin-card">
+            <div class="admin-card-header">
+                <h5><i class="bi bi-info-circle"></i> Grade Scale</h5>
+            </div>
+            <div class="admin-card-body">
+                <div class="small">
+                    <div class="d-flex justify-content-between py-1 border-bottom">
+                        <span class="badge-admin badge-admin-success">A</span>
+                        <span class="text-muted">8.5 - 10.0</span>
+                    </div>
+                    <div class="d-flex justify-content-between py-1 border-bottom">
+                        <span class="badge-admin badge-admin-primary">B+</span>
+                        <span class="text-muted">8.0 - 8.4</span>
+                    </div>
+                    <div class="d-flex justify-content-between py-1 border-bottom">
+                        <span class="badge-admin badge-admin-primary">B</span>
+                        <span class="text-muted">7.0 - 7.9</span>
+                    </div>
+                    <div class="d-flex justify-content-between py-1 border-bottom">
+                        <span class="badge-admin badge-admin-warning">C+</span>
+                        <span class="text-muted">6.5 - 6.9</span>
+                    </div>
+                    <div class="d-flex justify-content-between py-1 border-bottom">
+                        <span class="badge-admin badge-admin-warning">C</span>
+                        <span class="text-muted">5.5 - 6.4</span>
+                    </div>
+                    <div class="d-flex justify-content-between py-1 border-bottom">
+                        <span class="badge-admin badge-admin-accent">D+</span>
+                        <span class="text-muted">5.0 - 5.4</span>
+                    </div>
+                    <div class="d-flex justify-content-between py-1 border-bottom">
+                        <span class="badge-admin badge-admin-accent">D</span>
+                        <span class="text-muted">4.0 - 4.9</span>
+                    </div>
+                    <div class="d-flex justify-content-between py-1">
+                        <span class="badge-admin badge-admin-danger">F</span>
+                        <span class="text-muted">&lt; 4.0</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

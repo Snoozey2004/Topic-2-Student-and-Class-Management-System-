@@ -1,58 +1,96 @@
 ﻿@model WebApplication1.ViewModels.CourseClassFormViewModel
 @{
     ViewData["Title"] = "Create Course Class";
+    ViewData["PageTitle"] = "Create Course Class";
     Layout = "~/Views/Shared/_DashboardLayout.cshtml";
+    var subjects = ViewBag.Subjects as List<WebApplication1.ViewModels.SubjectListViewModel> ?? new List<WebApplication1.ViewModels.SubjectListViewModel>();
+    var lecturers = ViewBag.Lecturers as List<WebApplication1.ViewModels.LecturerListViewModel> ?? new List<WebApplication1.ViewModels.LecturerListViewModel>();
 }
 
-<h4>Create Course Class</h4>
-<form asp-action="Create" method="post">
-    <div class="mb-3">
-        <label asp-for="ClassCode" class="form-label"></label>
-        <input asp-for="ClassCode" class="form-control" />
-        <span asp-validation-for="ClassCode" class="text-danger"></span>
-    </div>
+@section SidebarMenu {
+    @await Html.PartialAsync("_AdminSidebar")
+}
 
-    <div class="mb-3">
-        <label asp-for="SubjectId" class="form-label"></label>
-        <select asp-for="SubjectId" class="form-select">
-            <option value="">-- Select Subject --</option>
-            @foreach (var s in (ViewBag.Subjects as List<WebApplication1.ViewModels.SubjectListViewModel> ?? new List<WebApplication1.ViewModels.SubjectListViewModel>()))
-            {
-                <option value="@s.Id">@s.SubjectCode - @s.SubjectName</option>
-            }
-        </select>
-    </div>
+@section Styles {
+    <link rel="stylesheet" href="~/css/admin-crud.css" />
+}
 
-    <div class="mb-3">
-        <label asp-for="LecturerId" class="form-label"></label>
-        <select asp-for="LecturerId" class="form-select">
-            <option value="">-- Select Lecturer --</option>
-            @foreach (var l in (ViewBag.Lecturers as List<WebApplication1.ViewModels.LecturerListViewModel> ?? new List<WebApplication1.ViewModels.LecturerListViewModel>()))
-            {
-                <option value="@l.Id">@l.LecturerCode - @l.FullName</option>
-            }
-        </select>
-    </div>
+<a asp-action="Index" class="admin-back-link">
+    <i class="bi bi-arrow-left"></i> Back to Course Class List
+</a>
 
-    <div class="mb-3">
-        <label asp-for="Semester" class="form-label"></label>
-        <input asp-for="Semester" class="form-control" />
+<div class="admin-card">
+    <div class="admin-card-header">
+        <h5><i class="bi bi-journal-plus"></i> Create New Course Class</h5>
     </div>
+    <div class="admin-card-body">
+        <form asp-action="Create" method="post" class="admin-form">
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label asp-for="ClassCode" class="form-label">Class Code *</label>
+                    <input asp-for="ClassCode" class="form-control" placeholder="e.g. IT001-01" />
+                    <span asp-validation-for="ClassCode" class="text-danger small"></span>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label asp-for="Semester" class="form-label">Semester *</label>
+                    <input asp-for="Semester" class="form-control" placeholder="e.g. HK1-2024" />
+                    <span asp-validation-for="Semester" class="text-danger small"></span>
+                </div>
+            </div>
 
-    <div class="mb-3">
-        <label asp-for="MaxStudents" class="form-label"></label>
-        <input asp-for="MaxStudents" class="form-control" type="number" />
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label asp-for="SubjectId" class="form-label">Subject *</label>
+                    <select asp-for="SubjectId" class="form-select">
+                        <option value="">-- Select Subject --</option>
+                        @foreach (var s in subjects)
+                        {
+                            <option value="@s.Id">@s.SubjectCode - @s.SubjectName</option>
+                        }
+                    </select>
+                    <span asp-validation-for="SubjectId" class="text-danger small"></span>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label asp-for="LecturerId" class="form-label">Lecturer *</label>
+                    <select asp-for="LecturerId" class="form-select">
+                        <option value="">-- Select Lecturer --</option>
+                        @foreach (var l in lecturers)
+                        {
+                            <option value="@l.Id">@l.LecturerCode - @l.FullName</option>
+                        }
+                    </select>
+                    <span asp-validation-for="LecturerId" class="text-danger small"></span>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <label asp-for="MaxStudents" class="form-label">Max Students *</label>
+                    <input asp-for="MaxStudents" class="form-control" type="number" min="1" placeholder="e.g. 40" />
+                    <span asp-validation-for="MaxStudents" class="text-danger small"></span>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label asp-for="Room" class="form-label">Room</label>
+                    <input asp-for="Room" class="form-control" placeholder="e.g. A101" />
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label asp-for="Status" class="form-label">Status *</label>
+                    <select asp-for="Status" class="form-select" asp-items="Html.GetEnumSelectList<WebApplication1.Models.CourseClassStatus>()"></select>
+                </div>
+            </div>
+
+            <hr class="my-4">
+
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn-admin-primary">
+                    <i class="bi bi-check-circle me-2"></i>Create Course Class
+                </button>
+                <a asp-action="Index" class="btn-admin-outline">Cancel</a>
+            </div>
+        </form>
     </div>
+</div>
 
-    <div class="mb-3">
-        <label asp-for="Room" class="form-label"></label>
-        <input asp-for="Room" class="form-control" />
-    </div>
-
-    <div class="mb-3">
-        <label asp-for="Status" class="form-label"></label>
-        <select asp-for="Status" class="form-select" asp-items="Html.GetEnumSelectList<WebApplication1.Models.CourseClassStatus>()"></select>
-    </div>
-
-    <button type="submit" class="btn btn-primary">Create</button>
-</form>
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

@@ -2,7 +2,6 @@ using Microsoft.AspNetCore.Mvc;
 using WebApplication1.Services;
 using WebApplication1.ViewModels;
 using WebApplication1.Models;
-using WebApplication1.Data;
 
 namespace WebApplication1.Controllers
 {
@@ -91,15 +90,13 @@ namespace WebApplication1.Controllers
             }
 
             var userId = int.Parse(userIdClaim.Value);
-            var user = FakeDatabase.Users.FirstOrDefault(u => u.Id == userId);
+            var success = _userService.UpdateProfile(userId, model.FullName);
             
-            if (user == null)
+            if (!success)
             {
-                return NotFound();
+                TempData["ErrorMessage"] = "Unable to update profile";
+                return RedirectToAction("Index");
             }
-
-            // Update full name
-            user.FullName = model.FullName;
 
             TempData["SuccessMessage"] = "Profile updated successfully";
             return RedirectToAction("Index");
@@ -126,22 +123,21 @@ namespace WebApplication1.Controllers
             }
 
             var userId = int.Parse(userIdClaim.Value);
-            var user = FakeDatabase.Users.FirstOrDefault(u => u.Id == userId);
             
-            if (user == null)
-            {
-                return NotFound();
-            }
-
-            // Verify current password
-            if (user.Password != model.CurrentPassword)
+            // Verify current password using service
+            if (!_userService.ValidatePassword(userId, model.CurrentPassword))
             {
                 ModelState.AddModelError("CurrentPassword", "Current password is incorrect");
                 return View(model);
             }
 
-            // Update password
-            user.Password = model.NewPassword;
+            // Update password using service
+            var success = _userService.ChangePassword(userId, model.CurrentPassword, model.NewPassword);
+            if (!success)
+            {
+                ModelState.AddModelError("", "Unable to change password");
+                return View(model);
+            }
 
             TempData["SuccessMessage"] = "Password changed successfully";
             return RedirectToAction("Index");

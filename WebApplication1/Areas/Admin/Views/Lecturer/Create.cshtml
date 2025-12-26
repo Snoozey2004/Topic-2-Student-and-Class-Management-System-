@@ -1,53 +1,96 @@
 ﻿@model WebApplication1.ViewModels.LecturerFormViewModel
 @{
     ViewData["Title"] = "Create Lecturer";
+    ViewData["PageTitle"] = "Create Lecturer";
     Layout = "~/Views/Shared/_DashboardLayout.cshtml";
 }
 
-<h4>Create Lecturer</h4>
-<form asp-action="Create" method="post">
-    <div class="row">
-        <div class="col-md-6">
-            <div class="mb-3">
-                <label asp-for="LecturerCode" class="form-label"></label>
-                <input asp-for="LecturerCode" class="form-control" />
-                <span asp-validation-for="LecturerCode" class="text-danger"></span>
-            </div>
-            <div class="mb-3">
-                <label asp-for="FullName" class="form-label"></label>
-                <input asp-for="FullName" class="form-control" />
-                <span asp-validation-for="FullName" class="text-danger"></span>
-            </div>
-            <div class="mb-3">
-                <label asp-for="Email" class="form-label"></label>
-                <input asp-for="Email" class="form-control" />
-                <span asp-validation-for="Email" class="text-danger"></span>
-            </div>
-            <div class="mb-3">
-                <label asp-for="Password" class="form-label"></label>
-                <input asp-for="Password" class="form-control" />
-            </div>
-        </div>
-        <div class="col-md-6">
-            <div class="mb-3">
-                <label asp-for="DateOfBirth" class="form-label"></label>
-                <input asp-for="DateOfBirth" class="form-control" type="date" />
-                <span asp-validation-for="DateOfBirth" class="text-danger"></span>
-            </div>
-            <div class="mb-3">
-                <label asp-for="PhoneNumber" class="form-label"></label>
-                <input asp-for="PhoneNumber" class="form-control" />
-                <span asp-validation-for="PhoneNumber" class="text-danger"></span>
-            </div>
-            <div class="mb-3">
-                <label asp-for="Department" class="form-label"></label>
-                <input asp-for="Department" class="form-control" />
-            </div>
-            <div class="mb-3">
-                <label asp-for="JoinDate" class="form-label"></label>
-                <input asp-for="JoinDate" class="form-control" type="date" />
-            </div>
-        </div>
+@section SidebarMenu {
+    @await Html.PartialAsync("_AdminSidebar")
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/admin-crud.css" />
+}
+
+<a asp-action="Index" class="admin-back-link">
+    <i class="bi bi-arrow-left"></i> Back to Lecturer List
+</a>
+
+<div class="admin-card">
+    <div class="admin-card-header">
+        <h5><i class="bi bi-person-plus"></i> Create New Lecturer</h5>
     </div>
-    <button type="submit" class="btn btn-primary">Create</button>
-</form>
+    <div class="admin-card-body">
+        <form asp-action="Create" method="post" class="admin-form">
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label asp-for="LecturerCode" class="form-label">Lecturer Code *</label>
+                    <input asp-for="LecturerCode" class="form-control" placeholder="e.g. GV001" />
+                    <span asp-validation-for="LecturerCode" class="text-danger small"></span>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label asp-for="FullName" class="form-label">Full Name *</label>
+                    <input asp-for="FullName" class="form-control" placeholder="Enter full name" />
+                    <span asp-validation-for="FullName" class="text-danger small"></span>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label asp-for="Email" class="form-label">Email *</label>
+                    <input asp-for="Email" class="form-control" placeholder="lecturer@example.com" />
+                    <span asp-validation-for="Email" class="text-danger small"></span>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label asp-for="DateOfBirth" class="form-label">Date of Birth</label>
+                    <input asp-for="DateOfBirth" class="form-control" type="date" />
+                    <span asp-validation-for="DateOfBirth" class="text-danger small"></span>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label asp-for="PhoneNumber" class="form-label">Phone Number</label>
+                    <input asp-for="PhoneNumber" class="form-control" placeholder="0901234567" />
+                    <span asp-validation-for="PhoneNumber" class="text-danger small"></span>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label asp-for="Department" class="form-label">Department</label>
+                    <input asp-for="Department" class="form-control" placeholder="e.g. Information Technology" />
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label asp-for="Title" class="form-label">Title</label>
+                    <input asp-for="Title" class="form-control" placeholder="e.g. Professor, Associate Professor" />
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label asp-for="Specialization" class="form-label">Specialization</label>
+                    <input asp-for="Specialization" class="form-control" placeholder="e.g. Software Engineering" />
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label asp-for="JoinDate" class="form-label">Join Date</label>
+                    <input asp-for="JoinDate" class="form-control" type="date" />
+                </div>
+            </div>
+
+            <hr class="my-4">
+
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn-admin-primary">
+                    <i class="bi bi-check-circle me-2"></i>Create Lecturer
+                </button>
+                <a asp-action="Index" class="btn-admin-outline">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

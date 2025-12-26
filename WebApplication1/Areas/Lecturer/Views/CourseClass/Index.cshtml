@@ -6,78 +6,94 @@
 }
 
 @section SidebarMenu {
-    <li class="nav-item">
-        <a class="nav-link" asp-area="Lecturer" asp-controller="Dashboard" asp-action="Index">
-            <i class="bi bi-house-door me-2"></i>Home
-        </a>
-    </li>
-    <li class="nav-item">
-        <a class="nav-link active" asp-area="Lecturer" asp-controller="CourseClass" asp-action="Index">
-            <i class="bi bi-journal-text me-2"></i>Course Classes
-        </a>
-    </li>
-    <li class="nav-item">
-        <a class="nav-link" asp-area="Lecturer" asp-controller="Grade" asp-action="Index">
-            <i class="bi bi-pencil-square me-2"></i>Manage Grades
-        </a>
-    </li>
-    <li class="nav-item">
-        <a class="nav-link" asp-area="Lecturer" asp-controller="Attendance" asp-action="Index">
-            <i class="bi bi-clipboard-check me-2"></i>Attendance
-        </a>
-    </li>
-    <li class="nav-item">
-        <a class="nav-link" asp-area="Lecturer" asp-controller="Schedule" asp-action="Index">
-            <i class="bi bi-calendar3 me-2"></i>Teaching Schedule
-        </a>
-    </li>
+    @await Html.PartialAsync("_LecturerSidebar")
 }
 
-<div class="card">
-    <div class="card-header bg-white">
-        <h5 class="mb-0"><i class="bi bi-list me-2"></i>Course Class List</h5>
-    </div>
-    <div class="card-body">
-        @if (Model.Any())
-        {
-            <div class="row g-3">
-                @foreach (var courseClass in Model)
-                {
-                    <div class="col-md-6">
-                        <div class="card h-100">
-                            <div class="card-body">
-                                <div class="d-flex justify-content-between align-items-start mb-3">
-                                    <div>
-                                        <h5 class="card-title mb-1">@courseClass.SubjectName</h5>
-                                        <span class="badge bg-primary">@courseClass.ClassCode</span>
-                                        <span class="badge bg-secondary">@courseClass.Semester</span>
-                                    </div>
-                                    <span class="badge" style="background-color: @(courseClass.Status == "InProgress" ? "#10b981" : courseClass.Status == "Open" ? "#3b82f6" : "#6b7280")">
-                                        @(courseClass.Status == "InProgress" ? "In Progress" : courseClass.Status == "Open" ? "Open" : "Completed")
-                                    </span>
-                                </div>
-                                <p class="mb-2"><i class="bi bi-code-square me-2"></i><strong>Subject Code:</strong> @courseClass.SubjectCode</p>
-                                <p class="mb-2"><i class="bi bi-door-open me-2"></i><strong>Room:</strong> @courseClass.Room</p>
-                                <p class="mb-3"><i class="bi bi-people me-2"></i><strong>Enrollment:</strong> @courseClass.CurrentStudents/@courseClass.MaxStudents</p>
-                                <div class="d-grid gap-2">
-                                    <a asp-action="Details" asp-route-id="@courseClass.Id" class="btn btn-outline-primary btn-sm">
-                                        <i class="bi bi-eye me-2"></i>View Details
-                                    </a>
-                                    <a asp-area="Lecturer" asp-controller="Grade" asp-action="CourseClass" asp-route-id="@courseClass.Id" class="btn btn-outline-success btn-sm">
-                                        <i class="bi bi-pencil-square me-2"></i>Enter Grades
-                                    </a>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                }
-            </div>
-        }
-        else
-        {
-            <div class="alert alert-info mb-0">
-                <i class="bi bi-info-circle me-2"></i>You have no course classes assigned
-            </div>
-        }
+@section Styles {
+    <link rel="stylesheet" href="~/css/portal-common.css" />
+}
+
+<div class="portal-filter-bar">
+    <div class="portal-filter-controls">
+        <select class="portal-select">
+            <option value="">All Semesters</option>
+            <option value="HK1-2024" selected>HK1-2024</option>
+        </select>
     </div>
 </div>
+
+@if (Model.Any())
+{
+    <div class="row g-3">
+        @{ var colorIndex = 0; }
+        @foreach (var courseClass in Model)
+        {
+            colorIndex++;
+            var colors = new[] { 
+                ("var(--portal-accent)", "var(--portal-accent-dark)"),
+                ("var(--portal-primary)", "var(--portal-primary-dark)"),
+                ("#6366f1", "#4f46e5"),
+                ("#8b5cf6", "#7c3aed"),
+                ("#0891b2", "#0e7490")
+            };
+            var color = colors[(colorIndex - 1) % colors.Length];
+            
+            <div class="col-md-6 col-lg-4">
+                <div class="portal-card h-100">
+                    <div style="height: 6px; background: linear-gradient(90deg, @color.Item1, @color.Item2);"></div>
+                    <div class="portal-card-body">
+                        <div class="d-flex justify-content-between align-items-start mb-3">
+                            <div>
+                                <h6 class="mb-1 fw-bold" style="color: var(--portal-primary);">@courseClass.SubjectName</h6>
+                                <span class="portal-badge portal-badge-primary">@courseClass.ClassCode</span>
+                            </div>
+                            @{
+                                var statusClass = courseClass.Status == "InProgress" ? "portal-badge-accent" : 
+                                                  courseClass.Status == "Open" ? "portal-badge-primary" : "";
+                                var statusText = courseClass.Status == "InProgress" ? "In Progress" : 
+                                                courseClass.Status == "Open" ? "Open" : "Completed";
+                            }
+                            <span class="portal-badge @statusClass">@statusText</span>
+                        </div>
+                        
+                        <div class="small mb-3" style="color: var(--portal-text-muted);">
+                            <div class="d-flex align-items-center gap-2 mb-1">
+                                <i class="bi bi-door-open"></i>
+                                <span>Room: @courseClass.Room</span>
+                            </div>
+                            <div class="d-flex align-items-center gap-2 mb-1">
+                                <i class="bi bi-people"></i>
+                                <span>Students: @courseClass.CurrentStudents / @courseClass.MaxStudents</span>
+                            </div>
+                            <div class="d-flex align-items-center gap-2">
+                                <i class="bi bi-calendar3"></i>
+                                <span>@courseClass.Semester</span>
+                            </div>
+                        </div>
+                        
+                        <div class="d-flex gap-2">
+                            <a asp-action="Details" asp-route-id="@courseClass.Id" class="portal-btn portal-btn-outline flex-grow-1" style="font-size: 0.75rem; padding: 0.375rem 0.75rem;">
+                                <i class="bi bi-eye"></i> View
+                            </a>
+                            <a asp-area="Lecturer" asp-controller="Grade" asp-action="CourseClass" asp-route-id="@courseClass.Id" class="portal-btn portal-btn-accent flex-grow-1" style="font-size: 0.75rem; padding: 0.375rem 0.75rem;">
+                                <i class="bi bi-award"></i> Grades
+                            </a>
+                            <a asp-area="Lecturer" asp-controller="Attendance" asp-action="Index" asp-route-courseClassId="@courseClass.Id" class="portal-btn portal-btn-primary flex-grow-1" style="font-size: 0.75rem; padding: 0.375rem 0.75rem;">
+                                <i class="bi bi-clipboard-check"></i> Attend
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}
+else
+{
+    <div class="portal-card">
+        <div class="portal-empty">
+            <i class="bi bi-journal-x"></i>
+            <p>You have no course classes assigned</p>
+        </div>
+    </div>
+}

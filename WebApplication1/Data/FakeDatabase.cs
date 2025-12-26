@@ -487,7 +487,7 @@ namespace WebApplication1.Data
         {
             Schedules.AddRange(new[]
             {
-                // IT001.01
+                // IT001.01 - Lecturer 1 (Dr. Nguyen Van A)
                 new Schedule
                 {
                     Id = GetNextScheduleId(),
@@ -515,14 +515,14 @@ namespace WebApplication1.Data
                     CreatedDate = DateTime.Now.AddMonths(-2)
                 },
                 
-                // IT002.01
+                // IT002.01 - Lecturer 1 (Dr. Nguyen Van A)
                 new Schedule
                 {
                     Id = GetNextScheduleId(),
                     CourseClassId = 2,
                     DayOfWeek = DayOfWeek.Tuesday,
                     Session = "Afternoon",
-                    Period = "Period 4-6",
+                    Period = "Period 7-9",
                     StartTime = "13:00",
                     EndTime = "15:30",
                     Room = "A102",
@@ -535,7 +535,7 @@ namespace WebApplication1.Data
                     CourseClassId = 2,
                     DayOfWeek = DayOfWeek.Thursday,
                     Session = "Afternoon",
-                    Period = "Period 4-6",
+                    Period = "Period 7-9",
                     StartTime = "13:00",
                     EndTime = "15:30",
                     Room = "A102",
@@ -543,7 +543,20 @@ namespace WebApplication1.Data
                     CreatedDate = DateTime.Now.AddMonths(-2)
                 },
                 
-                // IT003.01
+                // IT003.01 - Lecturer 2 (Assoc. Prof. Tran Thi B)
+                new Schedule
+                {
+                    Id = GetNextScheduleId(),
+                    CourseClassId = 3,
+                    DayOfWeek = DayOfWeek.Monday,
+                    Session = "Morning",
+                    Period = "Period 4-6",
+                    StartTime = "09:45",
+                    EndTime = "12:15",
+                    Room = "B201",
+                    EffectiveDate = DateTime.Now.AddMonths(-2),
+                    CreatedDate = DateTime.Now.AddMonths(-2)
+                },
                 new Schedule
                 {
                     Id = GetNextScheduleId(),
@@ -558,17 +571,86 @@ namespace WebApplication1.Data
                     CreatedDate = DateTime.Now.AddMonths(-2)
                 },
                 
-                // BA001.01
+                // IT004.01 - Lecturer 2 (Assoc. Prof. Tran Thi B)
+                new Schedule
+                {
+                    Id = GetNextScheduleId(),
+                    CourseClassId = 4,
+                    DayOfWeek = DayOfWeek.Wednesday,
+                    Session = "Afternoon",
+                    Period = "Period 7-9",
+                    StartTime = "13:00",
+                    EndTime = "15:30",
+                    Room = "Lab301",
+                    EffectiveDate = DateTime.Now.AddMonths(-2),
+                    CreatedDate = DateTime.Now.AddMonths(-2)
+                },
+                new Schedule
+                {
+                    Id = GetNextScheduleId(),
+                    CourseClassId = 4,
+                    DayOfWeek = DayOfWeek.Thursday,
+                    Session = "Morning",
+                    Period = "Period 4-6",
+                    StartTime = "09:45",
+                    EndTime = "12:15",
+                    Room = "Lab301",
+                    EffectiveDate = DateTime.Now.AddMonths(-2),
+                    CreatedDate = DateTime.Now.AddMonths(-2)
+                },
+                
+                // BA001.01 - Lecturer 3 (MSc. Le Van C)
                 new Schedule
                 {
                     Id = GetNextScheduleId(),
                     CourseClassId = 5,
                     DayOfWeek = DayOfWeek.Monday,
                     Session = "Afternoon",
-                    Period = "Period 4-6",
+                    Period = "Period 7-9",
                     StartTime = "13:00",
                     EndTime = "15:30",
                     Room = "C301",
+                    EffectiveDate = DateTime.Now.AddMonths(-2),
+                    CreatedDate = DateTime.Now.AddMonths(-2)
+                },
+                new Schedule
+                {
+                    Id = GetNextScheduleId(),
+                    CourseClassId = 5,
+                    DayOfWeek = DayOfWeek.Wednesday,
+                    Session = "Morning",
+                    Period = "Period 4-6",
+                    StartTime = "09:45",
+                    EndTime = "12:15",
+                    Room = "C301",
+                    EffectiveDate = DateTime.Now.AddMonths(-2),
+                    CreatedDate = DateTime.Now.AddMonths(-2)
+                },
+                
+                // BA002.01 - Lecturer 3 (MSc. Le Van C)
+                new Schedule
+                {
+                    Id = GetNextScheduleId(),
+                    CourseClassId = 6,
+                    DayOfWeek = DayOfWeek.Tuesday,
+                    Session = "Morning",
+                    Period = "Period 1-3",
+                    StartTime = "07:00",
+                    EndTime = "09:30",
+                    Room = "C302",
+                    EffectiveDate = DateTime.Now.AddMonths(-2),
+                    CreatedDate = DateTime.Now.AddMonths(-2)
+                },
+                new Schedule
+                {
+                    Id = GetNextScheduleId(),
+                    CourseClassId = 6,
+                    DayOfWeek = DayOfWeek.Friday,
+                    Session = "Afternoon",
+                    Period = "Period 7-9",
+                    StartTime = "13:00",
+                    EndTime = "15:30",
+                    Room = "C302",
                     EffectiveDate = DateTime.Now.AddMonths(-2),
                     CreatedDate = DateTime.Now.AddMonths(-2)
                 }

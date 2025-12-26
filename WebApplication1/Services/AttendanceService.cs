@@ -5,11 +5,11 @@ using WebApplication1.ViewModels;
 namespace WebApplication1.Services
 {
     /// <summary>
-    /// Service qu?n l? ði?m danh
+    /// Service qu?n lý ?i?m danh
     /// </summary>
     public interface IAttendanceService
     {
-        List<AttendanceClassListViewModel> GetClassesByLecturerId(int lecturerId);
+        List<AttendanceClassListViewModel> GetClassesByLecturerId(int lecturerId, string? semester = null);
         AttendanceSessionViewModel GetAttendanceSession(int courseClassId, DateTime date, string session);
         bool TakeAttendance(TakeAttendanceViewModel model, int lecturerId);
         AttendanceHistoryViewModel GetAttendanceHistory(int courseClassId);
@@ -38,41 +38,48 @@ namespace WebApplication1.Services
             _gradeService = gradeService;
         }
 
-        public List<AttendanceClassListViewModel> GetClassesByLecturerId(int lecturerId)
+        /// <summary>
+        /// Get classes for lecturer - semester passed from Controller
+        /// </summary>
+        public List<AttendanceClassListViewModel> GetClassesByLecturerId(int lecturerId, string? semester = null)
         {
-            var classes = FakeDatabase.CourseClasses
-                .Where(c => c.LecturerId == lecturerId)
-                .Select(c =>
+            var query = FakeDatabase.CourseClasses
+                .Where(c => c.LecturerId == lecturerId);
+
+            // Filter by semester if provided
+            if (!string.IsNullOrEmpty(semester))
+            {
+                query = query.Where(c => c.Semester == semester);
+            }
+
+            var classes = query.Select(c =>
+            {
+                var subject = _subjectService.GetById(c.SubjectId);
+                var enrollments = FakeDatabase.Enrollments
+                    .Where(e => e.CourseClassId == c.Id && e.Status == EnrollmentStatus.Approved)
+                    .ToList();
+                var attendances = FakeDatabase.Attendances.Where(a => a.CourseClassId == c.Id).ToList();
+
+                var sessions = attendances.GroupBy(a => new { a.AttendanceDate, a.Session }).Count();
+
+                var avgRate = sessions > 0 && enrollments.Count > 0
+                    ? (attendances.Count(a => a.Status == AttendanceStatus.Present) * 100.0) / (sessions * enrollments.Count)
+                    : 0;
+
+                return new AttendanceClassListViewModel
                 {
-                    var subject = _subjectService.GetById(c.SubjectId);
-                    // Get approved enrollments manually
-                    var enrollments = FakeDatabase.Enrollments
-                        .Where(e => e.CourseClassId == c.Id && e.Status == EnrollmentStatus.Approved)
-                        .ToList();
-                    var attendances = FakeDatabase.Attendances.Where(a => a.CourseClassId == c.Id).ToList();
-
-                    // Tính s? bu?i h?c ð? ði?m danh
-                    var sessions = attendances.GroupBy(a => new { a.AttendanceDate, a.Session }).Count();
-
-                    // Tính t? l? ði?m danh trung b?nh
-                    var avgRate = sessions > 0 && enrollments.Count > 0
-                        ? (attendances.Count(a => a.Status == AttendanceStatus.Present) * 100.0) / (sessions * enrollments.Count)
-                        : 0;
-
-                    return new AttendanceClassListViewModel
-                    {
-                        Id = c.Id,
-                        ClassCode = c.ClassCode,
-                        SubjectName = subject?.SubjectName ?? "",
-                        Semester = c.Semester,
-                        Room = c.Room,
-                        TotalStudents = enrollments.Count,
-                        TotalSessions = sessions,
-                        AverageAttendanceRate = avgRate
-                    };
-                })
-                .OrderBy(c => c.ClassCode)
-                .ToList();
+                    Id = c.Id,
+                    ClassCode = c.ClassCode,
+                    SubjectName = subject?.SubjectName ?? "",
+                    Semester = c.Semester,
+                    Room = c.Room,
+                    TotalStudents = enrollments.Count,
+                    TotalSessions = sessions,
+                    AverageAttendanceRate = avgRate
+                };
+            })
+            .OrderBy(c => c.ClassCode)
+            .ToList();
 
             return classes;
         }
@@ -84,12 +91,10 @@ namespace WebApplication1.Services
                 return new AttendanceSessionViewModel();
 
             var subject = _subjectService.GetById(courseClass.SubjectId);
-            // Get approved enrollments manually
             var enrollments = FakeDatabase.Enrollments
                 .Where(e => e.CourseClassId == courseClassId && e.Status == EnrollmentStatus.Approved)
                 .ToList();
 
-            // L?y ði?m danh ð? có cho bu?i này
             var existingAttendances = FakeDatabase.Attendances
                 .Where(a => a.CourseClassId == courseClassId 
                          && a.AttendanceDate.Date == date.Date 
@@ -128,7 +133,6 @@ namespace WebApplication1.Services
 
         public bool TakeAttendance(TakeAttendanceViewModel model, int lecturerId)
         {
-            // Xóa ði?m danh c? c?a bu?i này (n?u có)
             var oldAttendances = FakeDatabase.Attendances
                 .Where(a => a.CourseClassId == model.CourseClassId
                          && a.AttendanceDate.Date == model.SessionDate.Date
@@ -140,7 +144,6 @@ namespace WebApplication1.Services
                 FakeDatabase.Attendances.Remove(old);
             }
 
-            // T?o ði?m danh m?i
             foreach (var student in model.Students)
             {
                 var attendance = new Attendance
@@ -160,7 +163,6 @@ namespace WebApplication1.Services
                 FakeDatabase.Attendances.Add(attendance);
             }
 
-            // C?p nh?t ði?m chuyên c?n
             UpdateAttendanceScore(model.CourseClassId);
 
             return true;
@@ -173,7 +175,6 @@ namespace WebApplication1.Services
                 return new AttendanceHistoryViewModel();
 
             var subject = _subjectService.GetById(courseClass.SubjectId);
-            // Get approved enrollments manually
             var enrollments = FakeDatabase.Enrollments
                 .Where(e => e.CourseClassId == courseClassId && e.Status == EnrollmentStatus.Approved)
                 .ToList();
@@ -183,7 +184,6 @@ namespace WebApplication1.Services
                 .ThenBy(a => a.Session)
                 .ToList();
 
-            // Nhóm theo bu?i h?c
             var records = attendances
                 .GroupBy(a => new { a.AttendanceDate, a.Session })
                 .Select(g =>
@@ -204,7 +204,6 @@ namespace WebApplication1.Services
                 })
                 .ToList();
 
-            // Th?ng kê theo sinh viên
             var studentStats = new Dictionary<int, AttendanceStatViewModel>();
 
             foreach (var enrollment in enrollments)
@@ -218,7 +217,6 @@ namespace WebApplication1.Services
                 var absentSessions = totalSessions - presentSessions;
                 var rate = totalSessions > 0 ? (presentSessions * 100.0 / totalSessions) : 0;
 
-                // Tính ði?m chuyên c?n (max 10)
                 var score = Math.Round(rate / 10.0, 1);
 
                 studentStats[enrollment.StudentId] = new AttendanceStatViewModel
@@ -248,7 +246,6 @@ namespace WebApplication1.Services
         {
             var history = GetAttendanceHistory(courseClassId);
 
-            // C?p nh?t ði?m chuyên c?n vào Grade
             foreach (var stat in history.StudentStats.Values)
             {
                 var enrollment = FakeDatabase.Enrollments
@@ -263,7 +260,6 @@ namespace WebApplication1.Services
                     grade.AttendanceScore = stat.AttendanceScore;
                     grade.LastUpdated = DateTime.Now;
 
-                    // Tính l?i t?ng ði?m n?u ð? có ð? ði?m
                     if (grade.MidtermScore.HasValue && grade.FinalScore.HasValue)
                     {
                         var totalScore = (grade.AttendanceScore ?? 0) * 0.1 

@@ -1,201 +1,355 @@
 ﻿@model WebApplication1.ViewModels.EnrollmentRegisterViewModel
+@using Microsoft.AspNetCore.Mvc.Rendering
 @{
     ViewData["Title"] = "Course Registration";
     ViewData["PageTitle"] = "Course Registration";
     Layout = "~/Views/Shared/_DashboardLayout.cshtml";
+    
+    var semesters = ViewBag.Semesters as SelectList;
+    var currentSemester = ViewBag.CurrentSemester as string;
 }
 
 @section SidebarMenu {
-    <li class="nav-item">
-        <a class="nav-link" asp-area="Student" asp-controller="Dashboard" asp-action="Index">
-            <i class="bi bi-house-door"></i>Home
-        </a>
-    </li>
-    <li class="nav-item">
-        <a class="nav-link active" asp-area="Student" asp-controller="Enrollment" asp-action="Index">
-            <i class="bi bi-clipboard-check"></i>Course Registration
-        </a>
-    </li>
-    <li class="nav-item">
-        <a class="nav-link" asp-area="Student" asp-controller="Schedule" asp-action="Index">
-            <i class="bi bi-calendar3"></i>Schedule
-        </a>
-    </li>
-    <li class="nav-item">
-        <a class="nav-link" asp-area="Student" asp-controller="Grade" asp-action="Index">
-            <i class="bi bi-award"></i>View Grades
-        </a>
-    </li>
+    @await Html.PartialAsync("_StudentSidebar")
 }
 
-<div class="row mb-4">
-    <div class="col-12">
-        <div class="card">
-            <div class="card-header bg-white">
-                <h5 class="mb-0"><i class="bi bi-list-ul me-2"></i>Available Courses</h5>
-            </div>
-            <div class="card-body">
-                @if (Model.AvailableCourses.Any())
+@section Styles {
+    <link rel="stylesheet" href="~/css/portal-common.css" />
+    <style>
+        .search-select-wrapper {
+            position: relative;
+            min-width: 300px;
+        }
+        .search-select-input {
+            width: 100%;
+            padding: 0.5rem 2.5rem 0.5rem 1rem;
+            border: 2px solid var(--portal-border);
+            border-radius: 8px;
+            font-size: 0.875rem;
+            background: white;
+            cursor: pointer;
+        }
+        .search-select-input:focus {
+            outline: none;
+            border-color: var(--portal-accent);
+        }
+        .search-select-dropdown {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border: 2px solid var(--portal-border);
+            border-top: none;
+            border-radius: 0 0 8px 8px;
+            max-height: 250px;
+            overflow-y: auto;
+            z-index: 100;
+            display: none;
+        }
+        .search-select-dropdown.show { display: block; }
+        .search-select-search {
+            padding: 0.5rem 0.75rem;
+            border-bottom: 1px solid var(--portal-border);
+        }
+        .search-select-search input {
+            width: 100%;
+            padding: 0.375rem 0.5rem;
+            border: 1px solid var(--portal-border);
+            border-radius: 4px;
+            font-size: 0.8rem;
+        }
+        .search-select-option {
+            padding: 0.5rem 0.75rem;
+            cursor: pointer;
+            font-size: 0.85rem;
+        }
+        .search-select-option:hover { background: var(--portal-light); }
+        .search-select-option.selected { 
+            background: rgba(45, 158, 142, 0.1); 
+            color: var(--portal-accent);
+        }
+        .search-select-icon {
+            position: absolute;
+            right: 0.75rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--portal-text-muted);
+            pointer-events: none;
+        }
+    </style>
+}
+
+<!-- Alerts -->
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="portal-alert portal-alert-success">
+        <i class="bi bi-check-circle"></i>
+        <span>@TempData["SuccessMessage"]</span>
+    </div>
+}
+
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="portal-alert portal-alert-danger">
+        <i class="bi bi-exclamation-circle"></i>
+        <span>@TempData["ErrorMessage"]</span>
+    </div>
+}
+
+<!-- Info Banner -->
+<div class="portal-alert portal-alert-success" style="background: rgba(30, 58, 95, 0.05); border-color: rgba(30, 58, 95, 0.1); color: var(--portal-primary);">
+    <i class="bi bi-info-circle"></i>
+    <span><strong>Auto-Registration:</strong> When you register for a course, it will be automatically approved and added to your schedule.</span>
+</div>
+
+<!-- Filter Section -->
+<div class="portal-filter-bar">
+    <div class="portal-filter-controls">
+        <!-- Semester dropdown from Controller/Service -->
+        <form method="get" id="filterForm">
+            <select name="semester" class="portal-select" style="min-width: 200px;" onchange="document.getElementById('filterForm').submit();">
+                <option value="">All Semesters</option>
+                @if (semesters != null)
                 {
-                    <div class="table-responsive">
-                        <table class="table table-hover">
-                            <thead>
-                                <tr>
-                                    <th>Class Code</th>
-                                    <th>Course</th>
-                                    <th>Credits</th>
-                                    <th>Lecturer</th>
-                                    <th>Enrollment</th>
-                                    <th>Schedule</th>
-                                    <th>Action</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach (var course in Model.AvailableCourses)
-                                {
-                                    <tr>
-                                        <td><span class="badge bg-primary">@course.ClassCode</span></td>
-                                        <td>
-                                            <strong>@course.SubjectName</strong><br>
-                                            <small class="text-muted">@course.SubjectCode</small>
-                                        </td>
-                                        <td>@course.Credits</td>
-                                        <td>@course.LecturerName</td>
-                                        <td>
-                                            <div class="progress" style="height: 20px;">
-                                                <div class="progress-bar" role="progressbar" 
-                                                     style="width: @((course.CurrentStudents * 100.0 / course.MaxStudents))%;">
-                                                    @course.CurrentStudents/@course.MaxStudents
-                                                </div>
-                                            </div>
-                                        </td>
-                                        <td>
-                                            @foreach (var schedule in course.ScheduleInfo)
-                                            {
-                                                <small class="d-block">@schedule</small>
-                                            }
-                                        </td>
-                                        <td>
-                                            @if (course.CanEnroll)
-                                            {
-                                                <form asp-action="Enroll" method="post" class="d-inline">
-                                                    <input type="hidden" name="courseClassId" value="@course.CourseClassId" />
-                                                    <button type="submit" class="btn btn-sm btn-success">
-                                                        <i class="bi bi-plus-circle"></i> Enroll
-                                                    </button>
-                                                </form>
-                                            }
-                                            else
-                                            {
-                                                <span class="badge bg-secondary" title="@course.EnrollmentMessage">
-                                                    Cannot Enroll
-                                                </span>
-                                            }
-                                        </td>
-                                    </tr>
-                                }
-                            </tbody>
-                        </table>
-                    </div>
+                    @foreach (var sem in semesters)
+                    {
+                        <option value="@sem.Value" selected="@(sem.Value == currentSemester)">@sem.Text</option>
+                    }
                 }
-                else
-                {
-                    <div class="alert alert-info mb-0">
-                        <i class="bi bi-info-circle me-2"></i>No courses available for registration
-                    </div>
-                }
+            </select>
+        </form>
+        
+        <!-- Search + Dropdown for Subject -->
+        <div class="search-select-wrapper" id="subjectSelect">
+            <input type="text" class="search-select-input" id="subjectInput" placeholder="Search or select subject..." readonly>
+            <i class="bi bi-chevron-down search-select-icon"></i>
+            <div class="search-select-dropdown" id="subjectDropdown">
+                <div class="search-select-search">
+                    <input type="text" id="subjectSearch" placeholder="Type to search...">
+                </div>
+                <div id="subjectOptions">
+                    <div class="search-select-option" data-value="">All Subjects</div>
+                    @if (Model.AvailableCourses.Any())
+                    {
+                        @foreach (var subject in Model.AvailableCourses.Select(c => new { c.SubjectCode, c.SubjectName }).Distinct())
+                        {
+                            <div class="search-select-option" data-value="@subject.SubjectName">
+                                <strong>@subject.SubjectCode</strong> - @subject.SubjectName
+                            </div>
+                        }
+                    }
+                </div>
             </div>
         </div>
     </div>
 </div>
 
-<div class="row">
-    <div class="col-12">
-        <div class="card">
-            <div class="card-header bg-white">
-                <h5 class="mb-0"><i class="bi bi-journal-check me-2"></i>My Enrolled Courses</h5>
+<!-- Available Courses Section -->
+<div class="portal-card" style="margin-bottom: 1.5rem;">
+    <div class="portal-card-header">
+        <h5><i class="bi bi-journal-plus"></i> Available Courses</h5>
+        @if (!string.IsNullOrEmpty(currentSemester))
+        {
+            <span class="portal-badge portal-badge-primary">@currentSemester</span>
+        }
+    </div>
+    <div class="portal-card-body p-0">
+        @if (Model.AvailableCourses.Any())
+        {
+            <div class="table-responsive">
+                <table class="portal-table" id="availableCoursesTable">
+                    <thead>
+                        <tr>
+                            <th>Subject Code</th>
+                            <th>Subject Name</th>
+                            <th>Class</th>
+                            <th>Lecturer</th>
+                            <th style="text-align: center;">Credits</th>
+                            <th style="text-align: center;">Available</th>
+                            <th>Schedule</th>
+                            <th style="width: 100px;">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var course in Model.AvailableCourses)
+                        {
+                            var remaining = course.MaxStudents - course.CurrentStudents;
+                            var canEnroll = course.CanEnroll && remaining > 0;
+                            <tr data-subject="@course.SubjectName">
+                                <td><span class="portal-badge portal-badge-primary">@course.SubjectCode</span></td>
+                                <td><strong>@course.SubjectName</strong></td>
+                                <td>@course.ClassCode</td>
+                                <td><small style="color: var(--portal-text-muted);">@course.LecturerName</small></td>
+                                <td style="text-align: center;"><span class="portal-badge portal-badge-accent">@course.Credits</span></td>
+                                <td style="text-align: center;">
+                                    <span class="portal-badge @(remaining > 10 ? "portal-badge-success" : remaining > 0 ? "portal-badge-warning" : "portal-badge-danger")">
+                                        @remaining / @course.MaxStudents
+                                    </span>
+                                </td>
+                                <td>
+                                    @if (course.ScheduleInfo != null && course.ScheduleInfo.Any())
+                                    {
+                                        <small style="color: var(--portal-text-muted);">
+                                            @foreach (var schedule in course.ScheduleInfo)
+                                            {
+                                                <div>@schedule</div>
+                                            }
+                                        </small>
+                                    }
+                                    else
+                                    {
+                                        <span class="portal-no-score">TBA</span>
+                                    }
+                                </td>
+                                <td>
+                                    @if (canEnroll)
+                                    {
+                                        <form asp-action="Register" method="post" style="display: inline;">
+                                            <input type="hidden" name="courseClassId" value="@course.CourseClassId" />
+                                            <button type="submit" class="portal-btn portal-btn-accent portal-btn-sm" 
+                                                    onclick="return confirm('Register for @course.SubjectName (@course.ClassCode)?');">
+                                                <i class="bi bi-plus"></i> Register
+                                            </button>
+                                        </form>
+                                    }
+                                    else if (remaining <= 0)
+                                    {
+                                        <span class="portal-badge portal-badge-danger">Full</span>
+                                    }
+                                    else
+                                    {
+                                        <small style="color: var(--portal-text-muted);" title="@course.EnrollmentMessage">
+                                            @course.EnrollmentMessage
+                                        </small>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
             </div>
-            <div class="card-body">
-                @if (Model.MyEnrollments.Any())
-                {
-                    <div class="table-responsive">
-                        <table class="table table-hover">
-                            <thead>
-                                <tr>
-                                    <th>Class Code</th>
-                                    <th>Course</th>
-                                    <th>Semester</th>
-                                    <th>Enrollment Date</th>
-                                    <th>Status</th>
-                                    <th>Action</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach (var enrollment in Model.MyEnrollments)
-                                {
-                                    <tr>
-                                        <td><span class="badge bg-primary">@enrollment.ClassCode</span></td>
-                                        <td><strong>@enrollment.SubjectName</strong></td>
-                                        <td>@enrollment.Semester</td>
-                                        <td>@enrollment.EnrollmentDate.ToString("dd/MM/yyyy")</td>
-                                        <td>
-                                            @switch (enrollment.Status)
-                                            {
-                                                case "Pending":
-                                                    <span class="badge bg-warning">Pending</span>
-                                                    break;
-                                                case "Approved":
-                                                    <span class="badge bg-success">Approved</span>
-                                                    break;
-                                                case "Rejected":
-                                                    <span class="badge bg-danger">Rejected</span>
-                                                    break;
-                                                case "Dropped":
-                                                    <span class="badge bg-secondary">Dropped</span>
-                                                    break;
-                                            }
-                                        </td>
-                                        <td>
-                                            @if (enrollment.Status == "Pending")
-                                            {
-                                                <form asp-action="Drop" method="post" class="d-inline" 
-                                                      onsubmit="return confirm('Are you sure you want to drop this course?');">
-                                                    <input type="hidden" name="enrollmentId" value="@enrollment.Id" />
-                                                    <button type="submit" class="btn btn-sm btn-danger">
-                                                        <i class="bi bi-x-circle"></i> Drop
-                                                    </button>
-                                                </form>
-                                            }
-                                            @if (enrollment.Status == "Rejected" && !string.IsNullOrEmpty(enrollment.RejectionReason))
-                                            {
-                                                <button class="btn btn-sm btn-info" data-bs-toggle="tooltip" 
-                                                        title="@enrollment.RejectionReason">
-                                                    <i class="bi bi-info-circle"></i> Reason
-                                                </button>
-                                            }
-                                        </td>
-                                    </tr>
-                                }
-                            </tbody>
-                        </table>
-                    </div>
-                }
-                else
-                {
-                    <div class="alert alert-info mb-0">
-                        <i class="bi bi-info-circle me-2"></i>You have not enrolled in any courses yet
-                    </div>
-                }
+        }
+        else
+        {
+            <div class="portal-empty">
+                <i class="bi bi-journal-x"></i>
+                <p>No courses available for registration</p>
             </div>
-        </div>
+        }
+    </div>
+</div>
+
+<!-- Registered Courses Section -->
+<div class="portal-card">
+    <div class="portal-card-header">
+        <h5><i class="bi bi-journal-check"></i> My Registered Courses</h5>
+        <span class="portal-badge portal-badge-primary">@Model.MyEnrollments.Count() courses</span>
+    </div>
+    <div class="portal-card-body p-0">
+        @if (Model.MyEnrollments.Any())
+        {
+            <div class="table-responsive">
+                <table class="portal-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 60px;">Drop</th>
+                            <th>Class Code</th>
+                            <th>Subject Name</th>
+                            <th>Semester</th>
+                            <th>Registration Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var enrollment in Model.MyEnrollments)
+                        {
+                            <tr>
+                                <td style="text-align: center;">
+                                    <form asp-action="Drop" method="post" style="display: inline;"
+                                          onsubmit="return confirm('Are you sure you want to drop this course? This will remove it from your schedule.');">
+                                        <input type="hidden" name="enrollmentId" value="@enrollment.Id" />
+                                        <button type="submit" class="portal-btn portal-btn-outline portal-btn-sm" 
+                                                style="padding: 0.25rem 0.5rem; color: #dc3545; border-color: #dc3545;">
+                                            <i class="bi bi-x-circle"></i>
+                                        </button>
+                                    </form>
+                                </td>
+                                <td><span class="portal-badge portal-badge-primary">@enrollment.ClassCode</span></td>
+                                <td><strong>@enrollment.SubjectName</strong></td>
+                                <td>@enrollment.Semester</td>
+                                <td>@enrollment.EnrollmentDate.ToString("dd/MM/yyyy HH:mm")</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+        else
+        {
+            <div class="portal-empty">
+                <i class="bi bi-inbox"></i>
+                <p>You have not registered for any courses yet</p>
+            </div>
+        }
     </div>
 </div>
 
 @section Scripts {
-    <script>
-        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
-        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
-            return new bootstrap.Tooltip(tooltipTriggerEl)
-        })
-    </script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const wrapper = document.getElementById('subjectSelect');
+        const input = document.getElementById('subjectInput');
+        const dropdown = document.getElementById('subjectDropdown');
+        const searchInput = document.getElementById('subjectSearch');
+        const optionsContainer = document.getElementById('subjectOptions');
+        const options = optionsContainer.querySelectorAll('.search-select-option');
+        const table = document.getElementById('availableCoursesTable');
+
+        input.addEventListener('click', function() {
+            dropdown.classList.toggle('show');
+            if (dropdown.classList.contains('show')) {
+                searchInput.focus();
+            }
+        });
+
+        document.addEventListener('click', function(e) {
+            if (!wrapper.contains(e.target)) {
+                dropdown.classList.remove('show');
+            }
+        });
+
+        searchInput.addEventListener('input', function() {
+            const filter = this.value.toLowerCase();
+            options.forEach(opt => {
+                const text = opt.textContent.toLowerCase();
+                opt.style.display = text.includes(filter) ? '' : 'none';
+            });
+        });
+
+        options.forEach(opt => {
+            opt.addEventListener('click', function() {
+                const value = this.dataset.value;
+                input.value = value || 'All Subjects';
+                
+                options.forEach(o => o.classList.remove('selected'));
+                this.classList.add('selected');
+                
+                dropdown.classList.remove('show');
+                filterTable(value);
+            });
+        });
+
+        function filterTable(subject) {
+            if (!table) return;
+            const rows = table.querySelectorAll('tbody tr');
+            rows.forEach(row => {
+                if (!subject || row.dataset.subject === subject) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        }
+    });
+</script>
 }

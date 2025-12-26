@@ -9,49 +9,139 @@
     @await Html.PartialAsync("_AdminSidebar")
 }
 
-<div class="card">
-    <div class="card-header">Student Details</div>
-    <div class="card-body">
-        <p><strong>Code:</strong> @Model.StudentCode</p>
-        <p><strong>Name:</strong> @Model.FullName</p>
-        <p><strong>Email:</strong> @Model.Email</p>
-        <p><strong>Major:</strong> @Model.Major</p>
-        <p><strong>Admission Year:</strong> @Model.AdmissionYear</p>
-        <p><strong>Administrative Class:</strong> @Model.AdministrativeClassName</p>
-        <p><strong>GPA:</strong> @(Model.GPA?.ToString("0.00") ?? "-")</p>
+@section Styles {
+    <link rel="stylesheet" href="~/css/admin-crud.css" />
+}
 
-        <h6>Enrollments</h6>
-        @if (Model.Enrollments.Any())
-        {
-            <table class="table">
-                <thead>
-                    <tr>
-                        <th>Subject</th>
-                        <th>Class</th>
-                        <th>Semester</th>
-                        <th>Status</th>
-                        <th>Total</th>
-                        <th>Letter</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach (var e in Model.Enrollments)
-                    {
-                        <tr>
-                            <td>@e.SubjectName</td>
-                            <td>@e.ClassCode</td>
-                            <td>@e.Semester</td>
-                            <td>@e.Status</td>
-                            <td>@(e.TotalScore?.ToString("0.00") ?? "-")</td>
-                            <td>@(e.LetterGrade ?? "-")</td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
-        }
-        else
-        {
-            <div class="alert alert-info">No enrollments</div>
-        }
+<a asp-action="Index" class="admin-back-link">
+    <i class="bi bi-arrow-left"></i> Back to Student List
+</a>
+
+<div class="row">
+    <div class="col-lg-5">
+        <div class="admin-card mb-4">
+            <div class="admin-card-header">
+                <h5><i class="bi bi-person"></i> Student Information</h5>
+                <div class="d-flex gap-2">
+                    <a asp-action="Edit" asp-route-id="@Model.Id" class="btn-admin-outline btn-sm">
+                        <i class="bi bi-pencil me-1"></i>Edit
+                    </a>
+                    <a asp-action="Delete" asp-route-id="@Model.Id" class="btn-admin-danger btn-sm">
+                        <i class="bi bi-trash me-1"></i>Delete
+                    </a>
+                </div>
+            </div>
+            <div class="admin-card-body">
+                <div class="admin-detail-row">
+                    <div class="admin-detail-label">Student Code</div>
+                    <div class="admin-detail-value">
+                        <span class="badge-admin badge-admin-primary">@Model.StudentCode</span>
+                    </div>
+                </div>
+                <div class="admin-detail-row">
+                    <div class="admin-detail-label">Full Name</div>
+                    <div class="admin-detail-value"><strong>@Model.FullName</strong></div>
+                </div>
+                <div class="admin-detail-row">
+                    <div class="admin-detail-label">Email</div>
+                    <div class="admin-detail-value">@Model.Email</div>
+                </div>
+                <div class="admin-detail-row">
+                    <div class="admin-detail-label">Date of Birth</div>
+                    <div class="admin-detail-value">@Model.DateOfBirth.ToString("dd/MM/yyyy")</div>
+                </div>
+                <div class="admin-detail-row">
+                    <div class="admin-detail-label">Phone</div>
+                    <div class="admin-detail-value">@Model.PhoneNumber</div>
+                </div>
+                <div class="admin-detail-row">
+                    <div class="admin-detail-label">Address</div>
+                    <div class="admin-detail-value">@(string.IsNullOrEmpty(Model.Address) ? "-" : Model.Address)</div>
+                </div>
+                <div class="admin-detail-row">
+                    <div class="admin-detail-label">Major</div>
+                    <div class="admin-detail-value">@Model.Major</div>
+                </div>
+                <div class="admin-detail-row">
+                    <div class="admin-detail-label">Admission Year</div>
+                    <div class="admin-detail-value">@Model.AdmissionYear</div>
+                </div>
+                <div class="admin-detail-row">
+                    <div class="admin-detail-label">Class</div>
+                    <div class="admin-detail-value">@(Model.AdministrativeClassName ?? "-")</div>
+                </div>
+                <div class="admin-detail-row">
+                    <div class="admin-detail-label">GPA</div>
+                    <div class="admin-detail-value">
+                        @if (Model.GPA.HasValue)
+                        {
+                            <span class="badge-admin badge-admin-accent">@Model.GPA.Value.ToString("0.00")</span>
+                        }
+                        else
+                        {
+                            <span>-</span>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-7">
+        <div class="admin-card">
+            <div class="admin-card-header">
+                <h5><i class="bi bi-journal-text"></i> Enrollments</h5>
+            </div>
+            <div class="admin-card-body">
+                @if (Model.Enrollments.Any())
+                {
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th>Subject</th>
+                                <th>Class</th>
+                                <th>Semester</th>
+                                <th>Status</th>
+                                <th>Score</th>
+                                <th>Grade</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var e in Model.Enrollments)
+                            {
+                                <tr>
+                                    <td>@e.SubjectName</td>
+                                    <td><span class="badge-admin badge-admin-accent">@e.ClassCode</span></td>
+                                    <td>@e.Semester</td>
+                                    <td>
+                                        @if (e.Status == "Approved")
+                                        {
+                                            <span class="badge-admin badge-admin-accent">@e.Status</span>
+                                        }
+                                        else if (e.Status == "Pending")
+                                        {
+                                            <span class="badge-admin" style="background: #fef3cd; color: #856404;">@e.Status</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge-admin" style="background: rgba(220,53,69,0.1); color: #dc3545;">@e.Status</span>
+                                        }
+                                    </td>
+                                    <td>@(e.TotalScore?.ToString("0.00") ?? "-")</td>
+                                    <td>@(e.LetterGrade ?? "-")</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                }
+                else
+                {
+                    <div class="admin-empty">
+                        <i class="bi bi-journal-x"></i>
+                        <p>No enrollments found</p>
+                    </div>
+                }
+            </div>
+        </div>
     </div>
 </div>

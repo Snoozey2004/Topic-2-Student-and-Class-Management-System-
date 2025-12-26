@@ -1,0 +1,14 @@
+/* Lecturer Attendance History Styles - Areas/Lecturer/Views/Attendance/History.cshtml */
+
+.table tbody tr:hover {
+    background-color: #f8f9fa;
+}
+
+.progress {
+    background-color: #e9ecef;
+}
+
+.card {
+    border-radius: 12px;
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+}

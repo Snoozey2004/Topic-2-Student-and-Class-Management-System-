@@ -6,31 +6,7 @@
 }
 
 @section SidebarMenu {
-    <li class="nav-item">
-        <a class="nav-link" asp-area="Lecturer" asp-controller="Dashboard" asp-action="Index">
-            <i class="bi bi-house-door"></i>Home
-        </a>
-    </li>
-    <li class="nav-item">
-        <a class="nav-link active" asp-area="Lecturer" asp-controller="CourseClass" asp-action="Index">
-            <i class="bi bi-journal-text"></i>Course Classes
-        </a>
-    </li>
-    <li class="nav-item">
-        <a class="nav-link" asp-area="Lecturer" asp-controller="Grade" asp-action="Index">
-            <i class="bi bi-pencil-square"></i>Manage Grades
-        </a>
-    </li>
-    <li class="nav-item">
-        <a class="nav-link" asp-area="Lecturer" asp-controller="Attendance" asp-action="Index">
-            <i class="bi bi-clipboard-check"></i>Attendance
-        </a>
-    </li>
-    <li class="nav-item">
-        <a class="nav-link" asp-area="Lecturer" asp-controller="Schedule" asp-action="Index">
-            <i class="bi bi-calendar3"></i>Teaching Schedule
-        </a>
-    </li>
+    @await Html.PartialAsync("_LecturerSidebar")
 }
 
 <div class="mb-3">

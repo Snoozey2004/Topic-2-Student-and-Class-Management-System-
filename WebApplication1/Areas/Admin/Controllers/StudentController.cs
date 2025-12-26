@@ -36,7 +36,7 @@ namespace WebApplication1.Areas.Admin.Controllers
         // GET: Admin/Student/Create
         public IActionResult Create()
         {
-            ViewBag.AdministrativeClasses = WebApplication1.Data.FakeDatabase.AdministrativeClasses;
+            ViewBag.AdministrativeClasses = _studentService.GetAdministrativeClasses();
             return View();
         }
 
@@ -47,7 +47,7 @@ namespace WebApplication1.Areas.Admin.Controllers
         {
             if (!ModelState.IsValid)
             {
-                ViewBag.AdministrativeClasses = WebApplication1.Data.FakeDatabase.AdministrativeClasses;
+                ViewBag.AdministrativeClasses = _studentService.GetAdministrativeClasses();
                 return View(model);
             }
 
@@ -55,8 +55,8 @@ namespace WebApplication1.Areas.Admin.Controllers
             if (!success)
             {
                 ModelState.AddModelError("", "Email ho?c mã sinh viên ?ã t?n t?i");
-            ViewBag.AdministrativeClasses = WebApplication1.Data.FakeDatabase.AdministrativeClasses;
-            return View(model);
+                ViewBag.AdministrativeClasses = _studentService.GetAdministrativeClasses();
+                return View(model);
             }
 
             TempData["SuccessMessage"] = "Thêm sinh viên thành công!";
@@ -86,6 +86,7 @@ namespace WebApplication1.Areas.Admin.Controllers
                 AdmissionYear = student.AdmissionYear
             };
 
+            ViewBag.AdministrativeClasses = _studentService.GetAdministrativeClasses();
             return View(model);
         }
 
@@ -96,7 +97,7 @@ namespace WebApplication1.Areas.Admin.Controllers
         {
             if (!ModelState.IsValid)
             {
-                ViewBag.AdministrativeClasses = WebApplication1.Data.FakeDatabase.AdministrativeClasses;
+                ViewBag.AdministrativeClasses = _studentService.GetAdministrativeClasses();
                 return View(model);
             }
 
@@ -104,6 +105,7 @@ namespace WebApplication1.Areas.Admin.Controllers
             if (!success)
             {
                 ModelState.AddModelError("", "Email ho?c mã sinh viên ?ã t?n t?i");
+                ViewBag.AdministrativeClasses = _studentService.GetAdministrativeClasses();
                 return View(model);
             }
 

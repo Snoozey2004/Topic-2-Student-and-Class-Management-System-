@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations;
 using WebApplication1.Models;
 
 namespace WebApplication1.ViewModels
@@ -16,6 +17,20 @@ namespace WebApplication1.ViewModels
         public DateTime EnrollmentDate { get; set; }
         public string Status { get; set; } = string.Empty;
         public string? RejectionReason { get; set; }
+    }
+
+    /// <summary>
+    /// ViewModel cho form t?o/s?a Enrollment
+    /// </summary>
+    public class EnrollmentFormViewModel
+    {
+        public int? Id { get; set; }
+
+        [Required(ErrorMessage = "Student is required")]
+        public int StudentId { get; set; }
+
+        [Required(ErrorMessage = "Course Class is required")]
+        public int CourseClassId { get; set; }
     }
 
     /// <summary>

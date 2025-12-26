@@ -17,6 +17,7 @@ namespace WebApplication1.Services
         bool Update(StudentFormViewModel model);
         bool Delete(int id);
         double? CalculateGPA(int studentId, string? semester = null);
+        List<AdministrativeClass> GetAdministrativeClasses();
     }
 
     public class StudentService : IStudentService
@@ -234,6 +235,11 @@ namespace WebApplication1.Services
             }
 
             return totalCredits > 0 ? Math.Round(totalPoints / totalCredits, 2) : null;
+        }
+
+        public List<AdministrativeClass> GetAdministrativeClasses()
+        {
+            return FakeDatabase.AdministrativeClasses.ToList();
         }
     }
 }

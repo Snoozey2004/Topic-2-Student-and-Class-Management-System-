@@ -1,0 +1,60 @@
+@model WebApplication1.ViewModels.EnrollmentFormViewModel
+@{
+    ViewData["Title"] = "Edit Enrollment";
+    ViewData["PageTitle"] = "Edit Enrollment";
+    Layout = "~/Views/Shared/_DashboardLayout.cshtml";
+}
+
+@section SidebarMenu {
+    @await Html.PartialAsync("_AdminSidebar")
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/admin-crud.css" />
+}
+
+<a asp-action="Index" class="admin-back-link">
+    <i class="bi bi-arrow-left"></i> Back to Enrollment List
+</a>
+
+<div class="admin-card">
+    <div class="admin-card-header">
+        <h5><i class="bi bi-pencil"></i> Edit Enrollment</h5>
+    </div>
+    <div class="admin-card-body">
+        <form asp-action="Edit" method="post" class="admin-form">
+            <input type="hidden" asp-for="Id" />
+            
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label asp-for="StudentId" class="form-label">Student *</label>
+                    <select asp-for="StudentId" asp-items="ViewBag.Students" class="form-select">
+                        <option value="">-- Select Student --</option>
+                    </select>
+                    <span asp-validation-for="StudentId" class="text-danger small"></span>
+                </div>
+
+                <div class="col-md-6 mb-3">
+                    <label asp-for="CourseClassId" class="form-label">Course Class *</label>
+                    <select asp-for="CourseClassId" asp-items="ViewBag.CourseClasses" class="form-select">
+                        <option value="">-- Select Course Class --</option>
+                    </select>
+                    <span asp-validation-for="CourseClassId" class="text-danger small"></span>
+                </div>
+            </div>
+
+            <hr class="my-4">
+
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn-admin-primary">
+                    <i class="bi bi-check-circle"></i> Update Enrollment
+                </button>
+                <a asp-action="Index" class="btn-admin-outline">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

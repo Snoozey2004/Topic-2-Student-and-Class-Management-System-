@@ -6,235 +6,197 @@
 }
 
 @section SidebarMenu {
-    <li class="nav-item">
-        <a class="nav-link" asp-area="Lecturer" asp-controller="Dashboard" asp-action="Index">
-            <i class="bi bi-house-door me-2"></i>Home
-        </a>
-    </li>
-    <li class="nav-item">
-        <a class="nav-link" asp-area="Lecturer" asp-controller="CourseClass" asp-action="Index">
-            <i class="bi bi-journal-text me-2"></i>Course Classes
-        </a>
-    </li>
-    <li class="nav-item">
-        <a class="nav-link" asp-area="Lecturer" asp-controller="Grade" asp-action="Index">
-            <i class="bi bi-pencil-square me-2"></i>Manage Grades
-        </a>
-    </li>
-    <li class="nav-item">
-        <a class="nav-link active" asp-area="Lecturer" asp-controller="Attendance" asp-action="Index">
-            <i class="bi bi-clipboard-check me-2"></i>Attendance
-        </a>
-    </li>
-    <li class="nav-item">
-        <a class="nav-link" asp-area="Lecturer" asp-controller="Schedule" asp-action="Index">
-            <i class="bi bi-calendar3 me-2"></i>Teaching Schedule
-        </a>
-    </li>
+    @await Html.PartialAsync("_LecturerSidebar")
 }
-
-<div class="mb-3">
-    <a asp-action="Index" class="btn btn-secondary">
-        <i class="bi bi-arrow-left me-2"></i>Back to Classes
-    </a>
-    <a asp-action="TakeAttendance" asp-route-id="@Model.CourseClassId" class="btn btn-primary">
-        <i class="bi bi-clipboard-check me-2"></i>Take Attendance
-    </a>
-</div>
-
-<!-- Session History Card -->
-<div class="card mb-4">
-    <div class="card-header bg-primary text-white">
-        <h5 class="mb-0">
-            <i class="bi bi-clock-history me-2"></i>Attendance Sessions
-        </h5>
-        <small>@Model.SubjectName (@Model.ClassCode)</small>
-    </div>
-    <div class="card-body">
-        @if (Model.Records.Any())
-        {
-            <div class="table-responsive">
-                <table class="table table-hover">
-                    <thead class="table-light">
-                        <tr>
-                            <th style="width: 5%">#</th>
-                            <th style="width: 20%">Date</th>
-                            <th style="width: 20%">Session</th>
-                            <th style="width: 15%" class="text-center">Total Students</th>
-                            <th style="width: 15%" class="text-center">Present</th>
-                            <th style="width: 15%" class="text-center">Absent</th>
-                            <th style="width: 10%" class="text-center">Rate</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @for (int i = 0; i < Model.Records.Count; i++)
-                        {
-                            var record = Model.Records[i];
-                            <tr>
-                                <td>@(i + 1)</td>
-                                <td>
-                                    <i class="bi bi-calendar-date me-2"></i>
-                                    @record.SessionDate.ToString("dd/MM/yyyy")
-                                </td>
-                                <td>
-                                    <i class="bi bi-clock me-2"></i>
-                                    @record.Session
-                                </td>
-                                <td class="text-center">
-                                    <span class="badge bg-secondary">@record.TotalStudents</span>
-                                </td>
-                                <td class="text-center">
-                                    <span class="badge bg-success">@record.PresentCount</span>
-                                </td>
-                                <td class="text-center">
-                                    <span class="badge bg-danger">@record.AbsentCount</span>
-                                </td>
-                                <td class="text-center">
-                                    <span class="badge @(record.AttendanceRate >= 80 ? "bg-success" : record.AttendanceRate >= 60 ? "bg-warning" : "bg-danger")">
-                                        @record.AttendanceRate.ToString("F1")%
-                                    </span>
-                                </td>
-                            </tr>
-                        }
-                    </tbody>
-                </table>
-            </div>
-        }
-        else
-        {
-            <div class="alert alert-warning text-center">
-                <i class="bi bi-exclamation-triangle me-2"></i>
-                No attendance records found for this class.
-            </div>
-        }
-    </div>
-</div>
-
-<!-- Student Statistics Card -->
-<div class="card">
-    <div class="card-header bg-success text-white">
-        <h5 class="mb-0">
-            <i class="bi bi-people me-2"></i>Student Attendance Statistics
-        </h5>
-    </div>
-    <div class="card-body">
-        @if (Model.StudentStats.Any())
-        {
-            <div class="table-responsive">
-                <table class="table table-hover">
-                    <thead class="table-light">
-                        <tr>
-                            <th style="width: 5%">#</th>
-                            <th style="width: 15%">Student Code</th>
-                            <th style="width: 25%">Full Name</th>
-                            <th style="width: 15%" class="text-center">Sessions</th>
-                            <th style="width: 10%" class="text-center">Present</th>
-                            <th style="width: 10%" class="text-center">Absent</th>
-                            <th style="width: 10%" class="text-center">Rate</th>
-                            <th style="width: 10%" class="text-center">Score</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @{
-                            int index = 1;
-                            foreach (var stat in Model.StudentStats.Values.OrderBy(s => s.StudentCode))
-                            {
-                                <tr>
-                                    <td>@index</td>
-                                    <td><strong>@stat.StudentCode</strong></td>
-                                    <td>@stat.FullName</td>
-                                    <td class="text-center">
-                                        <span class="badge bg-secondary">@stat.TotalSessions</span>
-                                    </td>
-                                    <td class="text-center">
-                                        <span class="badge bg-success">@stat.PresentSessions</span>
-                                    </td>
-                                    <td class="text-center">
-                                        <span class="badge bg-danger">@stat.AbsentSessions</span>
-                                    </td>
-                                    <td class="text-center">
-                                        <div class="progress" style="height: 20px;">
-                                            <div class="progress-bar @(stat.AttendanceRate >= 80 ? "bg-success" : stat.AttendanceRate >= 60 ? "bg-warning" : "bg-danger")" 
-                                                 role="progressbar" 
-                                                 style="width: @stat.AttendanceRate.ToString("F1")%"
-                                                 aria-valuenow="@stat.AttendanceRate" 
-                                                 aria-valuemin="0" 
-                                                 aria-valuemax="100">
-                                                <small>@stat.AttendanceRate.ToString("F0")%</small>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td class="text-center">
-                                        <strong class="@(stat.AttendanceScore >= 8 ? "text-success" : stat.AttendanceScore >= 5 ? "text-warning" : "text-danger")">
-                                            @stat.AttendanceScore.ToString("F1")
-                                        </strong>
-                                    </td>
-                                </tr>
-                                index++;
-                            }
-                        }
-                    </tbody>
-                </table>
-            </div>
-
-            <div class="row mt-4">
-                <div class="col-md-4">
-                    <div class="card bg-light">
-                        <div class="card-body text-center">
-                            <h6 class="text-muted">Total Sessions</h6>
-                            <h3 class="mb-0">@Model.Records.Count</h3>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="card bg-light">
-                        <div class="card-body text-center">
-                            <h6 class="text-muted">Total Students</h6>
-                            <h3 class="mb-0">@Model.StudentStats.Count</h3>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="card bg-light">
-                        <div class="card-body text-center">
-                            <h6 class="text-muted">Average Rate</h6>
-                            <h3 class="mb-0 @(Model.StudentStats.Values.Average(s => s.AttendanceRate) >= 80 ? "text-success" : "text-warning")">
-                                @Model.StudentStats.Values.Average(s => s.AttendanceRate).ToString("F1")%
-                            </h3>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="alert alert-info mt-4">
-                <i class="bi bi-info-circle me-2"></i>
-                <strong>Note:</strong> Attendance score is calculated based on attendance rate (max 10 points). 
-                This score contributes 10% to the final grade.
-            </div>
-        }
-        else
-        {
-            <div class="alert alert-warning text-center">
-                <i class="bi bi-exclamation-triangle me-2"></i>
-                No student statistics available yet.
-            </div>
-        }
-    </div>
-</div>
 
 @section Styles {
-<style>
-    .table tbody tr:hover {
-        background-color: #f8f9fa;
-    }
-
-    .progress {
-        background-color: #e9ecef;
-    }
-
-    .card {
-        border-radius: 12px;
-        box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
-    }
-</style>
+    <link rel="stylesheet" href="~/css/portal-common.css" />
 }
+
+<!-- Header -->
+<div class="portal-filter-bar">
+    <div>
+        <h6 style="margin: 0; color: var(--portal-primary); font-weight: 600;">
+            <i class="bi bi-clock-history me-2" style="color: var(--portal-accent);"></i>@Model.SubjectName
+        </h6>
+        <small style="color: var(--portal-text-muted);">Class: @Model.ClassCode</small>
+    </div>
+    <div style="display: flex; gap: 0.5rem;">
+        <a asp-action="TakeAttendance" asp-route-id="@Model.CourseClassId" class="portal-btn portal-btn-accent portal-btn-sm">
+            <i class="bi bi-clipboard-check"></i> Take Attendance
+        </a>
+        <a asp-action="Index" class="portal-btn portal-btn-outline portal-btn-sm">
+            <i class="bi bi-arrow-left"></i> Back
+        </a>
+    </div>
+</div>
+
+<!-- Stats -->
+@if (Model.StudentStats.Any())
+{
+    <div class="portal-stats">
+        <div class="portal-stat-card">
+            <div class="portal-stat-icon primary">
+                <i class="bi bi-calendar-check"></i>
+            </div>
+            <div class="portal-stat-info">
+                <h4>@Model.Records.Count</h4>
+                <p>Total Sessions</p>
+            </div>
+        </div>
+        <div class="portal-stat-card">
+            <div class="portal-stat-icon accent">
+                <i class="bi bi-people"></i>
+            </div>
+            <div class="portal-stat-info">
+                <h4>@Model.StudentStats.Count</h4>
+                <p>Total Students</p>
+            </div>
+        </div>
+        <div class="portal-stat-card">
+            <div class="portal-stat-icon primary">
+                <i class="bi bi-percent"></i>
+            </div>
+            <div class="portal-stat-info">
+                <h4>@Model.StudentStats.Values.Average(s => s.AttendanceRate).ToString("F1")%</h4>
+                <p>Average Rate</p>
+            </div>
+        </div>
+    </div>
+}
+
+<!-- Session History -->
+<div class="portal-card" style="margin-bottom: 1.5rem;">
+    <div class="portal-card-header">
+        <h5><i class="bi bi-list-ul"></i> Attendance Sessions</h5>
+    </div>
+    <div class="portal-card-body p-0">
+        @if (Model.Records.Any())
+        {
+            <table class="portal-table">
+                <thead>
+                    <tr>
+                        <th style="width: 50px;">#</th>
+                        <th>Date</th>
+                        <th>Session</th>
+                        <th style="text-align: center;">Total</th>
+                        <th style="text-align: center;">Present</th>
+                        <th style="text-align: center;">Absent</th>
+                        <th style="text-align: center;">Rate</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @for (int i = 0; i < Model.Records.Count; i++)
+                    {
+                        var record = Model.Records[i];
+                        var rateClass = record.AttendanceRate >= 80 ? "portal-badge-success" : 
+                                       record.AttendanceRate >= 60 ? "portal-badge-warning" : "portal-badge-danger";
+                        <tr>
+                            <td style="text-align: center;">@(i + 1)</td>
+                            <td>
+                                <i class="bi bi-calendar-date me-1" style="color: var(--portal-accent);"></i>
+                                @record.SessionDate.ToString("dd/MM/yyyy")
+                            </td>
+                            <td>
+                                <i class="bi bi-clock me-1" style="color: var(--portal-accent);"></i>
+                                @record.Session
+                            </td>
+                            <td style="text-align: center;">
+                                <span class="portal-badge portal-badge-primary">@record.TotalStudents</span>
+                            </td>
+                            <td style="text-align: center;">
+                                <span class="portal-badge portal-badge-success">@record.PresentCount</span>
+                            </td>
+                            <td style="text-align: center;">
+                                <span class="portal-badge portal-badge-danger">@record.AbsentCount</span>
+                            </td>
+                            <td style="text-align: center;">
+                                <span class="portal-badge @rateClass">@record.AttendanceRate.ToString("F1")%</span>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+        else
+        {
+            <div class="portal-empty">
+                <i class="bi bi-calendar-x"></i>
+                <p>No attendance records found</p>
+            </div>
+        }
+    </div>
+</div>
+
+<!-- Student Statistics -->
+<div class="portal-card">
+    <div class="portal-card-header">
+        <h5><i class="bi bi-people"></i> Student Attendance Statistics</h5>
+    </div>
+    <div class="portal-card-body p-0">
+        @if (Model.StudentStats.Any())
+        {
+            <table class="portal-table">
+                <thead>
+                    <tr>
+                        <th style="width: 50px;">#</th>
+                        <th style="width: 120px;">Student Code</th>
+                        <th>Full Name</th>
+                        <th style="text-align: center;">Sessions</th>
+                        <th style="text-align: center;">Present</th>
+                        <th style="text-align: center;">Absent</th>
+                        <th style="width: 150px;">Rate</th>
+                        <th style="text-align: center; width: 80px;">Score</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @{
+                        int index = 1;
+                        foreach (var stat in Model.StudentStats.Values.OrderBy(s => s.StudentCode))
+                        {
+                            var scoreClass = stat.AttendanceScore >= 8 ? "portal-grade-a" : 
+                                           stat.AttendanceScore >= 5 ? "portal-grade-c" : "portal-grade-d";
+                            <tr>
+                                <td style="text-align: center;">@index</td>
+                                <td><span class="portal-badge portal-badge-primary">@stat.StudentCode</span></td>
+                                <td><strong>@stat.FullName</strong></td>
+                                <td style="text-align: center;">@stat.TotalSessions</td>
+                                <td style="text-align: center;">
+                                    <span class="portal-badge portal-badge-success">@stat.PresentSessions</span>
+                                </td>
+                                <td style="text-align: center;">
+                                    <span class="portal-badge portal-badge-danger">@stat.AbsentSessions</span>
+                                </td>
+                                <td>
+                                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                        <div class="portal-progress" style="flex: 1;">
+                                            <div class="portal-progress-bar" style="width: @stat.AttendanceRate.ToString("F1")%"></div>
+                                        </div>
+                                        <small style="width: 40px; text-align: right;">@stat.AttendanceRate.ToString("F0")%</small>
+                                    </div>
+                                </td>
+                                <td style="text-align: center;">
+                                    <span class="portal-grade-badge @scoreClass">@stat.AttendanceScore.ToString("F1")</span>
+                                </td>
+                            </tr>
+                            index++;
+                        }
+                    }
+                </tbody>
+            </table>
+        }
+        else
+        {
+            <div class="portal-empty">
+                <i class="bi bi-people"></i>
+                <p>No student statistics available</p>
+            </div>
+        }
+    </div>
+</div>
+
+<!-- Note -->
+<div class="portal-alert portal-alert-success" style="margin-top: 1rem;">
+    <i class="bi bi-info-circle"></i>
+    <span><strong>Note:</strong> Attendance score (max 10) contributes 10% to the final grade.</span>
+</div>

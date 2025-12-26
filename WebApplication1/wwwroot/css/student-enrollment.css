@@ -1,0 +1,270 @@
+/* Student Enrollment Page - Figma Design Match */
+
+/* Page Header */
+.page-header {
+    margin-bottom: 2rem;
+}
+
+.page-title {
+    font-size: 2rem;
+    font-weight: 600;
+    color: #1E3A5F;
+    margin-bottom: 0.5rem;
+}
+
+.page-subtitle {
+    font-size: 0.95rem;
+    color: #6B7280;
+}
+
+/* Filter Container */
+.filter-container {
+    background: #F9FAFB;
+    border: 1px solid #E2E8F0;
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.filter-group {
+    flex: 1;
+    min-width: 250px;
+}
+
+.filter-select {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border: 1px solid #E2E8F0;
+    border-radius: 8px;
+    background: white;
+    font-size: 0.9rem;
+    color: #1E3A5F;
+}
+
+.filter-select:focus {
+    outline: none;
+    border-color: #2D9E8E;
+    box-shadow: 0 0 0 3px rgba(45, 158, 142, 0.1);
+}
+
+/* Section Headers */
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+}
+
+.section-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #1E3A5F;
+    margin: 0;
+}
+
+.btn-register-selected {
+    background: #1E3A5F;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 0.75rem 1.5rem;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.btn-register-selected:hover {
+    background: #163354;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(30, 58, 95, 0.2);
+}
+
+/* Cards */
+.enrollment-card {
+    background: white;
+    border: 1px solid #E2E8F0;
+    border-radius: 16px;
+    padding: 2rem;
+    margin-bottom: 2rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+/* Table Styling */
+.enrollment-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+.enrollment-table thead th {
+    background: #F9FAFB;
+    color: #1E3A5F;
+    font-weight: 600;
+    font-size: 0.875rem;
+    padding: 1rem;
+    border-bottom: 1px solid #E2E8F0;
+    text-align: left;
+}
+
+.enrollment-table thead th:first-child {
+    border-top-left-radius: 8px;
+}
+
+.enrollment-table thead th:last-child {
+    border-top-right-radius: 8px;
+}
+
+.enrollment-table tbody tr {
+    border-bottom: 1px solid #E2E8F0;
+    transition: background 0.2s ease;
+}
+
+.enrollment-table tbody tr:hover {
+    background: #F9FAFB;
+}
+
+.enrollment-table tbody td {
+    padding: 1.25rem 1rem;
+    font-size: 0.9rem;
+    color: #374151;
+}
+
+/* Code Badge */
+.code-badge {
+    display: inline-block;
+    background: #EFF6FF;
+    color: #1E3A5F;
+    padding: 0.35rem 0.75rem;
+    border-radius: 6px;
+    font-weight: 600;
+    font-size: 0.85rem;
+}
+
+/* Subject Name */
+.subject-name {
+    font-weight: 600;
+    color: #1E3A5F;
+}
+
+/* Credits Pill */
+.credits-pill {
+    display: inline-block;
+    background: #E0E7FF;
+    color: #4F46E5;
+    padding: 0.25rem 0.75rem;
+    border-radius: 12px;
+    font-weight: 600;
+    font-size: 0.85rem;
+}
+
+/* Enrollment Count */
+.enrollment-count {
+    color: #EF4444;
+    font-weight: 600;
+}
+
+/* Schedule Info */
+.schedule-info {
+    font-size: 0.85rem;
+    color: #6B7280;
+    line-height: 1.6;
+}
+
+/* Status Badges */
+.status-badge {
+    display: inline-block;
+    padding: 0.35rem 0.85rem;
+    border-radius: 12px;
+    font-weight: 600;
+    font-size: 0.85rem;
+}
+
+.status-badge.status-pending {
+    background: #FEF3C7;
+    color: #D97706;
+}
+
+.status-badge.status-approved {
+    background: #D1FAE5;
+    color: #2D9E8E;
+}
+
+.status-badge.status-rejected {
+    background: #FEE2E2;
+    color: #DC2626;
+}
+
+.status-badge.status-in-progress {
+    background: #FEF3C7;
+    color: #D97706;
+}
+
+.status-badge.status-completed {
+    background: #D1FAE5;
+    color: #2D9E8E;
+}
+
+/* Action Buttons */
+.btn-action {
+    border: none;
+    background: none;
+    color: #DC2626;
+    font-size: 1.25rem;
+    cursor: pointer;
+    padding: 0.25rem;
+    transition: color 0.2s ease;
+}
+
+.btn-action:hover {
+    color: #991B1B;
+}
+
+/* Summary Footer */
+.enrollment-summary {
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid #E2E8F0;
+    margin-top: 1.5rem;
+}
+
+.summary-item {
+    font-size: 0.95rem;
+    color: #1E3A5F;
+}
+
+.summary-item strong {
+    font-weight: 600;
+}
+
+.summary-total {
+    color: #2D9E8E;
+    font-weight: 700;
+    font-size: 1.1rem;
+}
+
+/* No Grade/Data */
+.no-grade {
+    color: #9CA3AF;
+    font-size: 1.25rem;
+}
+
+/* Empty State */
+.empty-state {
+    text-align: center;
+    padding: 3rem 1rem;
+    color: #9CA3AF;
+}
+
+.empty-state i {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    opacity: 0.5;
+}

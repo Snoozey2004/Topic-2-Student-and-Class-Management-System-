@@ -1,0 +1,100 @@
+@model WebApplication1.ViewModels.EnrollmentListViewModel
+@{
+    ViewData["Title"] = "Enrollment Details";
+    ViewData["PageTitle"] = "Enrollment Details";
+    Layout = "~/Views/Shared/_DashboardLayout.cshtml";
+}
+
+@section SidebarMenu {
+    @await Html.PartialAsync("_AdminSidebar")
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/admin-crud.css" />
+}
+
+<a asp-action="Index" class="admin-back-link">
+    <i class="bi bi-arrow-left"></i> Back to Enrollment List
+</a>
+
+<div class="admin-card">
+    <div class="admin-card-header">
+        <h5><i class="bi bi-clipboard-check"></i> Enrollment Details</h5>
+        <div class="d-flex gap-2">
+            <a asp-action="Edit" asp-route-id="@Model.Id" class="btn-admin-outline btn-sm">
+                <i class="bi bi-pencil"></i> Edit
+            </a>
+            <a asp-action="Delete" asp-route-id="@Model.Id" class="btn-admin-danger btn-sm">
+                <i class="bi bi-trash"></i> Delete
+            </a>
+        </div>
+    </div>
+    <div class="admin-card-body">
+        <div class="row">
+            <div class="col-md-6">
+                <div class="admin-detail-row">
+                    <div class="admin-detail-label">ID</div>
+                    <div class="admin-detail-value">@Model.Id</div>
+                </div>
+                <div class="admin-detail-row">
+                    <div class="admin-detail-label">Student Code</div>
+                    <div class="admin-detail-value">
+                        <span class="badge-admin badge-admin-primary">@Model.StudentCode</span>
+                    </div>
+                </div>
+                <div class="admin-detail-row">
+                    <div class="admin-detail-label">Student Name</div>
+                    <div class="admin-detail-value"><strong>@Model.StudentName</strong></div>
+                </div>
+                <div class="admin-detail-row">
+                    <div class="admin-detail-label">Course Class</div>
+                    <div class="admin-detail-value">
+                        <span class="badge-admin badge-admin-accent">@Model.ClassCode</span>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="admin-detail-row">
+                    <div class="admin-detail-label">Subject</div>
+                    <div class="admin-detail-value">@Model.SubjectName</div>
+                </div>
+                <div class="admin-detail-row">
+                    <div class="admin-detail-label">Semester</div>
+                    <div class="admin-detail-value">@Model.Semester</div>
+                </div>
+                <div class="admin-detail-row">
+                    <div class="admin-detail-label">Enrollment Date</div>
+                    <div class="admin-detail-value">@Model.EnrollmentDate.ToString("dd/MM/yyyy HH:mm")</div>
+                </div>
+                <div class="admin-detail-row">
+                    <div class="admin-detail-label">Status</div>
+                    <div class="admin-detail-value">
+                        @switch (Model.Status)
+                        {
+                            case "Pending":
+                                <span class="badge-admin badge-admin-warning">Pending</span>
+                                break;
+                            case "Approved":
+                                <span class="badge-admin badge-admin-success">Approved</span>
+                                break;
+                            case "Rejected":
+                                <span class="badge-admin badge-admin-danger">Rejected</span>
+                                break;
+                            case "Dropped":
+                                <span class="badge-admin" style="background: #6c757d20; color: #6c757d;">Dropped</span>
+                                break;
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        @if (!string.IsNullOrEmpty(Model.RejectionReason))
+        {
+            <div class="admin-alert admin-alert-danger mt-3">
+                <i class="bi bi-exclamation-circle"></i>
+                <span><strong>Rejection Reason:</strong> @Model.RejectionReason</span>
+            </div>
+        }
+    </div>
+</div>

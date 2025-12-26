@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using WebApplication1.Services;
 using WebApplication1.ViewModels;
 
@@ -9,17 +10,20 @@ namespace WebApplication1.Areas.Lecturer.Controllers
     {
         private readonly IAttendanceService _attendanceService;
         private readonly ILecturerService _lecturerService;
+        private readonly ISemesterService _semesterService;
 
         public AttendanceController(
             IAttendanceService attendanceService,
-            ILecturerService lecturerService)
+            ILecturerService lecturerService,
+            ISemesterService semesterService)
         {
             _attendanceService = attendanceService;
             _lecturerService = lecturerService;
+            _semesterService = semesterService;
         }
 
         // GET: Lecturer/Attendance
-        public IActionResult Index()
+        public IActionResult Index(string? semester = null)
         {
             var userIdClaim = User.FindFirst("UserId");
             if (userIdClaim == null)
@@ -35,7 +39,14 @@ namespace WebApplication1.Areas.Lecturer.Controllers
                 return NotFound("Lecturer not found");
             }
 
-            var classes = _attendanceService.GetClassesByLecturerId(lecturer.Id);
+            // Get semester data from SemesterService
+            var currentSemester = semester ?? _semesterService.GetCurrentSemester();
+            var allSemesters = _semesterService.GetAllSemesters();
+
+            ViewBag.Semesters = new SelectList(allSemesters);
+            ViewBag.CurrentSemester = currentSemester;
+
+            var classes = _attendanceService.GetClassesByLecturerId(lecturer.Id, currentSemester);
             return View(classes);
         }
 
@@ -56,7 +67,6 @@ namespace WebApplication1.Areas.Lecturer.Controllers
                 return NotFound("Lecturer not found");
             }
 
-            // Default values
             var sessionDate = date ?? DateTime.Today;
             var sessionTime = session ?? "Morning";
 

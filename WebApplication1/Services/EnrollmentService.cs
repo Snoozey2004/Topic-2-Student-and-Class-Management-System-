@@ -13,11 +13,14 @@ namespace WebApplication1.Services
         List<EnrollmentListViewModel> GetByStudentId(int studentId);
         List<EnrollmentListViewModel> GetByCourseClassId(int courseClassId);
         Enrollment? GetById(int id);
-        bool Enroll(int studentId, int courseClassId);
+        bool Create(EnrollmentFormViewModel model);
+        bool Update(EnrollmentFormViewModel model);
+        bool Delete(int id);
+        bool Enroll(int studentId, int courseClassId, bool autoApprove = true);
         bool Approve(int enrollmentId, int approvedBy);
         bool Reject(int enrollmentId, string reason);
         bool Drop(int enrollmentId);
-        List<AvailableCourseViewModel> GetAvailableCoursesForStudent(int studentId);
+        List<AvailableCourseViewModel> GetAvailableCoursesForStudent(int studentId, string? semester = null);
         bool CanEnroll(int studentId, int courseClassId, out string message);
     }
 
@@ -65,7 +68,9 @@ namespace WebApplication1.Services
         public List<EnrollmentListViewModel> GetByStudentId(int studentId)
         {
             return FakeDatabase.Enrollments
-                .Where(e => e.StudentId == studentId)
+                .Where(e => e.StudentId == studentId && 
+                           e.Status != EnrollmentStatus.Dropped &&
+                           e.Status != EnrollmentStatus.Rejected)
                 .Select(e =>
                 {
                     var student = FakeDatabase.Students.FirstOrDefault(s => s.Id == e.StudentId);
@@ -121,13 +126,72 @@ namespace WebApplication1.Services
             return FakeDatabase.Enrollments.FirstOrDefault(e => e.Id == id);
         }
 
-        public bool Enroll(int studentId, int courseClassId)
+        public bool Create(EnrollmentFormViewModel model)
         {
-            // Ki?m tra ?i?u ki?n ??ng ký
+            var existing = FakeDatabase.Enrollments.FirstOrDefault(e =>
+                e.StudentId == model.StudentId &&
+                e.CourseClassId == model.CourseClassId &&
+                e.Status != EnrollmentStatus.Rejected &&
+                e.Status != EnrollmentStatus.Dropped);
+
+            if (existing != null) return false;
+
+            var enrollment = new Enrollment
+            {
+                Id = FakeDatabase.GetNextEnrollmentId(),
+                StudentId = model.StudentId,
+                CourseClassId = model.CourseClassId,
+                EnrollmentDate = DateTime.Now,
+                Status = EnrollmentStatus.Pending
+            };
+
+            FakeDatabase.Enrollments.Add(enrollment);
+            return true;
+        }
+
+        public bool Update(EnrollmentFormViewModel model)
+        {
+            var enrollment = GetById(model.Id ?? 0);
+            if (enrollment == null) return false;
+
+            enrollment.StudentId = model.StudentId;
+            enrollment.CourseClassId = model.CourseClassId;
+            return true;
+        }
+
+        public bool Delete(int id)
+        {
+            var enrollment = GetById(id);
+            if (enrollment == null) return false;
+
+            if (enrollment.Status == EnrollmentStatus.Approved)
+            {
+                var courseClass = FakeDatabase.CourseClasses.FirstOrDefault(c => c.Id == enrollment.CourseClassId);
+                if (courseClass != null && courseClass.CurrentStudents > 0)
+                {
+                    courseClass.CurrentStudents--;
+                }
+
+                var grade = FakeDatabase.Grades.FirstOrDefault(g => g.EnrollmentId == enrollment.Id);
+                if (grade != null)
+                {
+                    FakeDatabase.Grades.Remove(grade);
+                }
+            }
+
+            FakeDatabase.Enrollments.Remove(enrollment);
+            return true;
+        }
+
+        public bool Enroll(int studentId, int courseClassId, bool autoApprove = true)
+        {
             if (!CanEnroll(studentId, courseClassId, out string message))
             {
                 return false;
             }
+
+            var courseClass = FakeDatabase.CourseClasses.FirstOrDefault(c => c.Id == courseClassId);
+            if (courseClass == null) return false;
 
             var enrollment = new Enrollment
             {
@@ -135,22 +199,56 @@ namespace WebApplication1.Services
                 StudentId = studentId,
                 CourseClassId = courseClassId,
                 EnrollmentDate = DateTime.Now,
-                Status = EnrollmentStatus.Pending
+                Status = autoApprove ? EnrollmentStatus.Approved : EnrollmentStatus.Pending
             };
+
+            // Auto-approve: immediately increase student count and create grade
+            if (autoApprove)
+            {
+                enrollment.ApprovedDate = DateTime.Now;
+                enrollment.ApprovedBy = 0; // System auto-approve
+                
+                // Increase current students count
+                courseClass.CurrentStudents++;
+
+                // Create Grade record
+                var grade = new Grade
+                {
+                    Id = FakeDatabase.GetNextGradeId(),
+                    EnrollmentId = enrollment.Id,
+                    StudentId = studentId,
+                    CourseClassId = courseClassId,
+                    IsPassed = false
+                };
+                FakeDatabase.Grades.Add(grade);
+            }
 
             FakeDatabase.Enrollments.Add(enrollment);
 
-            // T?o thông báo cho sinh viên
+            // Notify student
             var student = FakeDatabase.Students.FirstOrDefault(s => s.Id == studentId);
             if (student != null)
             {
-                _notificationService.CreateNotification(
-                    student.UserId,
-                    "??ng ký môn h?c",
-                    "??n ??ng ký môn h?c c?a b?n ?ang ch? ???c duy?t.",
-                    NotificationType.Enrollment,
-                    "/Student/Enrollments"
-                );
+                if (autoApprove)
+                {
+                    _notificationService.CreateNotification(
+                        student.UserId,
+                        "Course Registration Successful",
+                        $"You have been enrolled in {courseClass.ClassCode}. Check your schedule for class times.",
+                        NotificationType.Enrollment,
+                        "/Student/Schedule"
+                    );
+                }
+                else
+                {
+                    _notificationService.CreateNotification(
+                        student.UserId,
+                        "Course Registration Pending",
+                        "Your course registration is pending approval.",
+                        NotificationType.Enrollment,
+                        "/Student/Enrollments"
+                    );
+                }
             }
 
             return true;
@@ -168,14 +266,13 @@ namespace WebApplication1.Services
             enrollment.ApprovedDate = DateTime.Now;
             enrollment.ApprovedBy = approvedBy;
 
-            // C?p nh?t s? l??ng sinh viên trong l?p
             var courseClass = FakeDatabase.CourseClasses.FirstOrDefault(c => c.Id == enrollment.CourseClassId);
             if (courseClass != null)
             {
                 courseClass.CurrentStudents++;
             }
 
-            // T?o b?n ghi Grade
+            // Create Grade record
             var grade = new Grade
             {
                 Id = FakeDatabase.GetNextGradeId(),
@@ -186,16 +283,15 @@ namespace WebApplication1.Services
             };
             FakeDatabase.Grades.Add(grade);
 
-            // T?o thông báo cho sinh viên
             var student = FakeDatabase.Students.FirstOrDefault(s => s.Id == enrollment.StudentId);
             if (student != null)
             {
                 _notificationService.CreateNotification(
                     student.UserId,
-                    "??ng ký môn h?c thành công",
-                    "??n ??ng ký môn h?c c?a b?n ?ã ???c phê duy?t.",
+                    "Course Registration Approved",
+                    $"Your registration for {courseClass?.ClassCode} has been approved. Check your schedule.",
                     NotificationType.Enrollment,
-                    "/Student/Enrollments"
+                    "/Student/Schedule"
                 );
             }
 
@@ -213,14 +309,13 @@ namespace WebApplication1.Services
             enrollment.Status = EnrollmentStatus.Rejected;
             enrollment.RejectionReason = reason;
 
-            // T?o thông báo cho sinh viên
             var student = FakeDatabase.Students.FirstOrDefault(s => s.Id == enrollment.StudentId);
             if (student != null)
             {
                 _notificationService.CreateNotification(
                     student.UserId,
-                    "??ng ký môn h?c b? t? ch?i",
-                    $"??n ??ng ký môn h?c c?a b?n ?ã b? t? ch?i. Lý do: {reason}",
+                    "Course Registration Rejected",
+                    $"Your course registration has been rejected. Reason: {reason}",
                     NotificationType.Enrollment,
                     "/Student/Enrollments"
                 );
@@ -234,27 +329,58 @@ namespace WebApplication1.Services
             var enrollment = GetById(enrollmentId);
             if (enrollment == null) return false;
 
+            var wasApproved = enrollment.Status == EnrollmentStatus.Approved;
             enrollment.Status = EnrollmentStatus.Dropped;
 
-            // Gi?m s? l??ng sinh viên n?u ?ã approved
-            if (enrollment.Status == EnrollmentStatus.Approved)
+            if (wasApproved)
             {
                 var courseClass = FakeDatabase.CourseClasses.FirstOrDefault(c => c.Id == enrollment.CourseClassId);
                 if (courseClass != null && courseClass.CurrentStudents > 0)
                 {
                     courseClass.CurrentStudents--;
                 }
+
+                // Remove grade record
+                var grade = FakeDatabase.Grades.FirstOrDefault(g => g.EnrollmentId == enrollmentId);
+                if (grade != null)
+                {
+                    FakeDatabase.Grades.Remove(grade);
+                }
             }
 
             return true;
         }
 
-        public List<AvailableCourseViewModel> GetAvailableCoursesForStudent(int studentId)
+        /// <summary>
+        /// Get available courses for student - semester is passed from Controller (no hardcode)
+        /// </summary>
+        public List<AvailableCourseViewModel> GetAvailableCoursesForStudent(int studentId, string? semester = null)
         {
-            var currentSemester = "HK1-2024"; // Có th? l?y t? config ho?c tính toán
+            // L?y semester t? parameter, n?u null thì l?y t? database
+            var currentSemester = semester;
+            if (string.IsNullOrEmpty(currentSemester))
+            {
+                currentSemester = FakeDatabase.CourseClasses
+                    .Where(c => c.Status == CourseClassStatus.Open || c.Status == CourseClassStatus.InProgress)
+                    .OrderByDescending(c => c.Semester)
+                    .FirstOrDefault()?.Semester;
+                
+                if (string.IsNullOrEmpty(currentSemester))
+                {
+                    currentSemester = FakeDatabase.CourseClasses
+                        .OrderByDescending(c => c.Semester)
+                        .FirstOrDefault()?.Semester ?? "";
+                }
+            }
+
+            var enrolledCourseClassIds = FakeDatabase.Enrollments
+                .Where(e => e.StudentId == studentId && e.Status == EnrollmentStatus.Approved)
+                .Select(e => e.CourseClassId)
+                .ToList();
 
             return FakeDatabase.CourseClasses
-                .Where(c => c.Semester == currentSemester && c.Status == CourseClassStatus.Open)
+                .Where(c => c.Semester == currentSemester && 
+                           (c.Status == CourseClassStatus.Open || c.Status == CourseClassStatus.InProgress))
                 .Select(c =>
                 {
                     var subject = FakeDatabase.Subjects.FirstOrDefault(s => s.Id == c.SubjectId);
@@ -265,6 +391,7 @@ namespace WebApplication1.Services
                         .ToList();
 
                     var canEnroll = CanEnroll(studentId, c.Id, out string message);
+                    var remaining = c.MaxStudents - c.CurrentStudents;
 
                     return new AvailableCourseViewModel
                     {
@@ -279,15 +406,14 @@ namespace WebApplication1.Services
                         MaxStudents = c.MaxStudents,
                         Room = c.Room,
                         ScheduleInfo = schedules,
-                        CanEnroll = canEnroll,
-                        EnrollmentMessage = message
+                        CanEnroll = canEnroll && remaining > 0,
+                        EnrollmentMessage = remaining <= 0 ? "Class is full" : message
                     };
                 }).ToList();
         }
 
         public bool CanEnroll(int studentId, int courseClassId, out string message)
         {
-            // Ki?m tra ?ã ??ng ký r?i ch?a
             var existingEnrollment = FakeDatabase.Enrollments.FirstOrDefault(e =>
                 e.StudentId == studentId &&
                 e.CourseClassId == courseClassId &&
@@ -296,31 +422,50 @@ namespace WebApplication1.Services
 
             if (existingEnrollment != null)
             {
-                message = "B?n ?ã ??ng ký l?p này r?i";
+                message = "Already enrolled in this class";
                 return false;
             }
 
-            // Ki?m tra l?p ?ã ??y ch?a
             var courseClass = FakeDatabase.CourseClasses.FirstOrDefault(c => c.Id == courseClassId);
             if (courseClass == null)
             {
-                message = "L?p h?c không t?n t?i";
+                message = "Class not found";
                 return false;
             }
 
             if (courseClass.CurrentStudents >= courseClass.MaxStudents)
             {
-                message = "L?p h?c ?ã ??y";
+                message = "Class is full";
                 return false;
             }
 
-            if (courseClass.Status != CourseClassStatus.Open)
+            if (courseClass.Status != CourseClassStatus.Open && courseClass.Status != CourseClassStatus.InProgress)
             {
-                message = "L?p h?c không m? ??ng ký";
+                message = "Class is not open for registration";
                 return false;
             }
 
-            // Ki?m tra môn tiên quy?t
+            var enrolledInSameSubject = FakeDatabase.Enrollments
+                .Where(e => e.StudentId == studentId && e.Status == EnrollmentStatus.Approved)
+                .Any(e => 
+                {
+                    var cc = FakeDatabase.CourseClasses.FirstOrDefault(c => c.Id == e.CourseClassId);
+                    return cc != null && cc.SubjectId == courseClass.SubjectId && cc.Semester == courseClass.Semester;
+                });
+
+            if (enrolledInSameSubject)
+            {
+                message = "Already enrolled in this subject";
+                return false;
+            }
+
+            var conflictCheck = HasScheduleConflict(studentId, courseClassId);
+            if (conflictCheck.HasConflict)
+            {
+                message = $"Schedule conflict with {conflictCheck.ConflictingClass}";
+                return false;
+            }
+
             var subject = FakeDatabase.Subjects.FirstOrDefault(s => s.Id == courseClass.SubjectId);
             if (subject != null && subject.PrerequisiteSubjectIds.Any())
             {
@@ -343,13 +488,79 @@ namespace WebApplication1.Services
 
                 if (missingPrerequisites.Any())
                 {
-                    message = "Ch?a ?? ?i?u ki?n môn tiên quy?t";
+                    var missingSubjectNames = FakeDatabase.Subjects
+                        .Where(s => missingPrerequisites.Contains(s.Id))
+                        .Select(s => s.SubjectCode)
+                        .ToList();
+                    message = $"Prerequisites not met: {string.Join(", ", missingSubjectNames)}";
                     return false;
                 }
             }
 
-            message = "Có th? ??ng ký";
+            message = "Available";
             return true;
+        }
+
+        private (bool HasConflict, string ConflictingClass) HasScheduleConflict(int studentId, int courseClassId)
+        {
+            var newClassSchedules = FakeDatabase.Schedules
+                .Where(s => s.CourseClassId == courseClassId)
+                .ToList();
+
+            if (!newClassSchedules.Any())
+            {
+                return (false, "");
+            }
+
+            var enrolledCourseClassIds = FakeDatabase.Enrollments
+                .Where(e => e.StudentId == studentId && e.Status == EnrollmentStatus.Approved)
+                .Select(e => e.CourseClassId)
+                .ToList();
+
+            var enrolledSchedules = FakeDatabase.Schedules
+                .Where(s => enrolledCourseClassIds.Contains(s.CourseClassId))
+                .ToList();
+
+            foreach (var newSchedule in newClassSchedules)
+            {
+                foreach (var existingSchedule in enrolledSchedules)
+                {
+                    if (newSchedule.DayOfWeek == existingSchedule.DayOfWeek &&
+                        newSchedule.Period == existingSchedule.Period)
+                    {
+                        var conflictingClass = FakeDatabase.CourseClasses
+                            .FirstOrDefault(c => c.Id == existingSchedule.CourseClassId);
+                        return (true, conflictingClass?.ClassCode ?? "Unknown");
+                    }
+
+                    if (newSchedule.DayOfWeek == existingSchedule.DayOfWeek)
+                    {
+                        if (IsTimeOverlap(newSchedule.StartTime, newSchedule.EndTime,
+                                         existingSchedule.StartTime, existingSchedule.EndTime))
+                        {
+                            var conflictingClass = FakeDatabase.CourseClasses
+                                .FirstOrDefault(c => c.Id == existingSchedule.CourseClassId);
+                            return (true, conflictingClass?.ClassCode ?? "Unknown");
+                        }
+                    }
+                }
+            }
+
+            return (false, "");
+        }
+
+        private bool IsTimeOverlap(string start1, string end1, string start2, string end2)
+        {
+            if (!TimeSpan.TryParse(start1, out var s1) ||
+                !TimeSpan.TryParse(end1, out var e1) ||
+                !TimeSpan.TryParse(start2, out var s2) ||
+                !TimeSpan.TryParse(end2, out var e2))
+            {
+                return false;
+            }
+
+            // Two time ranges overlap if: start1 < end2 AND start2 < end1
+            return s1 < e2 && s2 < e1;
         }
     }
 }

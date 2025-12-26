@@ -3,7 +3,7 @@
 namespace WebApplication1.ViewModels
 {
     /// <summary>
-    /// ViewModel cho nh?p ?i?m
+    /// ViewModel cho nhập điểm
     /// </summary>
     public class GradeInputViewModel
     {
@@ -13,18 +13,72 @@ namespace WebApplication1.ViewModels
         public string StudentCode { get; set; } = string.Empty;
         public string StudentName { get; set; } = string.Empty;
 
-        [Range(0, 10, ErrorMessage = "?i?m ph?i t? 0-10")]
+        [Range(0, 10, ErrorMessage = "Score must be between 0-10")]
         public double? AttendanceScore { get; set; }
 
-        [Range(0, 10, ErrorMessage = "?i?m ph?i t? 0-10")]
+        [Range(0, 10, ErrorMessage = "Score must be between 0-10")]
         public double? MidtermScore { get; set; }
 
-        [Range(0, 10, ErrorMessage = "?i?m ph?i t? 0-10")]
+        [Range(0, 10, ErrorMessage = "Score must be between 0-10")]
         public double? FinalScore { get; set; }
     }
 
     /// <summary>
-    /// ViewModel cho danh sách ?i?m c?a l?p
+    /// ViewModel cho form tạo/sửa Grade
+    /// </summary>
+    public class GradeFormViewModel
+    {
+        public int? Id { get; set; }
+
+        [Required(ErrorMessage = "Enrollment is required")]
+        public int EnrollmentId { get; set; }
+
+        public int StudentId { get; set; }
+        public int CourseClassId { get; set; }
+
+        [Range(0, 10, ErrorMessage = "Score must be between 0-10")]
+        public double? AttendanceScore { get; set; }
+
+        [Range(0, 10, ErrorMessage = "Score must be between 0-10")]
+        public double? MidtermScore { get; set; }
+
+        [Range(0, 10, ErrorMessage = "Score must be between 0-10")]
+        public double? FinalScore { get; set; }
+    }
+
+    /// <summary>
+    /// ViewModel cho danh sách Grade (Admin)
+    /// </summary>
+    public class GradeListViewModel
+    {
+        public int Id { get; set; }
+        public string StudentName { get; set; } = string.Empty;
+        public string CourseClassCode { get; set; } = string.Empty;
+        public double? TotalScore { get; set; }
+        public string? LetterGrade { get; set; }
+    }
+
+    /// <summary>
+    /// ViewModel cho chi tiết Grade (Admin)
+    /// </summary>
+    public class GradeDetailAdminViewModel
+    {
+        public int Id { get; set; }
+        public string StudentCode { get; set; } = string.Empty;
+        public string StudentName { get; set; } = string.Empty;
+        public string ClassCode { get; set; } = string.Empty;
+        public string SubjectName { get; set; } = string.Empty;
+        public double? AttendanceScore { get; set; }
+        public double? MidtermScore { get; set; }
+        public double? FinalScore { get; set; }
+        public double? TotalScore { get; set; }
+        public string? LetterGrade { get; set; }
+        public bool IsPassed { get; set; }
+        public DateTime? LastUpdated { get; set; }
+    }
+
+    /// <summary>
+    /// ViewModel cho danh sách điểm của lớp
     /// </summary>
     public class ClassGradeListViewModel
     {
@@ -36,7 +90,7 @@ namespace WebApplication1.ViewModels
     }
 
     /// <summary>
-    /// ViewModel cho b?ng ?i?m c?a sinh viên
+    /// ViewModel cho bảng điểm của sinh viên
     /// </summary>
     public class StudentGradeViewModel
     {
@@ -50,7 +104,7 @@ namespace WebApplication1.ViewModels
     }
 
     /// <summary>
-    /// ViewModel cho chi ti?t ?i?m t?ng môn
+    /// ViewModel cho chi tiết điểm từng môn
     /// </summary>
     public class GradeDetailViewModel
     {

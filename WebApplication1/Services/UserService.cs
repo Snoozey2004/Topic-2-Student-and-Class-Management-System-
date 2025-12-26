@@ -16,6 +16,9 @@ namespace WebApplication1.Services
         bool Delete(int id);
         bool ChangeUserRole(int userId, UserRole newRole);
         bool ChangeUserStatus(int userId, UserStatus newStatus);
+        bool UpdateProfile(int userId, string fullName);
+        bool ChangePassword(int userId, string currentPassword, string newPassword);
+        bool ValidatePassword(int userId, string password);
     }
 
     public class UserService : IUserService
@@ -112,6 +115,37 @@ namespace WebApplication1.Services
 
             user.Status = newStatus;
             return true;
+        }
+
+        public bool UpdateProfile(int userId, string fullName)
+        {
+            var user = GetById(userId);
+            if (user == null) return false;
+
+            user.FullName = fullName;
+            return true;
+        }
+
+        public bool ChangePassword(int userId, string currentPassword, string newPassword)
+        {
+            var user = GetById(userId);
+            if (user == null) return false;
+
+            if (user.Password != currentPassword)
+            {
+                return false;
+            }
+
+            user.Password = newPassword;
+            return true;
+        }
+
+        public bool ValidatePassword(int userId, string password)
+        {
+            var user = GetById(userId);
+            if (user == null) return false;
+
+            return user.Password == password;
         }
     }
 }

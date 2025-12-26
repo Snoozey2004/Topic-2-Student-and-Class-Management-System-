@@ -9,291 +9,113 @@
     @await Html.PartialAsync("_AdminSidebar")
 }
 
-<style>
-    .schedule-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 1.5rem;
-    }
-    
-    .filter-tabs {
-        display: flex;
-        gap: 0.5rem;
-        margin-bottom: 1.5rem;
-        flex-wrap: wrap;
-    }
-    
-    .filter-tab {
-        padding: 0.5rem 1.25rem;
-        border-radius: 8px;
-        border: 2px solid #e2e8f0;
-        background: white;
-        color: #4a5568;
-        font-weight: 500;
-        cursor: pointer;
-        transition: all 0.3s ease;
-    }
-    
-    .filter-tab:hover {
-        border-color: #2d9e8e;
-        color: #2d9e8e;
-    }
-    
-    .filter-tab.active {
-        background: #2d9e8e;
-        border-color: #2d9e8e;
-        color: white;
-    }
-    
-    .filter-tab.weekend {
-        border-color: #1e3a5f;
-    }
-    
-    .filter-tab.weekend:hover {
-        border-color: #2d9e8e;
-        color: #2d9e8e;
-    }
-    
-    .filter-tab.weekend.active {
-        background: #1e3a5f;
-        border-color: #1e3a5f;
-    }
-    
-    /* Schedule Cards Grid */
-    .schedule-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-        gap: 1.5rem;
-    }
-    
-    .schedule-card {
-        background: white;
-        border-radius: 12px;
-        border-left: 4px solid var(--card-color, #2d9e8e);
-        padding: 1.25rem;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-        transition: all 0.3s ease;
-    }
-    
-    .schedule-card:hover {
-        transform: translateY(-3px);
-        box-shadow: 0 8px 16px rgba(0,0,0,0.12);
-    }
-    
-    .schedule-card.monday { --card-color: #2d9e8e; }
-    .schedule-card.tuesday { --card-color: #3b82f6; }
-    .schedule-card.wednesday { --card-color: #8b5cf6; }
-    .schedule-card.thursday { --card-color: #f59e0b; }
-    .schedule-card.friday { --card-color: #ef4444; }
-    .schedule-card.saturday { --card-color: #10b981; }
-    .schedule-card.sunday { --card-color: #ec4899; }
-    
-    .schedule-header-info {
-        display: flex;
-        justify-content: space-between;
-        align-items: start;
-        margin-bottom: 1rem;
-    }
-    
-    .class-code-badge {
-        font-weight: 700;
-        color: #1e3a5f;
-        font-size: 1.1rem;
-    }
-    
-    .day-badge {
-        padding: 0.35rem 0.75rem;
-        border-radius: 20px;
-        font-size: 0.8rem;
-        font-weight: 600;
-        background: var(--card-color, #2d9e8e);
-        color: white;
-    }
-    
-    .schedule-details {
-        display: flex;
-        flex-direction: column;
-        gap: 0.75rem;
-    }
-    
-    .detail-row {
-        display: flex;
-        align-items: center;
-        gap: 0.75rem;
-        font-size: 0.9rem;
-        color: #4a5568;
-    }
-    
-    .detail-icon {
-        width: 32px;
-        height: 32px;
-        border-radius: 8px;
-        background: #f7fafc;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: var(--card-color, #2d9e8e);
-    }
-    
-    .detail-text {
-        flex: 1;
-    }
-    
-    .detail-label {
-        font-size: 0.75rem;
-        color: #718096;
-        margin-bottom: 0.15rem;
-    }
-    
-    .detail-value {
-        font-weight: 600;
-        color: #2d3748;
-    }
-    
-    /* Empty State */
-    .empty-state {
-        text-align: center;
-        padding: 3rem;
-        background: #f7fafc;
-        border-radius: 12px;
-    }
-    
-    .empty-icon {
-        font-size: 4rem;
-        color: #cbd5e0;
-        margin-bottom: 1rem;
-    }
-    
-    .empty-text {
-        color: #718096;
-        font-size: 1.1rem;
-    }
-</style>
+@section Styles {
+    <link rel="stylesheet" href="~/css/admin-crud.css" />
+}
 
-<div class="schedule-header">
-    <div>
-        <h3 class="mb-2">
-            <i class="bi bi-calendar3 me-2"></i>All Schedules
-        </h3>
-        <p class="text-muted mb-0">Manage class schedules and timetables</p>
+<div class="admin-page-header">
+    <div class="admin-search-box">
+        <i class="bi bi-search"></i>
+        <input type="text" id="searchInput" placeholder="Search by class code, subject, room..." onkeyup="filterTable()">
     </div>
-    <button class="btn btn-primary">
-        <i class="bi bi-plus-circle me-2"></i>Add Schedule
-    </button>
+    <div class="admin-header-actions">
+        <a asp-action="Create" class="btn-admin-outline">
+            <i class="bi bi-plus-circle"></i> Add schedule
+        </a>
+    </div>
 </div>
 
-<div class="filter-tabs">
-    <button class="filter-tab active" onclick="filterByDay('all')">
-        <i class="bi bi-calendar-week me-2"></i>All Days
-    </button>
-    <button class="filter-tab" onclick="filterByDay('monday')">Monday</button>
-    <button class="filter-tab" onclick="filterByDay('tuesday')">Tuesday</button>
-    <button class="filter-tab" onclick="filterByDay('wednesday')">Wednesday</button>
-    <button class="filter-tab" onclick="filterByDay('thursday')">Thursday</button>
-    <button class="filter-tab" onclick="filterByDay('friday')">Friday</button>
-    <button class="filter-tab weekend" onclick="filterByDay('saturday')">
-        <i class="bi bi-sun me-1"></i>Saturday
-    </button>
-    <button class="filter-tab weekend" onclick="filterByDay('sunday')">
-        <i class="bi bi-brightness-high me-1"></i>Sunday
-    </button>
-</div>
-
-@if (Model != null && Model.Any())
+@if (TempData["SuccessMessage"] != null)
 {
-    <div class="schedule-grid">
-        @foreach (var schedule in Model)
+    <div class="admin-alert admin-alert-success mb-3">
+        <i class="bi bi-check-circle"></i>
+        <span>@TempData["SuccessMessage"]</span>
+    </div>
+}
+
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="admin-alert admin-alert-danger mb-3">
+        <i class="bi bi-exclamation-circle"></i>
+        <span>@TempData["ErrorMessage"]</span>
+    </div>
+}
+
+<div class="admin-card">
+    <div class="admin-card-body p-0">
+        @if (Model != null && Model.Any())
         {
-            var dayClass = schedule.DayOfWeek.ToLower();
-            <div class="schedule-card @dayClass" data-day="@dayClass">
-                <div class="schedule-header-info">
-                    <div class="class-code-badge">@schedule.ClassCode</div>
-                    <div class="day-badge">
-                        @if (dayClass == "saturday" || dayClass == "sunday")
-                        {
-                            <i class="bi bi-sun-fill me-1"></i>
-                        }
-                        @schedule.DayOfWeek
-                    </div>
-                </div>
-                
-                <div class="schedule-details">
-                    <div class="detail-row">
-                        <div class="detail-icon">
-                            <i class="bi bi-clock"></i>
-                        </div>
-                        <div class="detail-text">
-                            <div class="detail-label">Period & Time</div>
-                            <div class="detail-value">@schedule.Period</div>
-                        </div>
-                    </div>
-                    
-                    <div class="detail-row">
-                        <div class="detail-icon">
-                            <i class="bi bi-door-open"></i>
-                        </div>
-                        <div class="detail-text">
-                            <div class="detail-label">Room</div>
-                            <div class="detail-value">@schedule.Room</div>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="mt-3 d-flex gap-2">
-                    <button class="btn btn-sm btn-outline-primary flex-fill">
-                        <i class="bi bi-pencil"></i> Edit
-                    </button>
-                    <button class="btn btn-sm btn-outline-danger">
-                        <i class="bi bi-trash"></i>
-                    </button>
-                </div>
+            <table class="admin-table" id="dataTable">
+                <thead>
+                    <tr>
+                        <th>Class Code</th>
+                        <th>Subject</th>
+                        <th>Day</th>
+                        <th>Period</th>
+                        <th>Time</th>
+                        <th>Room</th>
+                        <th>From</th>
+                        <th style="width: 100px;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var schedule in Model)
+                    {
+                        <tr>
+                            <td><span class="badge-admin badge-admin-primary">@schedule.ClassCode</span></td>
+                            <td><strong>@schedule.SubjectName</strong></td>
+                            <td><span class="badge-admin badge-admin-accent">@schedule.DayOfWeek</span></td>
+                            <td>@schedule.Period</td>
+                            <td>@schedule.TimeRange</td>
+                            <td>@schedule.Room</td>
+                            <td>@schedule.EffectiveDate.ToString("dd/MM/yy")</td>
+                            <td>
+                                <div class="admin-actions">
+                                    <a asp-action="Details" asp-route-id="@schedule.Id" class="btn-action btn-action-view" title="View">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                    <a asp-action="Edit" asp-route-id="@schedule.Id" class="btn-action btn-action-edit" title="Edit">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                    <a asp-action="Delete" asp-route-id="@schedule.Id" class="btn-action btn-action-delete" title="Delete">
+                                        <i class="bi bi-trash"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+        else
+        {
+            <div class="admin-empty">
+                <i class="bi bi-calendar3"></i>
+                <p>No schedules found</p>
             </div>
         }
     </div>
-}
-else
-{
-    <div class="empty-state">
-        <div class="empty-icon">
-            <i class="bi bi-calendar-x"></i>
-        </div>
-        <div class="empty-text">
-            No schedules found. Click "Add Schedule" to create one.
-        </div>
-    </div>
-}
+</div>
 
 @section Scripts {
     <script>
-        function filterByDay(day) {
-            // Update active tab
-            document.querySelectorAll('.filter-tab').forEach(tab => {
-                tab.classList.remove('active');
-            });
-            event.target.classList.add('active');
-            
-            // Filter cards
-            const cards = document.querySelectorAll('.schedule-card');
-            cards.forEach(card => {
-                if (day === 'all' || card.dataset.day === day) {
-                    card.style.display = 'block';
-                    // Add fade in animation
-                    card.style.animation = 'fadeIn 0.3s ease';
-                } else {
-                    card.style.display = 'none';
+        function filterTable() {
+            var input = document.getElementById("searchInput");
+            var filter = input.value.toLowerCase();
+            var table = document.getElementById("dataTable");
+            var tr = table.getElementsByTagName("tr");
+
+            for (var i = 1; i < tr.length; i++) {
+                var td = tr[i].getElementsByTagName("td");
+                var found = false;
+                for (var j = 0; j < td.length - 1; j++) {
+                    if (td[j] && td[j].textContent.toLowerCase().indexOf(filter) > -1) {
+                        found = true;
+                        break;
+                    }
                 }
-            });
-        }
-        
-        // Add fade in animation
-        const style = document.createElement('style');
-        style.textContent = `
-            @@keyframes fadeIn {
-                from { opacity: 0; transform: translateY(10px); }
-                to { opacity: 1; transform: translateY(0); }
+                tr[i].style.display = found ? "" : "none";
             }
-        `;
-        document.head.appendChild(style);
+        }
     </script>
 }

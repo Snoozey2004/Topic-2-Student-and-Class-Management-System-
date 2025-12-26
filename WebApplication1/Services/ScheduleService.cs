@@ -5,7 +5,7 @@ using WebApplication1.ViewModels;
 namespace WebApplication1.Services
 {
     /// <summary>
-    /// Service qu?n lý Schedule
+    /// Service quản lý Schedule
     /// </summary>
     public interface IScheduleService
     {
@@ -80,7 +80,6 @@ namespace WebApplication1.Services
 
         public TimetableViewModel GetStudentTimetable(int studentId, string semester)
         {
-            // L?y các l?p mà sinh viên ?ã ??ng ký
             var enrolledClasses = FakeDatabase.Enrollments
                 .Where(e => e.StudentId == studentId && e.Status == EnrollmentStatus.Approved)
                 .Select(e => e.CourseClassId)
@@ -90,19 +89,42 @@ namespace WebApplication1.Services
                 .Where(c => enrolledClasses.Contains(c.Id) && c.Semester == semester)
                 .ToList();
 
+            var semesterParts = semester.Split('-');
+            var semesterNumber = semesterParts.Length > 0 ? semesterParts[0] : "HK1";
+            var year = semesterParts.Length > 1 ? semesterParts[1] : DateTime.Now.Year.ToString();
+            
+            var semesterLabel = $"{semesterNumber} - School year {year} - {int.Parse(year) + 1}";
+
+            var currentDate = DateTime.Now;
+            var startOfWeek = currentDate.AddDays(-(int)currentDate.DayOfWeek + (int)DayOfWeek.Monday);
+            var weekNumber = GetWeekOfYear(currentDate);
+            
+            var weekLabel = $"Week {weekNumber} [from date {startOfWeek:dd/MM/yyyy} to date {startOfWeek.AddDays(6):dd/MM/yyyy}]";
+
+            var dayHeaders = new List<DayHeaderViewModel>();
+            for (int i = 0; i < 7; i++)
+            {
+                var date = startOfWeek.AddDays(i);
+                dayHeaders.Add(new DayHeaderViewModel
+                {
+                    DayName = date.DayOfWeek.ToString(),
+                    DateDisplay = $"({date:dd/MM})",
+                    DayOfWeek = date.DayOfWeek
+                });
+            }
+
             var timetable = new TimetableViewModel
             {
                 Semester = semester,
+                SemesterLabel = semesterLabel,
+                WeekLabel = weekLabel,
+                DayHeaders = dayHeaders,
                 Schedule = new Dictionary<DayOfWeek, List<TimetableSlot>>()
             };
 
-            // Kh?i t?o dictionary cho t?t c? các ngày trong tu?n
             foreach (DayOfWeek day in Enum.GetValues(typeof(DayOfWeek)))
             {
-                if (day != DayOfWeek.Sunday && day != DayOfWeek.Saturday)
-                {
-                    timetable.Schedule[day] = new List<TimetableSlot>();
-                }
+                timetable.Schedule[day] = new List<TimetableSlot>();
             }
 
             foreach (var courseClass in courseClasses)
@@ -113,7 +135,6 @@ namespace WebApplication1.Services
 
                 foreach (var schedule in schedules)
                 {
-                    // Thêm t?t c? các l?ch, bao g?m Th? 7 và Ch? nh?t
                     timetable.Schedule[schedule.DayOfWeek].Add(new TimetableSlot
                     {
                         ClassCode = courseClass.ClassCode,
@@ -135,19 +156,42 @@ namespace WebApplication1.Services
                 .Where(c => c.LecturerId == lecturerId && c.Semester == semester)
                 .ToList();
 
+            var semesterParts = semester.Split('-');
+            var semesterNumber = semesterParts.Length > 0 ? semesterParts[0] : "HK1";
+            var year = semesterParts.Length > 1 ? semesterParts[1] : DateTime.Now.Year.ToString();
+            
+            var semesterLabel = $"{semesterNumber} - School year {year} - {int.Parse(year) + 1}";
+
+            var currentDate = DateTime.Now;
+            var startOfWeek = currentDate.AddDays(-(int)currentDate.DayOfWeek + (int)DayOfWeek.Monday);
+            var weekNumber = GetWeekOfYear(currentDate);
+            
+            var weekLabel = $"Week {weekNumber} [from date {startOfWeek:dd/MM/yyyy} to date {startOfWeek.AddDays(6):dd/MM/yyyy}]";
+
+            var dayHeaders = new List<DayHeaderViewModel>();
+            for (int i = 0; i < 7; i++)
+            {
+                var date = startOfWeek.AddDays(i);
+                dayHeaders.Add(new DayHeaderViewModel
+                {
+                    DayName = date.DayOfWeek.ToString(),
+                    DateDisplay = $"({date:dd/MM})",
+                    DayOfWeek = date.DayOfWeek
+                });
+            }
+
             var timetable = new TimetableViewModel
             {
                 Semester = semester,
+                SemesterLabel = semesterLabel,
+                WeekLabel = weekLabel,
+                DayHeaders = dayHeaders,
                 Schedule = new Dictionary<DayOfWeek, List<TimetableSlot>>()
             };
 
-            // Kh?i t?o dictionary cho t?t c? các ngày trong tu?n
             foreach (DayOfWeek day in Enum.GetValues(typeof(DayOfWeek)))
             {
-                if (day != DayOfWeek.Sunday && day != DayOfWeek.Saturday)
-                {
-                    timetable.Schedule[day] = new List<TimetableSlot>();
-                }
+                timetable.Schedule[day] = new List<TimetableSlot>();
             }
 
             foreach (var courseClass in courseClasses)
@@ -157,7 +201,6 @@ namespace WebApplication1.Services
 
                 foreach (var schedule in schedules)
                 {
-                    // Thêm t?t c? các l?ch, bao g?m Th? 7 và Ch? nh?t
                     timetable.Schedule[schedule.DayOfWeek].Add(new TimetableSlot
                     {
                         ClassCode = courseClass.ClassCode,
@@ -173,6 +216,16 @@ namespace WebApplication1.Services
             return timetable;
         }
 
+        private int GetWeekOfYear(DateTime date)
+        {
+            var jan1 = new DateTime(date.Year, 1, 1);
+            var daysOffset = (int)jan1.DayOfWeek - (int)DayOfWeek.Monday;
+            if (daysOffset < 0) daysOffset += 7;
+            var firstMonday = jan1.AddDays(-daysOffset);
+            var weekNumber = ((date - firstMonday).Days / 7) + 1;
+            return weekNumber;
+        }
+
         public Schedule? GetById(int id)
         {
             return FakeDatabase.Schedules.FirstOrDefault(s => s.Id == id);
@@ -180,6 +233,12 @@ namespace WebApplication1.Services
 
         public bool Create(ScheduleFormViewModel model)
         {
+            // Check for conflicts
+            if (HasConflict(model.CourseClassId, model.DayOfWeek, model.Period, model.Room, null))
+            {
+                return false;
+            }
+
             var schedule = new Schedule
             {
                 Id = FakeDatabase.GetNextScheduleId(),
@@ -196,9 +255,7 @@ namespace WebApplication1.Services
             };
 
             FakeDatabase.Schedules.Add(schedule);
-
-            // T?o thông báo cho sinh viên trong l?p
-            NotifyClassScheduleChange(model.CourseClassId, "L?ch h?c m?i ?ã ???c thêm");
+            NotifyClassScheduleChange(model.CourseClassId, "New schedule has been added");
 
             return true;
         }
@@ -207,6 +264,12 @@ namespace WebApplication1.Services
         {
             var schedule = GetById(model.Id ?? 0);
             if (schedule == null) return false;
+
+            // Check for conflicts (excluding current schedule)
+            if (HasConflict(model.CourseClassId, model.DayOfWeek, model.Period, model.Room, schedule.Id))
+            {
+                return false;
+            }
 
             schedule.DayOfWeek = model.DayOfWeek;
             schedule.Session = model.Session;
@@ -217,8 +280,7 @@ namespace WebApplication1.Services
             schedule.EffectiveDate = model.EffectiveDate;
             schedule.EndDate = model.EndDate;
 
-            // T?o thông báo cho sinh viên trong l?p
-            NotifyClassScheduleChange(schedule.CourseClassId, "L?ch h?c ?ã ???c c?p nh?t");
+            NotifyClassScheduleChange(schedule.CourseClassId, "Schedule has been updated");
 
             return true;
         }
@@ -228,12 +290,43 @@ namespace WebApplication1.Services
             var schedule = GetById(id);
             if (schedule == null) return false;
 
+            var courseClassId = schedule.CourseClassId;
             FakeDatabase.Schedules.Remove(schedule);
 
-            // T?o thông báo cho sinh viên trong l?p
-            NotifyClassScheduleChange(schedule.CourseClassId, "L?ch h?c ?ã b? xóa");
+            NotifyClassScheduleChange(courseClassId, "Schedule has been removed");
 
             return true;
+        }
+
+        /// <summary>
+        /// Check if there's a room conflict at the given day/period
+        /// </summary>
+        private bool HasConflict(int courseClassId, DayOfWeek day, string period, string room, int? excludeScheduleId)
+        {
+            return FakeDatabase.Schedules.Any(s =>
+                s.DayOfWeek == day &&
+                s.Period == period &&
+                s.Room == room &&
+                (!excludeScheduleId.HasValue || s.Id != excludeScheduleId.Value));
+        }
+
+        /// <summary>
+        /// Check if lecturer has conflict at the given day/period
+        /// </summary>
+        private bool HasLecturerConflict(int lecturerId, DayOfWeek day, string period, int? excludeScheduleId)
+        {
+            if (lecturerId == 0) return false;
+
+            var lecturerClassIds = FakeDatabase.CourseClasses
+                .Where(c => c.LecturerId == lecturerId)
+                .Select(c => c.Id)
+                .ToList();
+
+            return FakeDatabase.Schedules.Any(s =>
+                lecturerClassIds.Contains(s.CourseClassId) &&
+                s.DayOfWeek == day &&
+                s.Period == period &&
+                (!excludeScheduleId.HasValue || s.Id != excludeScheduleId.Value));
         }
 
         private void NotifyClassScheduleChange(int courseClassId, string message)
@@ -249,7 +342,7 @@ namespace WebApplication1.Services
                 {
                     _notificationService.CreateNotification(
                         student.UserId,
-                        "Thay ??i l?ch h?c",
+                        "Schedule Update",
                         message,
                         NotificationType.Schedule,
                         "/Student/Schedule"

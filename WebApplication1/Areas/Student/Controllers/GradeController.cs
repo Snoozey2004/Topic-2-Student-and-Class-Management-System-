@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using WebApplication1.Services;
 
 namespace WebApplication1.Areas.Student.Controllers
@@ -8,11 +9,16 @@ namespace WebApplication1.Areas.Student.Controllers
     {
         private readonly IStudentService _studentService;
         private readonly IGradeService _gradeService;
+        private readonly ISemesterService _semesterService;
 
-        public GradeController(IStudentService studentService, IGradeService gradeService)
+        public GradeController(
+            IStudentService studentService, 
+            IGradeService gradeService,
+            ISemesterService semesterService)
         {
             _studentService = studentService;
             _gradeService = gradeService;
+            _semesterService = semesterService;
         }
 
         // GET: Student/Grade
@@ -32,7 +38,14 @@ namespace WebApplication1.Areas.Student.Controllers
                 return NotFound();
             }
 
-            var grades = _gradeService.GetStudentGrades(student.Id, semester);
+            // Get semester data from SemesterService
+            var currentSemester = semester ?? _semesterService.GetCurrentSemester();
+            var allSemesters = _semesterService.GetAllSemesters();
+
+            ViewBag.Semesters = new SelectList(allSemesters);
+            ViewBag.CurrentSemester = currentSemester;
+
+            var grades = _gradeService.GetStudentGrades(student.Id, currentSemester);
             return View(grades);
         }
     }
