@@ -15,6 +15,11 @@ namespace WebApplication1.Models
         public string? Note { get; set; }
         public DateTime CreatedDate { get; set; }
         public int CreatedBy { get; set; } // LecturerId
+                                           // Navigation
+        public Enrollment Enrollment { get; set; } = null!;
+        public Student Student { get; set; } = null!;
+        public CourseClass CourseClass { get; set; } = null!;
+        public Lecturer Lecturer { get; set; } = null!;
     }
 
     public enum AttendanceStatus

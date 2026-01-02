@@ -13,6 +13,12 @@ namespace WebApplication1.Models
         public string? RejectionReason { get; set; } // Lý do t? ch?i (n?u có)
         public DateTime? ApprovedDate { get; set; }
         public int? ApprovedBy { get; set; } // UserId c?a Admin duy?t
+                                             // Navigation
+        public Student Student { get; set; } = null!;
+        public CourseClass CourseClass { get; set; } = null!;
+        public User? ApprovedByUser { get; set; }
+        public ICollection<Attendance> Attendances { get; set; } = new List<Attendance>();
+        public ICollection<Grade> Grades { get; set; } = new List<Grade>();
     }
 
     public enum EnrollmentStatus

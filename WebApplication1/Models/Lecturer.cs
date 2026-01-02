@@ -16,5 +16,11 @@ namespace WebApplication1.Models
         public string Title { get; set; } = string.Empty; // Ch?c danh: GS, PGS, TS, ThS
         public string Specialization { get; set; } = string.Empty; // Chuyên môn
         public DateTime JoinDate { get; set; }
+        // Navigation
+        public User User { get; set; } = null!;
+        public ICollection<CourseClass> CourseClasses { get; set; } = new List<CourseClass>();
+        public ICollection<AdministrativeClass> AdvisoryClasses { get; set; } = new List<AdministrativeClass>();
+        public ICollection<Attendance> CreatedAttendances { get; set; } = new List<Attendance>(); // CreatedBy
+        public ICollection<Grade> UpdatedGrades { get; set; } = new List<Grade>(); // UpdatedBy
     }
 }

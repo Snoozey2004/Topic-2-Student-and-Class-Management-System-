@@ -13,7 +13,14 @@ namespace WebApplication1.Models
         public UserStatus Status { get; set; }
         public DateTime CreatedDate { get; set; }
         public DateTime? LastLoginDate { get; set; }
+        // Navigation
+        public Student? Student { get; set; }
+        public Lecturer? Lecturer { get; set; }
+        public ICollection<Notification> Notifications { get; set; } = new List<Notification>();
+        public ICollection<Enrollment> ApprovedEnrollments { get; set; } = new List<Enrollment>(); // ApprovedBy
+
     }
+  
 
     public enum UserRole
     {
