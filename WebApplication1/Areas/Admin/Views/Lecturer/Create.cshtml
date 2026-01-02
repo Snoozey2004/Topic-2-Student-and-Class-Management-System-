@@ -78,6 +78,11 @@
                     <input asp-for="JoinDate" class="form-control" type="date" />
                 </div>
             </div>
+            <div class="form-group">
+                <label asp-for="Password"></label>
+                <input asp-for="Password" class="form-control" type="password" />
+                <span asp-validation-for="Password" class="text-danger"></span>
+            </div>
 
             <hr class="my-4">
 

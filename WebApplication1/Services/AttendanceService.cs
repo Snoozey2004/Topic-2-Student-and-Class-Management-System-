@@ -1,3 +1,4 @@
+﻿using Microsoft.EntityFrameworkCore;
 using WebApplication1.Data;
 using WebApplication1.Models;
 using WebApplication1.ViewModels;
@@ -5,7 +6,7 @@ using WebApplication1.ViewModels;
 namespace WebApplication1.Services
 {
     /// <summary>
-    /// Service qu?n l� ?i?m danh
+    /// Service quản lý điểm danh (SQL Server + EF Core)
     /// </summary>
     public interface IAttendanceService
     {
@@ -18,23 +19,12 @@ namespace WebApplication1.Services
 
     public class AttendanceService : IAttendanceService
     {
-        private readonly ICourseClassService _courseClassService;
-        private readonly IEnrollmentService _enrollmentService;
-        private readonly IStudentService _studentService;
-        private readonly ISubjectService _subjectService;
+        private readonly ApplicationDbContext _db;
         private readonly IGradeService _gradeService;
 
-        public AttendanceService(
-            ICourseClassService courseClassService,
-            IEnrollmentService enrollmentService,
-            IStudentService studentService,
-            ISubjectService subjectService,
-            IGradeService gradeService)
+        public AttendanceService(ApplicationDbContext db, IGradeService gradeService)
         {
-            _courseClassService = courseClassService;
-            _enrollmentService = enrollmentService;
-            _studentService = studentService;
-            _subjectService = subjectService;
+            _db = db;
             _gradeService = gradeService;
         }
 
@@ -43,27 +33,55 @@ namespace WebApplication1.Services
         /// </summary>
         public List<AttendanceClassListViewModel> GetClassesByLecturerId(int lecturerId, string? semester = null)
         {
-            var query = FakeDatabase.CourseClasses
+            var classQuery = _db.CourseClasses
+                .AsNoTracking()
                 .Where(c => c.LecturerId == lecturerId);
 
-            // Filter by semester if provided
-            if (!string.IsNullOrEmpty(semester))
+            if (!string.IsNullOrWhiteSpace(semester))
             {
-                query = query.Where(c => c.Semester == semester);
+                var sem = semester.Trim();
+                classQuery = classQuery.Where(c => c.Semester == sem);
             }
 
-            var classes = query.Select(c =>
+            var classes = classQuery.ToList();
+            if (classes.Count == 0) return new List<AttendanceClassListViewModel>();
+
+            var classIds = classes.Select(c => c.Id).ToList();
+
+            var enrollments = _db.Enrollments
+                .AsNoTracking()
+                .Where(e => classIds.Contains(e.CourseClassId) && e.Status == EnrollmentStatus.Approved)
+                .ToList();
+
+            var attendances = _db.Attendances
+                .AsNoTracking()
+                .Where(a => classIds.Contains(a.CourseClassId))
+                .ToList();
+
+            var subjectIds = classes.Select(c => c.SubjectId).Distinct().ToList();
+            var subjects = _db.Subjects
+                .AsNoTracking()
+                .Where(s => subjectIds.Contains(s.Id))
+                .ToDictionary(s => s.Id, s => s);
+
+            var result = classes.Select(c =>
             {
-                var subject = _subjectService.GetById(c.SubjectId);
-                var enrollments = FakeDatabase.Enrollments
-                    .Where(e => e.CourseClassId == c.Id && e.Status == EnrollmentStatus.Approved)
+                subjects.TryGetValue(c.SubjectId, out var subject);
+
+                var classEnrollments = enrollments
+                    .Where(e => e.CourseClassId == c.Id)
                     .ToList();
-                var attendances = FakeDatabase.Attendances.Where(a => a.CourseClassId == c.Id).ToList();
 
-                var sessions = attendances.GroupBy(a => new { a.AttendanceDate, a.Session }).Count();
+                var classAttendances = attendances
+                    .Where(a => a.CourseClassId == c.Id)
+                    .ToList();
 
-                var avgRate = sessions > 0 && enrollments.Count > 0
-                    ? (attendances.Count(a => a.Status == AttendanceStatus.Present) * 100.0) / (sessions * enrollments.Count)
+                var sessions = classAttendances
+                    .GroupBy(a => new { Date = a.AttendanceDate.Date, a.Session })
+                    .Count();
+
+                var avgRate = sessions > 0 && classEnrollments.Count > 0
+                    ? (classAttendances.Count(a => a.Status == AttendanceStatus.Present) * 100.0) / (sessions * classEnrollments.Count)
                     : 0;
 
                 return new AttendanceClassListViewModel
@@ -73,51 +91,73 @@ namespace WebApplication1.Services
                     SubjectName = subject?.SubjectName ?? "",
                     Semester = c.Semester,
                     Room = c.Room,
-                    TotalStudents = enrollments.Count,
+                    TotalStudents = classEnrollments.Count,
                     TotalSessions = sessions,
                     AverageAttendanceRate = avgRate
                 };
             })
-            .OrderBy(c => c.ClassCode)
+            .OrderBy(x => x.ClassCode)
             .ToList();
 
-            return classes;
+            return result;
         }
 
         public AttendanceSessionViewModel GetAttendanceSession(int courseClassId, DateTime date, string session)
         {
-            var courseClass = _courseClassService.GetById(courseClassId);
+            var courseClass = _db.CourseClasses
+                .AsNoTracking()
+                .FirstOrDefault(c => c.Id == courseClassId);
+
             if (courseClass == null)
                 return new AttendanceSessionViewModel();
 
-            var subject = _subjectService.GetById(courseClass.SubjectId);
-            var enrollments = FakeDatabase.Enrollments
+            var subject = _db.Subjects
+                .AsNoTracking()
+                .FirstOrDefault(s => s.Id == courseClass.SubjectId);
+
+            var enrollments = _db.Enrollments
+                .AsNoTracking()
                 .Where(e => e.CourseClassId == courseClassId && e.Status == EnrollmentStatus.Approved)
+                .OrderBy(e => e.StudentId)
                 .ToList();
 
-            var existingAttendances = FakeDatabase.Attendances
-                .Where(a => a.CourseClassId == courseClassId 
-                         && a.AttendanceDate.Date == date.Date 
+            var studentIds = enrollments.Select(e => e.StudentId).Distinct().ToList();
+            var students = _db.Students
+                .AsNoTracking()
+                .Where(s => studentIds.Contains(s.Id))
+                .ToDictionary(s => s.Id, s => s);
+
+            var existingAttendances = _db.Attendances
+                .AsNoTracking()
+                .Where(a => a.CourseClassId == courseClassId
+                         && a.AttendanceDate.Date == date.Date
                          && a.Session == session)
                 .ToList();
 
-            var students = enrollments.Select(e =>
+            var attendanceByStudent = existingAttendances
+                .GroupBy(a => a.StudentId)
+                .ToDictionary(g => g.Key, g => g.First());
+
+            var list = enrollments.Select(e =>
             {
-                var student = _studentService.GetById(e.StudentId);
-                var attendance = existingAttendances.FirstOrDefault(a => a.StudentId == e.StudentId);
+                students.TryGetValue(e.StudentId, out var st);
+                attendanceByStudent.TryGetValue(e.StudentId, out var atd);
 
                 return new StudentAttendanceViewModel
                 {
                     StudentId = e.StudentId,
                     EnrollmentId = e.Id,
-                    StudentCode = student?.StudentCode ?? "",
-                    FullName = student?.FullName ?? "",
-                    Email = student?.Email ?? "",
-                    IsPresent = attendance?.Status == AttendanceStatus.Present || attendance == null,
-                    Status = attendance?.Status ?? AttendanceStatus.Present,
-                    Note = attendance?.Note
+                    StudentCode = st?.StudentCode ?? "",
+                    FullName = st?.FullName ?? "",
+                    Email = st?.Email ?? "",
+                    // Mặc định Present nếu chưa có record
+                    IsPresent = atd == null || atd.Status == AttendanceStatus.Present,
+                    Status = atd?.Status ?? AttendanceStatus.Present,
+                    Note = atd?.Note
                 };
-            }).OrderBy(s => s.StudentCode).ToList();
+            })
+            .OrderBy(x => x.StudentCode)
+            .ToList();
 
             return new AttendanceSessionViewModel
             {
@@ -127,28 +167,42 @@ namespace WebApplication1.Services
                 SessionDate = date,
                 Session = session,
                 Room = courseClass.Room,
-                Students = students
+                Students = list
             };
         }
 
         public bool TakeAttendance(TakeAttendanceViewModel model, int lecturerId)
         {
-            var oldAttendances = FakeDatabase.Attendances
+            // Security: lecturer phải là owner của lớp
+            var ownsClass = _db.CourseClasses
+                .AsNoTracking()
+                .Any(c => c.Id == model.CourseClassId && c.LecturerId == lecturerId);
+
+            if (!ownsClass) return false;
+
+            using var tx = _db.Database.BeginTransaction();
+
+            // Xoá các attendance cũ của buổi đó
+            var oldAttendances = _db.Attendances
                 .Where(a => a.CourseClassId == model.CourseClassId
                          && a.AttendanceDate.Date == model.SessionDate.Date
                          && a.Session == model.Session)
                 .ToList();
 
-            foreach (var old in oldAttendances)
+            if (oldAttendances.Count > 0)
             {
-                FakeDatabase.Attendances.Remove(old);
+                _db.Attendances.RemoveRange(oldAttendances);
+                _db.SaveChanges();
             }
+
+            // Insert mới
+            var now = DateTime.Now;
 
             foreach (var student in model.Students)
             {
                 var attendance = new Attendance
                 {
-                    Id = FakeDatabase.GetNextAttendanceId(),
+                    // KHÔNG set Id nếu Identity
                     EnrollmentId = student.EnrollmentId,
                     StudentId = student.StudentId,
                     CourseClassId = model.CourseClassId,
@@ -156,36 +210,49 @@ namespace WebApplication1.Services
                     Session = model.Session,
                     Status = student.IsPresent ? AttendanceStatus.Present : AttendanceStatus.Absent,
                     Note = student.Note,
-                    CreatedDate = DateTime.Now,
+                    CreatedDate = now,
                     CreatedBy = lecturerId
                 };
 
-                FakeDatabase.Attendances.Add(attendance);
+                _db.Attendances.Add(attendance);
             }
 
-            UpdateAttendanceScore(model.CourseClassId);
+            _db.SaveChanges();
 
+            // Update điểm chuyên cần
+            var ok = UpdateAttendanceScore(model.CourseClassId);
+            if (!ok)
+            {
+                tx.Rollback();
+                return false;
+            }
+
+            tx.Commit();
             return true;
         }
 
         public AttendanceHistoryViewModel GetAttendanceHistory(int courseClassId)
         {
-            var courseClass = _courseClassService.GetById(courseClassId);
+            var courseClass = _db.CourseClasses.AsNoTracking().FirstOrDefault(c => c.Id == courseClassId);
             if (courseClass == null)
                 return new AttendanceHistoryViewModel();
 
-            var subject = _subjectService.GetById(courseClass.SubjectId);
-            var enrollments = FakeDatabase.Enrollments
+            var subject = _db.Subjects.AsNoTracking().FirstOrDefault(s => s.Id == courseClass.SubjectId);
+
+            var enrollments = _db.Enrollments
+                .AsNoTracking()
                 .Where(e => e.CourseClassId == courseClassId && e.Status == EnrollmentStatus.Approved)
                 .ToList();
-            var attendances = FakeDatabase.Attendances
+
+            var attendances = _db.Attendances
+                .AsNoTracking()
                 .Where(a => a.CourseClassId == courseClassId)
                 .OrderBy(a => a.AttendanceDate)
                 .ThenBy(a => a.Session)
                 .ToList();
 
             var records = attendances
-                .GroupBy(a => new { a.AttendanceDate, a.Session })
+                .GroupBy(a => new { Date = a.AttendanceDate.Date, a.Session })
                 .Select(g =>
                 {
                     var totalStudents = enrollments.Count;
@@ -194,7 +261,7 @@ namespace WebApplication1.Services
 
                     return new AttendanceRecordViewModel
                     {
-                        SessionDate = g.Key.AttendanceDate,
+                        SessionDate = g.Key.Date,
                         Session = g.Key.Session,
                         TotalStudents = totalStudents,
                         PresentCount = presentCount,
@@ -204,26 +271,33 @@ namespace WebApplication1.Services
                 })
                 .ToList();
 
+            var studentIds = enrollments.Select(e => e.StudentId).Distinct().ToList();
+            var students = _db.Students
+                .AsNoTracking()
+                .Where(s => studentIds.Contains(s.Id))
+                .ToDictionary(s => s.Id, s => s);
+
             var studentStats = new Dictionary<int, AttendanceStatViewModel>();
+            var totalSessions = records.Count;
 
             foreach (var enrollment in enrollments)
             {
-                var student = _studentService.GetById(enrollment.StudentId);
-                if (student == null) continue;
+                students.TryGetValue(enrollment.StudentId, out var st);
+                if (st == null) continue;
 
                 var studentAttendances = attendances.Where(a => a.StudentId == enrollment.StudentId).ToList();
-                var totalSessions = records.Count;
                 var presentSessions = studentAttendances.Count(a => a.Status == AttendanceStatus.Present);
                 var absentSessions = totalSessions - presentSessions;
                 var rate = totalSessions > 0 ? (presentSessions * 100.0 / totalSessions) : 0;
 
+                // giống code cũ: score = rate/10 (0-10)
                 var score = Math.Round(rate / 10.0, 1);
 
                 studentStats[enrollment.StudentId] = new AttendanceStatViewModel
                 {
                     StudentId = enrollment.StudentId,
-                    StudentCode = student.StudentCode,
-                    FullName = student.FullName,
+                    StudentCode = st.StudentCode,
+                    FullName = st.FullName,
                     TotalSessions = totalSessions,
                     PresentSessions = presentSessions,
                     AbsentSessions = absentSessions,
@@ -246,33 +320,48 @@ namespace WebApplication1.Services
         {
             var history = GetAttendanceHistory(courseClassId);
 
+            // Lấy tất cả enrollment của lớp
+            var enrollments = _db.Enrollments
+                .Where(e => e.CourseClassId == courseClassId && e.Status == EnrollmentStatus.Approved)
+                .ToList();
+
+            if (enrollments.Count == 0) return true;
+
+            var enrollmentIds = enrollments.Select(e => e.Id).ToList();
+
+            // Lấy grade theo enrollmentId (1-1)
+            var grades = _db.Grades
+                .Where(g => enrollmentIds.Contains(g.EnrollmentId))
+                .ToDictionary(g => g.EnrollmentId, g => g);
+
+            var now = DateTime.Now;
+
             foreach (var stat in history.StudentStats.Values)
             {
-                var enrollment = FakeDatabase.Enrollments
-                    .FirstOrDefault(e => e.StudentId == stat.StudentId && e.CourseClassId == courseClassId);
-
+                var enrollment = enrollments.FirstOrDefault(e => e.StudentId == stat.StudentId);
                 if (enrollment == null) continue;
 
-                var grade = FakeDatabase.Grades.FirstOrDefault(g => g.EnrollmentId == enrollment.Id);
+                if (!grades.TryGetValue(enrollment.Id, out var grade) || grade == null)
+                    continue; // nếu muốn auto tạo grade ở đây thì nói tao chỉnh
 
-                if (grade != null)
+                grade.AttendanceScore = stat.AttendanceScore;
+                grade.LastUpdated = now;
+
+                // Giữ đúng logic cũ: chỉ tính total khi có Midterm + Final
+                if (grade.MidtermScore.HasValue && grade.FinalScore.HasValue)
                 {
-                    grade.AttendanceScore = stat.AttendanceScore;
-                    grade.LastUpdated = DateTime.Now;
+                    var totalScore =
+                        (grade.AttendanceScore ?? 0) * 0.1 +
+                        grade.MidtermScore.Value * 0.3 +
+                        grade.FinalScore.Value * 0.6;
 
-                    if (grade.MidtermScore.HasValue && grade.FinalScore.HasValue)
-                    {
-                        var totalScore = (grade.AttendanceScore ?? 0) * 0.1 
-                                       + grade.MidtermScore.Value * 0.3 
-                                       + grade.FinalScore.Value * 0.6;
-                        
-                        grade.TotalScore = Math.Round(totalScore, 2);
-                        grade.LetterGrade = _gradeService.CalculateLetterGrade(totalScore);
-                        grade.IsPassed = totalScore >= 4.0;
-                    }
+                    grade.TotalScore = Math.Round(totalScore, 2);
+                    grade.LetterGrade = _gradeService.CalculateLetterGrade(totalScore);
+                    grade.IsPassed = totalScore >= 4.0;
                 }
             }
 
+            _db.SaveChanges();
             return true;
         }
     }

@@ -1,14 +1,28 @@
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.EntityFrameworkCore;
+using System;
 using WebApplication1.Data;
 using WebApplication1.Middleware;
 using WebApplication1.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
+// ================= SERVICES =================
 builder.Services.AddControllersWithViews();
 
-// Ðãng k? các Services
+// SQL Server
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+
+Console.WriteLine("======================================");
+Console.WriteLine("Using SQL Server:");
+Console.WriteLine(connectionString);
+Console.WriteLine("======================================");
+
+builder.Services.AddDbContext<ApplicationDbContext>(options =>
+    options.UseSqlServer(connectionString));
+
+
+//Services
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IStudentService, StudentService>();
@@ -19,10 +33,10 @@ builder.Services.AddScoped<IScheduleService, ScheduleService>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddScoped<IEnrollmentService, EnrollmentService>();
 builder.Services.AddScoped<IGradeService, GradeService>();
-builder.Services.AddScoped<IAttendanceService, AttendanceService>(); // ? Added
-builder.Services.AddScoped<ISemesterService, SemesterService>(); // Semester Service
+builder.Services.AddScoped<IAttendanceService, AttendanceService>();
+builder.Services.AddScoped<ISemesterService, SemesterService>();
 
-// C?u h?nh Cookie Authentication
+// Cookie Auth
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
     .AddCookie(options =>
     {
@@ -33,10 +47,9 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
         options.SlidingExpiration = true;
     });
 
-// Thêm HttpContextAccessor ?? truy c?p HttpContext trong services
+// HttpContext + Session
 builder.Services.AddHttpContextAccessor();
 
-// Thêm Session
 builder.Services.AddSession(options =>
 {
     options.IdleTimeout = TimeSpan.FromHours(2);
@@ -45,11 +58,13 @@ builder.Services.AddSession(options =>
 });
 
 var app = builder.Build();
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+    await DbSeeder.SeedAsync(db);
+}
 
-// Kh?i t?o FakeDatabase
-FakeDatabase.Initialize();
-
-// Configure the HTTP request pipeline.
+// ================= PIPELINE =================
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
@@ -63,19 +78,16 @@ app.UseRouting();
 
 app.UseSession();
 
-// Thêm Authentication & Authorization
 app.UseAuthentication();
 app.UseAuthorization();
 
-// Thêm Custom Auth Middleware
 app.UseAuthMiddleware();
 
-// Route cho Areas
+// Routes
 app.MapControllerRoute(
     name: "areas",
     pattern: "{area:exists}/{controller=Dashboard}/{action=Index}/{id?}");
 
-// Route m?c ??nh
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");

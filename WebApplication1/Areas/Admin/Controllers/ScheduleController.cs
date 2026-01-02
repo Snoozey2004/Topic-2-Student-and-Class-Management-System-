@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.EntityFrameworkCore;
 using WebApplication1.Data;
 using WebApplication1.Services;
 using WebApplication1.ViewModels;
@@ -10,10 +11,12 @@ namespace WebApplication1.Areas.Admin.Controllers
     public class ScheduleController : Controller
     {
         private readonly IScheduleService _scheduleService;
+        private readonly ApplicationDbContext _db;
 
-        public ScheduleController(IScheduleService scheduleService)
+        public ScheduleController(IScheduleService scheduleService, ApplicationDbContext db)
         {
             _scheduleService = scheduleService;
+            _db = db;
         }
 
         // GET: Admin/Schedule
@@ -28,24 +31,30 @@ namespace WebApplication1.Areas.Admin.Controllers
         {
             var schedule = _scheduleService.GetById(id);
             if (schedule == null)
-            {
                 return NotFound();
-            }
 
-            var courseClass = FakeDatabase.CourseClasses.FirstOrDefault(c => c.Id == schedule.CourseClassId);
-            var subject = courseClass != null 
-                ? FakeDatabase.Subjects.FirstOrDefault(s => s.Id == courseClass.SubjectId) 
-                : null;
-            var lecturer = courseClass != null 
-                ? FakeDatabase.Lecturers.FirstOrDefault(l => l.Id == courseClass.LecturerId) 
-                : null;
+            // Lấy info class + subject + lecturer từ DB
+            var data =
+                (from c in _db.CourseClasses.AsNoTracking()
+                 join s in _db.Subjects.AsNoTracking() on c.SubjectId equals s.Id into sj
+                 from subject in sj.DefaultIfEmpty()
+                 join l in _db.Lecturers.AsNoTracking() on c.LecturerId equals l.Id into lj
+                 from lecturer in lj.DefaultIfEmpty()
+                 where c.Id == schedule.CourseClassId
+                 select new
+                 {
+                     ClassCode = c.ClassCode,
+                     SubjectName = subject != null ? subject.SubjectName : "",
+                     LecturerName = lecturer != null ? lecturer.FullName : ""
+                 })
+                .FirstOrDefault();
 
             var model = new ScheduleDetailViewModel
             {
                 Id = schedule.Id,
-                ClassCode = courseClass?.ClassCode ?? "",
-                SubjectName = subject?.SubjectName ?? "",
-                LecturerName = lecturer?.FullName ?? "",
+                ClassCode = data?.ClassCode ?? "",
+                SubjectName = data?.SubjectName ?? "",
+                LecturerName = data?.LecturerName ?? "",
                 DayOfWeek = schedule.DayOfWeek.ToString(),
                 Session = schedule.Session,
                 Period = schedule.Period,
@@ -95,9 +104,7 @@ namespace WebApplication1.Areas.Admin.Controllers
         {
             var schedule = _scheduleService.GetById(id);
             if (schedule == null)
-            {
                 return NotFound();
-            }
 
             var model = new ScheduleFormViewModel
             {
@@ -123,9 +130,7 @@ namespace WebApplication1.Areas.Admin.Controllers
         public IActionResult Edit(int id, ScheduleFormViewModel model)
         {
             if (id != model.Id)
-            {
                 return NotFound();
-            }
 
             if (ModelState.IsValid)
             {
@@ -145,14 +150,17 @@ namespace WebApplication1.Areas.Admin.Controllers
         // GET: Admin/Schedule/Delete/5
         public IActionResult Delete(int id)
         {
-            var schedules = _scheduleService.GetAll();
-            var schedule = schedules.FirstOrDefault(s => s.Id == id);
+            var schedule = _scheduleService.GetById(id);
             if (schedule == null)
-            {
                 return NotFound();
-            }
 
-            return View(schedule);
+            // nếu View Delete đang nhận ScheduleListViewModel thì giữ cách cũ.
+            // còn nếu View nhận Schedule entity thì trả thẳng schedule cũng được.
+            // Ở đây giữ giống flow cũ: lấy từ list service (nhưng không load all).
+            var item = _scheduleService.GetAll().FirstOrDefault(s => s.Id == id);
+            if (item == null) return NotFound();
+
+            return View(item);
         }
 
         // POST: Admin/Schedule/Delete/5
@@ -162,28 +170,27 @@ namespace WebApplication1.Areas.Admin.Controllers
         {
             var success = _scheduleService.Delete(id);
             if (success)
-            {
                 TempData["SuccessMessage"] = "Schedule deleted successfully!";
-            }
             else
-            {
                 TempData["ErrorMessage"] = "Failed to delete schedule!";
-            }
 
             return RedirectToAction(nameof(Index));
         }
 
         private void PopulateDropdowns()
         {
-            var courseClasses = FakeDatabase.CourseClasses.Select(c =>
-            {
-                var subject = FakeDatabase.Subjects.FirstOrDefault(s => s.Id == c.SubjectId);
-                return new SelectListItem
-                {
-                    Value = c.Id.ToString(),
-                    Text = $"{c.ClassCode} - {subject?.SubjectName ?? ""}"
-                };
-            }).ToList();
+            // CourseClasses dropdown (kèm SubjectName)
+            var courseClasses =
+                (from c in _db.CourseClasses.AsNoTracking()
+                 join s in _db.Subjects.AsNoTracking() on c.SubjectId equals s.Id into sj
+                 from subject in sj.DefaultIfEmpty()
+                 orderby c.Semester descending, c.ClassCode
+                 select new SelectListItem
+                 {
+                     Value = c.Id.ToString(),
+                     Text = $"{c.ClassCode} - {(subject != null ? subject.SubjectName : "")}"
+                 })
+                .ToList();
 
             var days = Enum.GetValues<DayOfWeek>()
                 .Where(d => d != DayOfWeek.Sunday && d != DayOfWeek.Saturday)
@@ -191,7 +198,8 @@ namespace WebApplication1.Areas.Admin.Controllers
                 {
                     Value = ((int)d).ToString(),
                     Text = d.ToString()
-                }).ToList();
+                })
+                .ToList();
 
             var sessions = new List<SelectListItem>
             {

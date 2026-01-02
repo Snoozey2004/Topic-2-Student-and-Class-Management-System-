@@ -1,4 +1,4 @@
-﻿using System.Linq;
+﻿using Microsoft.EntityFrameworkCore;
 using WebApplication1.Data;
 using WebApplication1.Models;
 using WebApplication1.ViewModels;
@@ -6,7 +6,7 @@ using WebApplication1.ViewModels;
 namespace WebApplication1.Services
 {
     /// <summary>
-    /// Service quản lý Grade
+    /// Service quản lý Grade (SQL Server + EF Core)
     /// </summary>
     public interface IGradeService
     {
@@ -21,41 +21,60 @@ namespace WebApplication1.Services
 
     public class GradeService : IGradeService
     {
+        private readonly ApplicationDbContext _db;
         private readonly INotificationService _notificationService;
 
-        public GradeService(INotificationService notificationService)
+        public GradeService(ApplicationDbContext db, INotificationService notificationService)
         {
+            _db = db;
             _notificationService = notificationService;
         }
 
         public List<WebApplication1.ViewModels.GradeListViewModel> GetAll()
         {
-            return FakeDatabase.Grades.Select(g =>
-            {
-                var student = FakeDatabase.Students.FirstOrDefault(s => s.Id == g.StudentId);
-                var courseClass = FakeDatabase.CourseClasses.FirstOrDefault(c => c.Id == g.CourseClassId);
-
-                return new WebApplication1.ViewModels.GradeListViewModel
+            var query =
+                from g in _db.Grades
+                join st in _db.Students on g.StudentId equals st.Id into stj
+                from student in stj.DefaultIfEmpty()
+                join cc in _db.CourseClasses on g.CourseClassId equals cc.Id into ccj
+                from courseClass in ccj.DefaultIfEmpty()
+                select new WebApplication1.ViewModels.GradeListViewModel
                 {
                     Id = g.Id,
-                    StudentName = student?.FullName ?? string.Empty,
-                    CourseClassCode = courseClass?.ClassCode ?? string.Empty,
+                    StudentName = student != null ? student.FullName : string.Empty,
+                    CourseClassCode = courseClass != null ? courseClass.ClassCode : string.Empty,
                     TotalScore = g.TotalScore,
                     LetterGrade = g.LetterGrade
                 };
-            }).ToList();
+
+            return query.AsNoTracking().ToList();
         }
 
         public List<GradeInputViewModel> GetGradesByCourseClass(int courseClassId)
         {
-            var enrollments = FakeDatabase.Enrollments
+            // Lấy enrollments đã Approved trong lớp
+            var enrollments = _db.Enrollments
+                .AsNoTracking()
                 .Where(e => e.CourseClassId == courseClassId && e.Status == EnrollmentStatus.Approved)
                 .ToList();
 
-            return enrollments.Select(e =>
+            var enrollmentIds = enrollments.Select(e => e.Id).ToList();
+            var studentIds = enrollments.Select(e => e.StudentId).Distinct().ToList();
+
+            var students = _db.Students
+                .AsNoTracking()
+                .Where(s => studentIds.Contains(s.Id))
+                .ToDictionary(s => s.Id, s => s);
+
+            var gradeByEnrollment = _db.Grades
+                .AsNoTracking()
+                .Where(g => enrollmentIds.Contains(g.EnrollmentId))
+                .ToDictionary(g => g.EnrollmentId, g => g);
+
+            var result = enrollments.Select(e =>
             {
-                var student = FakeDatabase.Students.FirstOrDefault(s => s.Id == e.StudentId);
-                var grade = FakeDatabase.Grades.FirstOrDefault(g => g.EnrollmentId == e.Id);
+                students.TryGetValue(e.StudentId, out var student);
+                gradeByEnrollment.TryGetValue(e.Id, out var grade);
 
                 return new GradeInputViewModel
                 {
@@ -68,41 +87,71 @@ namespace WebApplication1.Services
                     MidtermScore = grade?.MidtermScore,
                     FinalScore = grade?.FinalScore
                 };
-            }).OrderBy(g => g.StudentCode).ToList();
+            })
+            .OrderBy(x => x.StudentCode)
+            .ToList();
+
+            return result;
         }
 
         public StudentGradeViewModel? GetStudentGrades(int studentId, string? semester = null)
         {
-            var student = FakeDatabase.Students.FirstOrDefault(s => s.Id == studentId);
+            var student = _db.Students
+                .AsNoTracking()
+                .FirstOrDefault(s => s.Id == studentId);
+
             if (student == null) return null;
 
-            var enrollments = FakeDatabase.Enrollments
-                .Where(e => e.StudentId == studentId && e.Status == EnrollmentStatus.Approved)
-                .ToList();
+            // enrollments approved
+            var enrollmentsQuery = _db.Enrollments
+                .AsNoTracking()
+                .Where(e => e.StudentId == studentId && e.Status == EnrollmentStatus.Approved);
 
-            if (!string.IsNullOrEmpty(semester))
+            if (!string.IsNullOrWhiteSpace(semester))
             {
-                var courseClassIds = FakeDatabase.CourseClasses
+                // chỉ lấy những enrollment thuộc lớp có semester đó
+                var classIdsInSemester = _db.CourseClasses
+                    .AsNoTracking()
                     .Where(c => c.Semester == semester)
-                    .Select(c => c.Id)
-                    .ToList();
-                enrollments = enrollments.Where(e => courseClassIds.Contains(e.CourseClassId)).ToList();
+                    .Select(c => c.Id);
+
+                enrollmentsQuery = enrollmentsQuery.Where(e => classIdsInSemester.Contains(e.CourseClassId));
             }
 
-            var grades = enrollments.Select(e =>
+            var enrollments = enrollmentsQuery.ToList();
+            var classIds = enrollments.Select(e => e.CourseClassId).Distinct().ToList();
+            var enrollmentIds = enrollments.Select(e => e.Id).ToList();
+
+            var courseClasses = _db.CourseClasses
+                .AsNoTracking()
+                .Where(c => classIds.Contains(c.Id))
+                .ToDictionary(c => c.Id, c => c);
+
+            var subjectIds = courseClasses.Values.Select(c => c.SubjectId).Distinct().ToList();
+            var subjects = _db.Subjects
+                .AsNoTracking()
+                .Where(s => subjectIds.Contains(s.Id))
+                .ToDictionary(s => s.Id, s => s);
+
+            var grades = _db.Grades
+                .AsNoTracking()
+                .Where(g => enrollmentIds.Contains(g.EnrollmentId))
+                .ToDictionary(g => g.EnrollmentId, g => g);
+
+            var gradeDetails = enrollments.Select(e =>
             {
-                var courseClass = FakeDatabase.CourseClasses.FirstOrDefault(c => c.Id == e.CourseClassId);
-                var subject = courseClass != null
-                    ? FakeDatabase.Subjects.FirstOrDefault(s => s.Id == courseClass.SubjectId)
-                    : null;
-                var grade = FakeDatabase.Grades.FirstOrDefault(g => g.EnrollmentId == e.Id);
+                courseClasses.TryGetValue(e.CourseClassId, out var cc);
+                Subject? subject = null;
+                if (cc != null) subjects.TryGetValue(cc.SubjectId, out subject);
+
+                grades.TryGetValue(e.Id, out var grade);
 
                 return new GradeDetailViewModel
                 {
                     SubjectCode = subject?.SubjectCode ?? "",
                     SubjectName = subject?.SubjectName ?? "",
                     Credits = subject?.Credits ?? 0,
-                    ClassCode = courseClass?.ClassCode ?? "",
+                    ClassCode = cc?.ClassCode ?? "",
                     AttendanceScore = grade?.AttendanceScore,
                     MidtermScore = grade?.MidtermScore,
                     FinalScore = grade?.FinalScore,
@@ -112,19 +161,18 @@ namespace WebApplication1.Services
                 };
             }).ToList();
 
-            // Tính GPA
+            // GPA theo TotalScore * Credits (giữ nguyên logic mày đang làm)
             double totalPoints = 0;
             int totalCredits = 0;
             int passedCredits = 0;
 
-            foreach (var grade in grades.Where(g => g.TotalScore.HasValue))
+            foreach (var gd in gradeDetails.Where(g => g.TotalScore.HasValue))
             {
-                totalPoints += grade.TotalScore!.Value * grade.Credits;
-                totalCredits += grade.Credits;
-                if (grade.IsPassed)
-                {
-                    passedCredits += grade.Credits;
-                }
+                totalPoints += gd.TotalScore!.Value * gd.Credits;
+                totalCredits += gd.Credits;
+
+                if (gd.IsPassed)
+                    passedCredits += gd.Credits;
             }
 
             double? gpa = totalCredits > 0 ? Math.Round(totalPoints / totalCredits, 2) : null;
@@ -134,7 +182,7 @@ namespace WebApplication1.Services
                 StudentCode = student.StudentCode,
                 StudentName = student.FullName,
                 Semester = semester ?? "Tất cả",
-                Grades = grades,
+                Grades = gradeDetails,
                 GPA = gpa,
                 TotalCredits = totalCredits,
                 PassedCredits = passedCredits
@@ -143,19 +191,50 @@ namespace WebApplication1.Services
 
         public Grade? GetByEnrollmentId(int enrollmentId)
         {
-            return FakeDatabase.Grades.FirstOrDefault(g => g.EnrollmentId == enrollmentId);
+            return _db.Grades.FirstOrDefault(g => g.EnrollmentId == enrollmentId);
         }
 
         public bool UpdateGrade(GradeInputViewModel model, int lecturerId)
         {
-            var grade = FakeDatabase.Grades.FirstOrDefault(g => g.Id == model.GradeId);
-            if (grade == null) return false;
+            // Nếu có GradeId thì update; nếu chưa có thì tạo mới theo EnrollmentId
+            Grade? grade = null;
+
+            if (model.GradeId > 0)
+            {
+                grade = _db.Grades.FirstOrDefault(g => g.Id == model.GradeId);
+            }
+
+            if (grade == null)
+            {
+                // tìm grade theo enrollmentId (phòng trường hợp gradeId = 0)
+                grade = _db.Grades.FirstOrDefault(g => g.EnrollmentId == model.EnrollmentId);
+
+                if (grade == null)
+                {
+                    // tạo mới grade (cần lấy StudentId & CourseClassId từ Enrollment)
+                    var enrollment = _db.Enrollments
+                        .AsNoTracking()
+                        .FirstOrDefault(e => e.Id == model.EnrollmentId);
+
+                    if (enrollment == null) return false;
+
+                    grade = new Grade
+                    {
+                        // KHÔNG set Id nếu Identity
+                        EnrollmentId = enrollment.Id,
+                        StudentId = enrollment.StudentId,
+                        CourseClassId = enrollment.CourseClassId
+                    };
+
+                    _db.Grades.Add(grade);
+                }
+            }
 
             grade.AttendanceScore = model.AttendanceScore;
             grade.MidtermScore = model.MidtermScore;
             grade.FinalScore = model.FinalScore;
 
-            // Tính điểm tổng kết nếu đủ điểm thành phần
+            // Tính tổng kết nếu đủ điểm
             if (grade.AttendanceScore.HasValue && grade.MidtermScore.HasValue && grade.FinalScore.HasValue)
             {
                 grade.TotalScore = Math.Round(
@@ -167,18 +246,30 @@ namespace WebApplication1.Services
                 grade.LetterGrade = CalculateLetterGrade(grade.TotalScore.Value);
                 grade.IsPassed = grade.TotalScore.Value >= 4.0;
             }
+            else
+            {
+                // nếu chưa đủ điểm, mày có thể chọn clear TotalScore/LetterGrade
+                // (đang giữ an toàn: không xóa)
+            }
 
             grade.LastUpdated = DateTime.Now;
             grade.UpdatedBy = lecturerId;
 
-            // Tạo thông báo cho sinh viên nếu có điểm mới
+            _db.SaveChanges();
+
+            // Notify student nếu đã có TotalScore
             if (grade.TotalScore.HasValue)
             {
-                var student = FakeDatabase.Students.FirstOrDefault(s => s.Id == grade.StudentId);
-                if (student != null)
+                var studentUserId = _db.Students
+                    .AsNoTracking()
+                    .Where(s => s.Id == grade.StudentId)
+                    .Select(s => s.UserId)
+                    .FirstOrDefault();
+
+                if (studentUserId != 0)
                 {
                     _notificationService.CreateNotification(
-                        student.UserId,
+                        studentUserId,
                         "Có điểm mới",
                         "Điểm số của bạn đã được cập nhật. Vui lòng kiểm tra bảng điểm.",
                         NotificationType.Grade,
@@ -194,7 +285,8 @@ namespace WebApplication1.Services
         {
             foreach (var gradeModel in grades)
             {
-                UpdateGrade(gradeModel, lecturerId);
+                var ok = UpdateGrade(gradeModel, lecturerId);
+                if (!ok) return false;
             }
             return true;
         }
