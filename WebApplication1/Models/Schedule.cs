@@ -16,6 +16,8 @@ namespace WebApplication1.Models
         public DateTime EffectiveDate { get; set; } // Ngày b?t ??u áp d?ng
         public DateTime? EndDate { get; set; } // Ngày k?t thúc (null = vô th?i h?n)
         public DateTime CreatedDate { get; set; }
+        // Navigation
+        public CourseClass CourseClass { get; set; } = null!;
     }
 
     public enum SessionType

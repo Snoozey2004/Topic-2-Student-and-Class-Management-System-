@@ -1,10 +1,11 @@
+﻿using Microsoft.EntityFrameworkCore;
 using WebApplication1.Data;
 using WebApplication1.Models;
 
 namespace WebApplication1.Services
 {
     /// <summary>
-    /// Service x? l� authentication v� authorization
+    /// Service xử lý authentication và authorization (SQL Server + EF Core)
     /// </summary>
     public interface IAuthService
     {
@@ -18,15 +19,23 @@ namespace WebApplication1.Services
 
     public class AuthService : IAuthService
     {
+        private readonly ApplicationDbContext _db;
+
+        public AuthService(ApplicationDbContext db)
+        {
+            _db = db;
+        }
+
         public User? Authenticate(string email, string password)
         {
-            var user = FakeDatabase.Users.FirstOrDefault(u => 
-                u.Email.Equals(email, StringComparison.OrdinalIgnoreCase) && 
+            var user = _db.Users.FirstOrDefault(u =>
+                u.Email.ToLower() == email.ToLower() &&
                 u.Password == password);
 
             if (user != null && user.Status == UserStatus.Active)
             {
                 user.LastLoginDate = DateTime.Now;
+                _db.SaveChanges(); // lưu LastLoginDate
                 return user;
             }
 
@@ -35,40 +44,38 @@ namespace WebApplication1.Services
 
         public User? GetUserByEmail(string email)
         {
-            return FakeDatabase.Users.FirstOrDefault(u => 
-                u.Email.Equals(email, StringComparison.OrdinalIgnoreCase));
+            return _db.Users.FirstOrDefault(u =>
+                u.Email.ToLower() == email.ToLower());
         }
 
         public User? GetUserById(int id)
         {
-            return FakeDatabase.Users.FirstOrDefault(u => u.Id == id);
+            return _db.Users.FirstOrDefault(u => u.Id == id);
         }
 
         public bool Register(string email, string password, string fullName)
         {
-            // Ki?m tra email ?� t?n t?i ch?a
+            // Kiểm tra email đã tồn tại chưa
             if (GetUserByEmail(email) != null)
-            {
                 return false;
-            }
 
+            // Tạo User (KHÔNG set Id - SQL tự tăng)
             var user = new User
             {
-                Id = FakeDatabase.GetNextUserId(),
                 Email = email,
                 Password = password,
                 FullName = fullName,
                 Role = UserRole.Student,
-                Status = UserStatus.Pending, // Ch? admin duy?t
+                Status = UserStatus.Pending, // chờ admin duyệt
                 CreatedDate = DateTime.Now
             };
 
-            FakeDatabase.Users.Add(user);
+            _db.Users.Add(user);
+            _db.SaveChanges(); // để lấy user.Id
 
-            // T?o b?n ghi Student
+            // Tạo Student record
             var student = new Student
             {
-                Id = FakeDatabase.GetNextStudentId(),
                 UserId = user.Id,
                 StudentCode = $"SV{DateTime.Now:yyyyMMddHHmmss}",
                 FullName = fullName,
@@ -76,12 +83,13 @@ namespace WebApplication1.Services
                 DateOfBirth = DateTime.Now.AddYears(-20),
                 PhoneNumber = "",
                 Address = "",
-                Major = "Ch?a x�c ??nh",
+                Major = "Chưa xác định",
                 AdmissionYear = DateTime.Now.Year,
                 CreatedDate = DateTime.Now
             };
 
-            FakeDatabase.Students.Add(student);
+            _db.Students.Add(student);
+            _db.SaveChanges();
 
             return true;
         }
@@ -90,11 +98,10 @@ namespace WebApplication1.Services
         {
             var user = GetUserById(userId);
             if (user == null || user.Password != currentPassword)
-            {
                 return false;
-            }
 
             user.Password = newPassword;
+            _db.SaveChanges();
             return true;
         }
 
@@ -102,11 +109,10 @@ namespace WebApplication1.Services
         {
             var user = GetUserByEmail(email);
             if (user == null)
-            {
                 return false;
-            }
 
             user.Password = newPassword;
+            _db.SaveChanges();
             return true;
         }
     }

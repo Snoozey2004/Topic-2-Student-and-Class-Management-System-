@@ -1,3 +1,4 @@
+﻿using Microsoft.EntityFrameworkCore;
 using WebApplication1.Data;
 using WebApplication1.Models;
 using WebApplication1.ViewModels;
@@ -5,7 +6,7 @@ using WebApplication1.ViewModels;
 namespace WebApplication1.Services
 {
     /// <summary>
-    /// Service qu?n l� Subject
+    /// Service quản lý Subject (SQL Server + EF Core)
     /// </summary>
     public interface ISubjectService
     {
@@ -20,46 +21,63 @@ namespace WebApplication1.Services
 
     public class SubjectService : ISubjectService
     {
+        private readonly ApplicationDbContext _db;
+
+        public SubjectService(ApplicationDbContext db)
+        {
+            _db = db;
+        }
+
         public List<SubjectListViewModel> GetAll()
         {
-            return FakeDatabase.Subjects.Select(s => new SubjectListViewModel
-            {
-                Id = s.Id,
-                SubjectCode = s.SubjectCode,
-                SubjectName = s.SubjectName,
-                Credits = s.Credits,
-                Department = s.Department,
-                PrerequisiteCount = s.PrerequisiteSubjectIds.Count
-            }).OrderBy(s => s.SubjectCode).ToList();
+            // Nếu PrerequisiteSubjectIds là List<int> map được thì dùng Count()
+            return _db.Subjects
+                .AsNoTracking()
+                .Select(s => new SubjectListViewModel
+                {
+                    Id = s.Id,
+                    SubjectCode = s.SubjectCode,
+                    SubjectName = s.SubjectName,
+                    Credits = s.Credits,
+                    Department = s.Department,
+                    PrerequisiteCount = s.PrerequisiteSubjectIds != null ? s.PrerequisiteSubjectIds.Count : 0
+                })
+                .OrderBy(s => s.SubjectCode)
+                .ToList();
         }
 
         public SubjectDetailViewModel? GetDetailById(int id)
         {
-            var subject = GetById(id);
+            var subject = _db.Subjects
+                .AsNoTracking()
+                .FirstOrDefault(s => s.Id == id);
+
             if (subject == null) return null;
 
-            var prerequisites = subject.PrerequisiteSubjectIds
-                .Select(pid => FakeDatabase.Subjects.FirstOrDefault(s => s.Id == pid))
-                .Where(s => s != null)
-                .Select(s => $"{s!.SubjectCode} - {s.SubjectName}")
+            // Load prerequisite subjects
+            var prerequisiteIds = subject.PrerequisiteSubjectIds ?? new List<int>();
+
+            var prerequisites = _db.Subjects
+                .AsNoTracking()
+                .Where(s => prerequisiteIds.Contains(s.Id))
+                .Select(s => $"{s.SubjectCode} - {s.SubjectName}")
                 .ToList();
 
-            var courseClasses = FakeDatabase.CourseClasses
+            // CourseClasses của subject
+            var courseClasses = _db.CourseClasses
+                .AsNoTracking()
                 .Where(c => c.SubjectId == id)
-                .Select(c =>
+                .Select(c => new CourseClassInfoViewModel
                 {
-                    var lecturer = FakeDatabase.Lecturers.FirstOrDefault(l => l.Id == c.LecturerId);
-                    return new CourseClassInfoViewModel
-                    {
-                        Id = c.Id,
-                        ClassCode = c.ClassCode,
-                        SubjectName = subject.SubjectName,
-                        Semester = c.Semester,
-                        CurrentStudents = c.CurrentStudents,
-                        MaxStudents = c.MaxStudents,
-                        Status = c.Status.ToString()
-                    };
-                }).ToList();
+                    Id = c.Id,
+                    ClassCode = c.ClassCode,
+                    SubjectName = subject.SubjectName,
+                    Semester = c.Semester,
+                    CurrentStudents = c.CurrentStudents,
+                    MaxStudents = c.MaxStudents,
+                    Status = c.Status.ToString()
+                })
+                .ToList();
 
             return new SubjectDetailViewModel
             {
@@ -76,21 +94,19 @@ namespace WebApplication1.Services
 
         public Subject? GetById(int id)
         {
-            return FakeDatabase.Subjects.FirstOrDefault(s => s.Id == id);
+            return _db.Subjects.FirstOrDefault(s => s.Id == id);
         }
 
         public bool Create(SubjectFormViewModel model)
         {
-            // Ki?m tra m� m�n h?c ?� t?n t?i
-            if (FakeDatabase.Subjects.Any(s => s.SubjectCode.Equals(model.SubjectCode, StringComparison.OrdinalIgnoreCase)))
-            {
+            var codeLower = model.SubjectCode.Trim().ToLower();
+            if (_db.Subjects.Any(s => s.SubjectCode.ToLower() == codeLower))
                 return false;
-            }
 
             var subject = new Subject
             {
-                Id = FakeDatabase.GetNextSubjectId(),
-                SubjectCode = model.SubjectCode,
+                // KHÔNG set Id nếu Identity
+                SubjectCode = model.SubjectCode.Trim(),
                 SubjectName = model.SubjectName,
                 Credits = model.Credits,
                 Department = model.Department,
@@ -99,56 +115,60 @@ namespace WebApplication1.Services
                 CreatedDate = DateTime.Now
             };
 
-            FakeDatabase.Subjects.Add(subject);
+            _db.Subjects.Add(subject);
+            _db.SaveChanges();
             return true;
         }
 
         public bool Update(SubjectFormViewModel model)
         {
-            var subject = GetById(model.Id ?? 0);
+            var id = model.Id ?? 0;
+            var subject = _db.Subjects.FirstOrDefault(s => s.Id == id);
             if (subject == null) return false;
 
-            // Ki?m tra m� m�n h?c tr�ng
-            if (FakeDatabase.Subjects.Any(s => s.Id != subject.Id &&
-                s.SubjectCode.Equals(model.SubjectCode, StringComparison.OrdinalIgnoreCase)))
-            {
+            var codeLower = model.SubjectCode.Trim().ToLower();
+            if (_db.Subjects.Any(s => s.Id != subject.Id && s.SubjectCode.ToLower() == codeLower))
                 return false;
-            }
 
-            subject.SubjectCode = model.SubjectCode;
+            subject.SubjectCode = model.SubjectCode.Trim();
             subject.SubjectName = model.SubjectName;
             subject.Credits = model.Credits;
             subject.Department = model.Department;
             subject.Description = model.Description;
             subject.PrerequisiteSubjectIds = model.PrerequisiteSubjectIds ?? new List<int>();
 
+            _db.SaveChanges();
             return true;
         }
 
         public bool Delete(int id)
         {
-            var subject = GetById(id);
+            var subject = _db.Subjects.FirstOrDefault(s => s.Id == id);
             if (subject == null) return false;
 
-            // Ki?m tra xem m�n h?c c� ?ang ???c s? d?ng kh�ng
-            if (FakeDatabase.CourseClasses.Any(c => c.SubjectId == id))
-            {
+            // Không cho xoá nếu đang được dùng bởi CourseClass
+            if (_db.CourseClasses.Any(c => c.SubjectId == id))
                 return false;
-            }
 
-            FakeDatabase.Subjects.Remove(subject);
+            _db.Subjects.Remove(subject);
+            _db.SaveChanges();
             return true;
         }
 
         public List<Subject> GetPrerequisites(int subjectId)
         {
-            var subject = GetById(subjectId);
+            var subject = _db.Subjects
+                .AsNoTracking()
+                .FirstOrDefault(s => s.Id == subjectId);
+
             if (subject == null) return new List<Subject>();
 
-            return subject.PrerequisiteSubjectIds
-                .Select(pid => GetById(pid))
-                .Where(s => s != null)
-                .Cast<Subject>()
+            var prerequisiteIds = subject.PrerequisiteSubjectIds ?? new List<int>();
+            if (prerequisiteIds.Count == 0) return new List<Subject>();
+
+            return _db.Subjects
+                .AsNoTracking()
+                .Where(s => prerequisiteIds.Contains(s.Id))
                 .ToList();
         }
     }

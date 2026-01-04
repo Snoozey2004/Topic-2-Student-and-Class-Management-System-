@@ -22,5 +22,10 @@ namespace WebApplication1.Models
         
         public DateTime? LastUpdated { get; set; }
         public int? UpdatedBy { get; set; } // LecturerId c?p nh?t ?i?m
+                                            // Navigation
+        public Enrollment Enrollment { get; set; } = null!;
+        public Student Student { get; set; } = null!;
+        public CourseClass CourseClass { get; set; } = null!;
+        public Lecturer? UpdatedByLecturer { get; set; }
     }
 }

@@ -1,12 +1,10 @@
+using Microsoft.EntityFrameworkCore;
 using WebApplication1.Data;
 using WebApplication1.Models;
 using WebApplication1.ViewModels;
 
 namespace WebApplication1.Services
 {
-    /// <summary>
-    /// Service qu?n lý Student
-    /// </summary>
     public interface IStudentService
     {
         List<StudentListViewModel> GetAll();
@@ -22,47 +20,64 @@ namespace WebApplication1.Services
 
     public class StudentService : IStudentService
     {
+        private readonly ApplicationDbContext _db;
+
+        public StudentService(ApplicationDbContext db)
+        {
+            _db = db;
+        }
+
         public List<StudentListViewModel> GetAll()
         {
-            return FakeDatabase.Students.Select(s => new StudentListViewModel
-            {
-                Id = s.Id,
-                StudentCode = s.StudentCode,
-                FullName = s.FullName,
-                Email = s.Email,
-                Major = s.Major,
-                AdmissionYear = s.AdmissionYear,
-                AdministrativeClassName = s.AdministrativeClassId.HasValue
-                    ? FakeDatabase.AdministrativeClasses.FirstOrDefault(c => c.Id == s.AdministrativeClassId)?.ClassName
-                    : null
-            }).OrderBy(s => s.StudentCode).ToList();
+            return _db.Students
+                .Select(s => new StudentListViewModel
+                {
+                    Id = s.Id,
+                    StudentCode = s.StudentCode,
+                    FullName = s.FullName,
+                    Email = s.Email,
+                    Major = s.Major,
+                    AdmissionYear = s.AdmissionYear,
+                    AdministrativeClassName = s.AdministrativeClassId != null
+                        ? _db.AdministrativeClasses
+                            .Where(c => c.Id == s.AdministrativeClassId)
+                            .Select(c => c.ClassName)
+                            .FirstOrDefault()
+                        : null
+                })
+                .OrderBy(s => s.StudentCode)
+                .ToList();
         }
+
+        public Student? GetById(int id) => _db.Students.FirstOrDefault(s => s.Id == id);
+
+        public Student? GetByUserId(int userId) => _db.Students.FirstOrDefault(s => s.UserId == userId);
 
         public StudentDetailViewModel? GetDetailById(int id)
         {
             var student = GetById(id);
             if (student == null) return null;
 
-            var enrollments = FakeDatabase.Enrollments
+            var enrollments = _db.Enrollments
                 .Where(e => e.StudentId == id && e.Status == EnrollmentStatus.Approved)
-                .Select(e =>
-                {
-                    var courseClass = FakeDatabase.CourseClasses.FirstOrDefault(c => c.Id == e.CourseClassId);
-                    var subject = courseClass != null
-                        ? FakeDatabase.Subjects.FirstOrDefault(s => s.Id == courseClass.SubjectId)
-                        : null;
-                    var grade = FakeDatabase.Grades.FirstOrDefault(g => g.EnrollmentId == e.Id);
+                .ToList();
 
-                    return new EnrollmentInfoViewModel
-                    {
-                        SubjectName = subject?.SubjectName ?? "",
-                        ClassCode = courseClass?.ClassCode ?? "",
-                        Semester = courseClass?.Semester ?? "",
-                        Status = e.Status.ToString(),
-                        TotalScore = grade?.TotalScore,
-                        LetterGrade = grade?.LetterGrade
-                    };
-                }).ToList();
+            var enrollmentVMs = enrollments.Select(e =>
+            {
+                var courseClass = _db.CourseClasses.FirstOrDefault(c => c.Id == e.CourseClassId);
+                var subject = courseClass == null ? null : _db.Subjects.FirstOrDefault(s => s.Id == courseClass.SubjectId);
+                var grade = _db.Grades.FirstOrDefault(g => g.EnrollmentId == e.Id);
+
+                return new EnrollmentInfoViewModel
+                {
+                    SubjectName = subject?.SubjectName ?? "",
+                    ClassCode = courseClass?.ClassCode ?? "",
+                    Semester = courseClass?.Semester ?? "",
+                    Status = e.Status.ToString(),
+                    TotalScore = grade?.TotalScore,
+                    LetterGrade = grade?.LetterGrade
+                };
+            }).ToList();
 
             return new StudentDetailViewModel
             {
@@ -75,41 +90,24 @@ namespace WebApplication1.Services
                 Address = student.Address,
                 Major = student.Major,
                 AdmissionYear = student.AdmissionYear,
-                AdministrativeClassName = student.AdministrativeClassId.HasValue
-                    ? FakeDatabase.AdministrativeClasses.FirstOrDefault(c => c.Id == student.AdministrativeClassId)?.ClassName
+                AdministrativeClassName = student.AdministrativeClassId != null
+                    ? _db.AdministrativeClasses
+                        .Where(c => c.Id == student.AdministrativeClassId)
+                        .Select(c => c.ClassName)
+                        .FirstOrDefault()
                     : null,
-                Enrollments = enrollments,
+                Enrollments = enrollmentVMs,
                 GPA = CalculateGPA(id)
             };
         }
 
-        public Student? GetById(int id)
-        {
-            return FakeDatabase.Students.FirstOrDefault(s => s.Id == id);
-        }
-
-        public Student? GetByUserId(int userId)
-        {
-            return FakeDatabase.Students.FirstOrDefault(s => s.UserId == userId);
-        }
-
         public bool Create(StudentFormViewModel model)
         {
-            // Ki?m tra email và mã sinh viên ?ã t?n t?i
-            if (FakeDatabase.Students.Any(s => s.Email.Equals(model.Email, StringComparison.OrdinalIgnoreCase)))
-            {
-                return false;
-            }
+            if (_db.Students.Any(s => s.Email.ToLower() == model.Email.ToLower())) return false;
+            if (_db.Students.Any(s => s.StudentCode.ToLower() == model.StudentCode.ToLower())) return false;
 
-            if (FakeDatabase.Students.Any(s => s.StudentCode.Equals(model.StudentCode, StringComparison.OrdinalIgnoreCase)))
-            {
-                return false;
-            }
-
-            // T?o User tr??c
             var user = new User
             {
-                Id = FakeDatabase.GetNextUserId(),
                 Email = model.Email,
                 Password = model.Password ?? "123456",
                 FullName = model.FullName,
@@ -117,12 +115,12 @@ namespace WebApplication1.Services
                 Status = UserStatus.Active,
                 CreatedDate = DateTime.Now
             };
-            FakeDatabase.Users.Add(user);
 
-            // T?o Student
+            _db.Users.Add(user);
+            _db.SaveChanges();
+
             var student = new Student
             {
-                Id = FakeDatabase.GetNextStudentId(),
                 UserId = user.Id,
                 StudentCode = model.StudentCode,
                 FullName = model.FullName,
@@ -136,7 +134,8 @@ namespace WebApplication1.Services
                 CreatedDate = DateTime.Now
             };
 
-            FakeDatabase.Students.Add(student);
+            _db.Students.Add(student);
+            _db.SaveChanges();
             return true;
         }
 
@@ -145,18 +144,8 @@ namespace WebApplication1.Services
             var student = GetById(model.Id ?? 0);
             if (student == null) return false;
 
-            // Ki?m tra email và mã sinh viên trùng
-            if (FakeDatabase.Students.Any(s => s.Id != student.Id &&
-                s.Email.Equals(model.Email, StringComparison.OrdinalIgnoreCase)))
-            {
-                return false;
-            }
-
-            if (FakeDatabase.Students.Any(s => s.Id != student.Id &&
-                s.StudentCode.Equals(model.StudentCode, StringComparison.OrdinalIgnoreCase)))
-            {
-                return false;
-            }
+            if (_db.Students.Any(s => s.Id != student.Id && s.Email.ToLower() == model.Email.ToLower())) return false;
+            if (_db.Students.Any(s => s.Id != student.Id && s.StudentCode.ToLower() == model.StudentCode.ToLower())) return false;
 
             student.StudentCode = model.StudentCode;
             student.FullName = model.FullName;
@@ -164,18 +153,18 @@ namespace WebApplication1.Services
             student.DateOfBirth = model.DateOfBirth;
             student.PhoneNumber = model.PhoneNumber;
             student.Address = model.Address;
-            student.AdministrativeClassId = model.AdministrativeClassId;
             student.Major = model.Major;
             student.AdmissionYear = model.AdmissionYear;
+            student.AdministrativeClassId = model.AdministrativeClassId;
 
-            // C?p nh?t User
-            var user = FakeDatabase.Users.FirstOrDefault(u => u.Id == student.UserId);
+            var user = _db.Users.FirstOrDefault(u => u.Id == student.UserId);
             if (user != null)
             {
                 user.Email = model.Email;
                 user.FullName = model.FullName;
             }
 
+            _db.SaveChanges();
             return true;
         }
 
@@ -184,62 +173,47 @@ namespace WebApplication1.Services
             var student = GetById(id);
             if (student == null) return false;
 
-            // Xóa User liên quan
-            var user = FakeDatabase.Users.FirstOrDefault(u => u.Id == student.UserId);
-            if (user != null)
-            {
-                FakeDatabase.Users.Remove(user);
-            }
+            var user = _db.Users.FirstOrDefault(u => u.Id == student.UserId);
+            if (user != null) _db.Users.Remove(user);
 
-            FakeDatabase.Students.Remove(student);
+            _db.Students.Remove(student);
+            _db.SaveChanges();
             return true;
         }
 
         public double? CalculateGPA(int studentId, string? semester = null)
         {
-            var enrollments = FakeDatabase.Enrollments
+            var enrollments = _db.Enrollments
                 .Where(e => e.StudentId == studentId && e.Status == EnrollmentStatus.Approved)
                 .ToList();
 
             if (semester != null)
             {
-                var courseClassIds = FakeDatabase.CourseClasses
-                    .Where(c => c.Semester == semester)
-                    .Select(c => c.Id)
-                    .ToList();
-                enrollments = enrollments.Where(e => courseClassIds.Contains(e.CourseClassId)).ToList();
+                var classIds = _db.CourseClasses.Where(c => c.Semester == semester).Select(c => c.Id).ToList();
+                enrollments = enrollments.Where(e => classIds.Contains(e.CourseClassId)).ToList();
             }
 
-            var grades = FakeDatabase.Grades
-                .Where(g => enrollments.Select(e => e.Id).Contains(g.EnrollmentId) && g.TotalScore.HasValue)
-                .ToList();
-
+            var enrollmentIds = enrollments.Select(e => e.Id).ToList();
+            var grades = _db.Grades.Where(g => enrollmentIds.Contains(g.EnrollmentId) && g.TotalScore.HasValue).ToList();
             if (!grades.Any()) return null;
 
-            double totalPoints = 0;
-            int totalCredits = 0;
+            double total = 0;
+            int credits = 0;
 
-            foreach (var grade in grades)
+            foreach (var g in grades)
             {
-                var enrollment = enrollments.FirstOrDefault(e => e.Id == grade.EnrollmentId);
-                if (enrollment == null) continue;
-
-                var courseClass = FakeDatabase.CourseClasses.FirstOrDefault(c => c.Id == enrollment.CourseClassId);
-                if (courseClass == null) continue;
-
-                var subject = FakeDatabase.Subjects.FirstOrDefault(s => s.Id == courseClass.SubjectId);
+                var enrollment = enrollments.First(e => e.Id == g.EnrollmentId);
+                var subjectId = _db.CourseClasses.Where(c => c.Id == enrollment.CourseClassId).Select(c => c.SubjectId).FirstOrDefault();
+                var subject = _db.Subjects.FirstOrDefault(s => s.Id == subjectId);
                 if (subject == null) continue;
 
-                totalPoints += grade.TotalScore!.Value * subject.Credits;
-                totalCredits += subject.Credits;
+                total += g.TotalScore!.Value * subject.Credits;
+                credits += subject.Credits;
             }
 
-            return totalCredits > 0 ? Math.Round(totalPoints / totalCredits, 2) : null;
+            return credits > 0 ? Math.Round(total / credits, 2) : null;
         }
 
-        public List<AdministrativeClass> GetAdministrativeClasses()
-        {
-            return FakeDatabase.AdministrativeClasses.ToList();
-        }
+        public List<AdministrativeClass> GetAdministrativeClasses() => _db.AdministrativeClasses.ToList();
     }
 }

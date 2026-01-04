@@ -15,6 +15,14 @@ namespace WebApplication1.Models
         public string Room { get; set; } = string.Empty;
         public CourseClassStatus Status { get; set; }
         public DateTime CreatedDate { get; set; }
+
+        // Navigation
+        public Subject Subject { get; set; } = null!;
+        public Lecturer Lecturer { get; set; } = null!;
+        public ICollection<Schedule> Schedules { get; set; } = new List<Schedule>();
+        public ICollection<Enrollment> Enrollments { get; set; } = new List<Enrollment>();
+        public ICollection<Attendance> Attendances { get; set; } = new List<Attendance>();
+        public ICollection<Grade> Grades { get; set; } = new List<Grade>();
     }
 
     public enum CourseClassStatus

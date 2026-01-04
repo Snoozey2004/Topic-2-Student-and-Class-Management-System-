@@ -13,5 +13,7 @@ namespace WebApplication1.Models
         public string Description { get; set; } = string.Empty;
         public List<int> PrerequisiteSubjectIds { get; set; } = new List<int>(); // Môn tiên quy?t
         public DateTime CreatedDate { get; set; }
+        // Navigation
+        public ICollection<CourseClass> CourseClasses { get; set; } = new List<CourseClass>();
     }
 }

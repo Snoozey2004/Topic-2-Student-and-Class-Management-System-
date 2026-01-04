@@ -1,11 +1,12 @@
-﻿using WebApplication1.Data;
+﻿using Microsoft.EntityFrameworkCore;
+using WebApplication1.Data;
 using WebApplication1.Models;
 using WebApplication1.ViewModels;
 
 namespace WebApplication1.Services
 {
     /// <summary>
-    /// Service quản lý Schedule
+    /// Service quản lý Schedule (SQL Server + EF Core)
     /// </summary>
     public interface IScheduleService
     {
@@ -21,46 +22,25 @@ namespace WebApplication1.Services
 
     public class ScheduleService : IScheduleService
     {
+        private readonly ApplicationDbContext _db;
         private readonly INotificationService _notificationService;
 
-        public ScheduleService(INotificationService notificationService)
+        public ScheduleService(ApplicationDbContext db, INotificationService notificationService)
         {
+            _db = db;
             _notificationService = notificationService;
         }
 
         public List<ScheduleListViewModel> GetAll()
         {
-            return FakeDatabase.Schedules.Select(s =>
-            {
-                var courseClass = FakeDatabase.CourseClasses.FirstOrDefault(c => c.Id == s.CourseClassId);
-                var subject = courseClass != null
-                    ? FakeDatabase.Subjects.FirstOrDefault(sub => sub.Id == courseClass.SubjectId)
-                    : null;
+            var schedules = _db.Schedules.ToList();   // ✅ tách khỏi EF
 
-                return new ScheduleListViewModel
-                {
-                    Id = s.Id,
-                    ClassCode = courseClass?.ClassCode ?? "",
-                    SubjectName = subject?.SubjectName ?? "",
-                    DayOfWeek = s.DayOfWeek.ToString(),
-                    Session = s.Session,
-                    Period = s.Period,
-                    TimeRange = $"{s.StartTime} - {s.EndTime}",
-                    Room = s.Room,
-                    EffectiveDate = s.EffectiveDate
-                };
-            }).OrderBy(s => s.DayOfWeek).ThenBy(s => s.TimeRange).ToList();
-        }
-
-        public List<ScheduleListViewModel> GetByCourseClassId(int courseClassId)
-        {
-            return FakeDatabase.Schedules
-                .Where(s => s.CourseClassId == courseClassId)
+            return schedules
                 .Select(s =>
                 {
-                    var courseClass = FakeDatabase.CourseClasses.FirstOrDefault(c => c.Id == s.CourseClassId);
+                    var courseClass = _db.CourseClasses.FirstOrDefault(c => c.Id == s.CourseClassId);
                     var subject = courseClass != null
-                        ? FakeDatabase.Subjects.FirstOrDefault(sub => sub.Id == courseClass.SubjectId)
+                        ? _db.Subjects.FirstOrDefault(sub => sub.Id == courseClass.SubjectId)
                         : null;
 
                     return new ScheduleListViewModel
@@ -75,30 +55,72 @@ namespace WebApplication1.Services
                         Room = s.Room,
                         EffectiveDate = s.EffectiveDate
                     };
-                }).OrderBy(s => s.DayOfWeek).ToList();
+                })
+                .OrderBy(s => s.DayOfWeek)
+                .ThenBy(s => s.TimeRange)
+                .ToList();
         }
+
+
+        public List<ScheduleListViewModel> GetByCourseClassId(int courseClassId)
+        {
+            // 1) Lấy schedule ra khỏi EF trước
+            var schedules = _db.Schedules
+                .Where(s => s.CourseClassId == courseClassId)
+                .ToList();
+
+            // 2) Map sang ViewModel bằng C# (không còn expression tree)
+            return schedules
+                .Select(s =>
+                {
+                    var courseClass = _db.CourseClasses.FirstOrDefault(c => c.Id == s.CourseClassId);
+
+                    var subject = courseClass != null
+                        ? _db.Subjects.FirstOrDefault(sub => sub.Id == courseClass.SubjectId)   
+                        : null;
+
+                    return new ScheduleListViewModel
+                    {
+                        Id = s.Id,
+                        ClassCode = courseClass?.ClassCode ?? "",
+                        SubjectName = subject?.SubjectName ?? "",
+                        DayOfWeek = s.DayOfWeek.ToString(),
+                        Session = s.Session,
+                        Period = s.Period,
+                        TimeRange = $"{s.StartTime} - {s.EndTime}",
+                        Room = s.Room,
+                        EffectiveDate = s.EffectiveDate
+                    };
+                })
+                .OrderBy(x => x.DayOfWeek)
+                .ToList();
+        }
+
+
 
         public TimetableViewModel GetStudentTimetable(int studentId, string semester)
         {
-            var enrolledClasses = FakeDatabase.Enrollments
+            // lấy classId đã Approved
+            var enrolledClassIds = _db.Enrollments
+                .AsNoTracking()
                 .Where(e => e.StudentId == studentId && e.Status == EnrollmentStatus.Approved)
                 .Select(e => e.CourseClassId)
+                .Distinct()
                 .ToList();
 
-            var courseClasses = FakeDatabase.CourseClasses
-                .Where(c => enrolledClasses.Contains(c.Id) && c.Semester == semester)
+            var courseClasses = _db.CourseClasses
+                .AsNoTracking()
+                .Where(c => enrolledClassIds.Contains(c.Id) && c.Semester == semester)
                 .ToList();
 
             var semesterParts = semester.Split('-');
             var semesterNumber = semesterParts.Length > 0 ? semesterParts[0] : "HK1";
             var year = semesterParts.Length > 1 ? semesterParts[1] : DateTime.Now.Year.ToString();
-            
             var semesterLabel = $"{semesterNumber} - School year {year} - {int.Parse(year) + 1}";
 
             var currentDate = DateTime.Now;
             var startOfWeek = currentDate.AddDays(-(int)currentDate.DayOfWeek + (int)DayOfWeek.Monday);
             var weekNumber = GetWeekOfYear(currentDate);
-            
             var weekLabel = $"Week {weekNumber} [from date {startOfWeek:dd/MM/yyyy} to date {startOfWeek.AddDays(6):dd/MM/yyyy}]";
 
             var dayHeaders = new List<DayHeaderViewModel>();
@@ -123,17 +145,31 @@ namespace WebApplication1.Services
             };
 
             foreach (DayOfWeek day in Enum.GetValues(typeof(DayOfWeek)))
-            {
                 timetable.Schedule[day] = new List<TimetableSlot>();
-            }
+
+            // preload subjects + lecturers để đỡ query lặp
+            var subjectIds = courseClasses.Select(c => c.SubjectId).Distinct().ToList();
+            var lecturerIds = courseClasses.Select(c => c.LecturerId).Distinct().ToList();
+
+            var subjects = _db.Subjects.AsNoTracking()
+                .Where(s => subjectIds.Contains(s.Id))
+                .ToDictionary(s => s.Id, s => s);
+
+            var lecturers = _db.Lecturers.AsNoTracking()
+                .Where(l => lecturerIds.Contains(l.Id))
+                .ToDictionary(l => l.Id, l => l);
+
+            var classIds = courseClasses.Select(c => c.Id).ToList();
+            var schedules = _db.Schedules.AsNoTracking()
+                .Where(s => classIds.Contains(s.CourseClassId))
+                .ToList();
 
             foreach (var courseClass in courseClasses)
             {
-                var schedules = FakeDatabase.Schedules.Where(s => s.CourseClassId == courseClass.Id).ToList();
-                var subject = FakeDatabase.Subjects.FirstOrDefault(s => s.Id == courseClass.SubjectId);
-                var lecturer = FakeDatabase.Lecturers.FirstOrDefault(l => l.Id == courseClass.LecturerId);
+                subjects.TryGetValue(courseClass.SubjectId, out var subject);
+                lecturers.TryGetValue(courseClass.LecturerId, out var lecturer);
 
-                foreach (var schedule in schedules)
+                foreach (var schedule in schedules.Where(s => s.CourseClassId == courseClass.Id))
                 {
                     timetable.Schedule[schedule.DayOfWeek].Add(new TimetableSlot
                     {
@@ -152,20 +188,19 @@ namespace WebApplication1.Services
 
         public TimetableViewModel GetLecturerTimetable(int lecturerId, string semester)
         {
-            var courseClasses = FakeDatabase.CourseClasses
+            var courseClasses = _db.CourseClasses
+                .AsNoTracking()
                 .Where(c => c.LecturerId == lecturerId && c.Semester == semester)
                 .ToList();
 
             var semesterParts = semester.Split('-');
             var semesterNumber = semesterParts.Length > 0 ? semesterParts[0] : "HK1";
             var year = semesterParts.Length > 1 ? semesterParts[1] : DateTime.Now.Year.ToString();
-            
             var semesterLabel = $"{semesterNumber} - School year {year} - {int.Parse(year) + 1}";
 
             var currentDate = DateTime.Now;
             var startOfWeek = currentDate.AddDays(-(int)currentDate.DayOfWeek + (int)DayOfWeek.Monday);
             var weekNumber = GetWeekOfYear(currentDate);
-            
             var weekLabel = $"Week {weekNumber} [from date {startOfWeek:dd/MM/yyyy} to date {startOfWeek.AddDays(6):dd/MM/yyyy}]";
 
             var dayHeaders = new List<DayHeaderViewModel>();
@@ -190,16 +225,23 @@ namespace WebApplication1.Services
             };
 
             foreach (DayOfWeek day in Enum.GetValues(typeof(DayOfWeek)))
-            {
                 timetable.Schedule[day] = new List<TimetableSlot>();
-            }
+
+            var subjectIds = courseClasses.Select(c => c.SubjectId).Distinct().ToList();
+            var subjects = _db.Subjects.AsNoTracking()
+                .Where(s => subjectIds.Contains(s.Id))
+                .ToDictionary(s => s.Id, s => s);
+
+            var classIds = courseClasses.Select(c => c.Id).ToList();
+            var schedules = _db.Schedules.AsNoTracking()
+                .Where(s => classIds.Contains(s.CourseClassId))
+                .ToList();
 
             foreach (var courseClass in courseClasses)
             {
-                var schedules = FakeDatabase.Schedules.Where(s => s.CourseClassId == courseClass.Id).ToList();
-                var subject = FakeDatabase.Subjects.FirstOrDefault(s => s.Id == courseClass.SubjectId);
+                subjects.TryGetValue(courseClass.SubjectId, out var subject);
 
-                foreach (var schedule in schedules)
+                foreach (var schedule in schedules.Where(s => s.CourseClassId == courseClass.Id))
                 {
                     timetable.Schedule[schedule.DayOfWeek].Add(new TimetableSlot
                     {
@@ -228,20 +270,28 @@ namespace WebApplication1.Services
 
         public Schedule? GetById(int id)
         {
-            return FakeDatabase.Schedules.FirstOrDefault(s => s.Id == id);
+            return _db.Schedules.FirstOrDefault(s => s.Id == id);
         }
 
         public bool Create(ScheduleFormViewModel model)
         {
-            // Check for conflicts
+            // Room conflict
             if (HasConflict(model.CourseClassId, model.DayOfWeek, model.Period, model.Room, null))
-            {
                 return false;
-            }
+
+            // Lecturer conflict (optional nhưng nên check)
+            var lecturerId = _db.CourseClasses
+                .AsNoTracking()
+                .Where(c => c.Id == model.CourseClassId)
+                .Select(c => c.LecturerId)
+                .FirstOrDefault();
+
+            if (HasLecturerConflict(lecturerId, model.DayOfWeek, model.Period, null))
+                return false;
 
             var schedule = new Schedule
             {
-                Id = FakeDatabase.GetNextScheduleId(),
+                // KHÔNG set Id nếu Id là Identity
                 CourseClassId = model.CourseClassId,
                 DayOfWeek = model.DayOfWeek,
                 Session = model.Session,
@@ -254,22 +304,32 @@ namespace WebApplication1.Services
                 CreatedDate = DateTime.Now
             };
 
-            FakeDatabase.Schedules.Add(schedule);
-            NotifyClassScheduleChange(model.CourseClassId, "New schedule has been added");
+            _db.Schedules.Add(schedule);
+            _db.SaveChanges();
 
+            NotifyClassScheduleChange(model.CourseClassId, "New schedule has been added");
             return true;
         }
 
         public bool Update(ScheduleFormViewModel model)
         {
-            var schedule = GetById(model.Id ?? 0);
+            var id = model.Id ?? 0;
+            var schedule = _db.Schedules.FirstOrDefault(s => s.Id == id);
             if (schedule == null) return false;
 
-            // Check for conflicts (excluding current schedule)
+            // Room conflict (exclude current)
             if (HasConflict(model.CourseClassId, model.DayOfWeek, model.Period, model.Room, schedule.Id))
-            {
                 return false;
-            }
+
+            // Lecturer conflict (exclude current)
+            var lecturerId = _db.CourseClasses
+                .AsNoTracking()
+                .Where(c => c.Id == model.CourseClassId)
+                .Select(c => c.LecturerId)
+                .FirstOrDefault();
+
+            if (HasLecturerConflict(lecturerId, model.DayOfWeek, model.Period, schedule.Id))
+                return false;
 
             schedule.DayOfWeek = model.DayOfWeek;
             schedule.Session = model.Session;
@@ -280,21 +340,23 @@ namespace WebApplication1.Services
             schedule.EffectiveDate = model.EffectiveDate;
             schedule.EndDate = model.EndDate;
 
-            NotifyClassScheduleChange(schedule.CourseClassId, "Schedule has been updated");
+            _db.SaveChanges();
 
+            NotifyClassScheduleChange(schedule.CourseClassId, "Schedule has been updated");
             return true;
         }
 
         public bool Delete(int id)
         {
-            var schedule = GetById(id);
+            var schedule = _db.Schedules.FirstOrDefault(s => s.Id == id);
             if (schedule == null) return false;
 
             var courseClassId = schedule.CourseClassId;
-            FakeDatabase.Schedules.Remove(schedule);
+
+            _db.Schedules.Remove(schedule);
+            _db.SaveChanges();
 
             NotifyClassScheduleChange(courseClassId, "Schedule has been removed");
-
             return true;
         }
 
@@ -303,11 +365,15 @@ namespace WebApplication1.Services
         /// </summary>
         private bool HasConflict(int courseClassId, DayOfWeek day, string period, string room, int? excludeScheduleId)
         {
-            return FakeDatabase.Schedules.Any(s =>
+            var q = _db.Schedules.Where(s =>
                 s.DayOfWeek == day &&
                 s.Period == period &&
-                s.Room == room &&
-                (!excludeScheduleId.HasValue || s.Id != excludeScheduleId.Value));
+                s.Room == room);
+
+            if (excludeScheduleId.HasValue)
+                q = q.Where(s => s.Id != excludeScheduleId.Value);
+
+            return q.Any();
         }
 
         /// <summary>
@@ -317,31 +383,41 @@ namespace WebApplication1.Services
         {
             if (lecturerId == 0) return false;
 
-            var lecturerClassIds = FakeDatabase.CourseClasses
+            var lecturerClassIds = _db.CourseClasses
+                .AsNoTracking()
                 .Where(c => c.LecturerId == lecturerId)
-                .Select(c => c.Id)
-                .ToList();
+                .Select(c => c.Id);
 
-            return FakeDatabase.Schedules.Any(s =>
+            var q = _db.Schedules.Where(s =>
                 lecturerClassIds.Contains(s.CourseClassId) &&
                 s.DayOfWeek == day &&
-                s.Period == period &&
-                (!excludeScheduleId.HasValue || s.Id != excludeScheduleId.Value));
+                s.Period == period);
+
+            if (excludeScheduleId.HasValue)
+                q = q.Where(s => s.Id != excludeScheduleId.Value);
+
+            return q.Any();
         }
 
         private void NotifyClassScheduleChange(int courseClassId, string message)
         {
-            var enrollments = FakeDatabase.Enrollments
+            var enrollments = _db.Enrollments
+                .AsNoTracking()
                 .Where(e => e.CourseClassId == courseClassId && e.Status == EnrollmentStatus.Approved)
                 .ToList();
 
             foreach (var enrollment in enrollments)
             {
-                var student = FakeDatabase.Students.FirstOrDefault(s => s.Id == enrollment.StudentId);
-                if (student != null)
+                var studentUserId = _db.Students
+                    .AsNoTracking()
+                    .Where(s => s.Id == enrollment.StudentId)
+                    .Select(s => s.UserId)
+                    .FirstOrDefault();
+
+                if (studentUserId != 0)
                 {
                     _notificationService.CreateNotification(
-                        student.UserId,
+                        studentUserId,
                         "Schedule Update",
                         message,
                         NotificationType.Schedule,

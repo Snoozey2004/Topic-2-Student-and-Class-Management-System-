@@ -14,6 +14,8 @@ namespace WebApplication1.Models
         public string? LinkUrl { get; set; } // URL liên k?t (n?u có)
         public DateTime CreatedDate { get; set; }
         public DateTime? ReadDate { get; set; }
+        // Navigation
+        public User User { get; set; } = null!;
     }
 
     public enum NotificationType

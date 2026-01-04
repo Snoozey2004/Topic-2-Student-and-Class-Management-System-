@@ -1,11 +1,12 @@
-﻿using WebApplication1.Data;
+﻿using Microsoft.EntityFrameworkCore;
+using WebApplication1.Data;
 using WebApplication1.Models;
 using WebApplication1.ViewModels;
 
 namespace WebApplication1.Services
 {
     /// <summary>
-    /// Service qu?n lý Notification
+    /// Service quản lý Notification (SQL Server + EF Core)
     /// </summary>
     public interface INotificationService
     {
@@ -20,44 +21,78 @@ namespace WebApplication1.Services
 
     public class NotificationService : INotificationService
     {
+        private readonly ApplicationDbContext _db;
+
+        public NotificationService(ApplicationDbContext db)
+        {
+            _db = db;
+        }
+
         public List<NotificationListViewModel> GetByUserId(int userId)
         {
-            return FakeDatabase.Notifications
+            var data = _db.Notifications
+                .AsNoTracking()
                 .Where(n => n.UserId == userId)
                 .OrderByDescending(n => n.CreatedDate)
-                .Select(n => new NotificationListViewModel
+                .Select(n => new
                 {
-                    Id = n.Id,
-                    Title = n.Title,
-                    Message = n.Message,
-                    Type = n.Type.ToString(),
-                    IsRead = n.IsRead,
-                    LinkUrl = n.LinkUrl,
-                    CreatedDate = n.CreatedDate,
-                    TimeAgo = GetTimeAgo(n.CreatedDate)
+                    n.Id,
+                    n.Title,
+                    n.Message,
+                    n.Type,
+                    n.IsRead,
+                    n.LinkUrl,
+                    n.CreatedDate
                 })
-                .ToList();
+                .ToList(); // ✅ EF chạy xong tại đây
+            return data.Select(n => new NotificationListViewModel
+            {
+                Id = n.Id,
+                Title = n.Title,
+                Message = n.Message,
+                Type = n.Type.ToString(),
+                IsRead = n.IsRead,
+                LinkUrl = n.LinkUrl,
+                CreatedDate = n.CreatedDate,
+                TimeAgo = GetTimeAgo(n.CreatedDate) // ✅ chạy ở memory
+            }).ToList();
         }
+
 
         public NotificationBadgeViewModel GetBadgeInfo(int userId)
         {
             var unreadCount = GetUnreadCount(userId);
-            var recentNotifications = FakeDatabase.Notifications
+
+            var data = _db.Notifications
+                .AsNoTracking()
                 .Where(n => n.UserId == userId)
                 .OrderByDescending(n => n.CreatedDate)
                 .Take(5)
-                .Select(n => new NotificationListViewModel
+                .Select(n => new
                 {
-                    Id = n.Id,
-                    Title = n.Title,
-                    Message = n.Message.Length > 50 ? n.Message.Substring(0, 50) + "..." : n.Message,
-                    Type = n.Type.ToString(),
-                    IsRead = n.IsRead,
-                    LinkUrl = n.LinkUrl,
-                    CreatedDate = n.CreatedDate,
-                    TimeAgo = GetTimeAgo(n.CreatedDate)
+                    n.Id,
+                    n.Title,
+                    n.Message,
+                    n.Type,
+                    n.IsRead,
+                    n.LinkUrl,
+                    n.CreatedDate
                 })
-                .ToList();
+                .ToList(); // ✅ EF chạy xong tại đây
+
+            var recentNotifications = data.Select(n => new NotificationListViewModel
+            {
+                Id = n.Id,
+                Title = n.Title,
+                Message = (n.Message != null && n.Message.Length > 50)
+                            ? n.Message.Substring(0, 50) + "..."
+                            : (n.Message ?? ""),
+                Type = n.Type.ToString(),
+                IsRead = n.IsRead,
+                LinkUrl = n.LinkUrl,
+                CreatedDate = n.CreatedDate,
+                TimeAgo = GetTimeAgo(n.CreatedDate) // ✅ chạy ở memory
+            }).ToList();
 
             return new NotificationBadgeViewModel
             {
@@ -70,7 +105,7 @@ namespace WebApplication1.Services
         {
             var notification = new Notification
             {
-                Id = FakeDatabase.GetNextNotificationId(),
+                // KHÔNG set Id nếu Id là Identity (SQL tự tăng)
                 UserId = userId,
                 Title = title,
                 Message = message,
@@ -80,47 +115,58 @@ namespace WebApplication1.Services
                 CreatedDate = DateTime.Now
             };
 
-            FakeDatabase.Notifications.Add(notification);
+            _db.Notifications.Add(notification);
+            _db.SaveChanges();
             return true;
         }
 
         public bool MarkAsRead(int notificationId)
         {
-            var notification = FakeDatabase.Notifications.FirstOrDefault(n => n.Id == notificationId);
+            var notification = _db.Notifications.FirstOrDefault(n => n.Id == notificationId);
             if (notification == null) return false;
 
-            notification.IsRead = true;
-            notification.ReadDate = DateTime.Now;
-            return true;
-        }
-
-        public bool MarkAllAsRead(int userId)
-        {
-            var notifications = FakeDatabase.Notifications
-                .Where(n => n.UserId == userId && !n.IsRead)
-                .ToList();
-
-            foreach (var notification in notifications)
+            if (!notification.IsRead)
             {
                 notification.IsRead = true;
                 notification.ReadDate = DateTime.Now;
+                _db.SaveChanges();
             }
 
             return true;
         }
 
+        public bool MarkAllAsRead(int userId)
+        {
+            var notifications = _db.Notifications
+                .Where(n => n.UserId == userId && !n.IsRead)
+                .ToList();
+
+            if (notifications.Count == 0) return true;
+
+            var now = DateTime.Now;
+            foreach (var n in notifications)
+            {
+                n.IsRead = true;
+                n.ReadDate = now;
+            }
+
+            _db.SaveChanges();
+            return true;
+        }
+
         public bool Delete(int notificationId)
         {
-            var notification = FakeDatabase.Notifications.FirstOrDefault(n => n.Id == notificationId);
+            var notification = _db.Notifications.FirstOrDefault(n => n.Id == notificationId);
             if (notification == null) return false;
 
-            FakeDatabase.Notifications.Remove(notification);
+            _db.Notifications.Remove(notification);
+            _db.SaveChanges();
             return true;
         }
 
         public int GetUnreadCount(int userId)
         {
-            return FakeDatabase.Notifications.Count(n => n.UserId == userId && !n.IsRead);
+            return _db.Notifications.Count(n => n.UserId == userId && !n.IsRead);
         }
 
         private string GetTimeAgo(DateTime dateTime)
@@ -128,19 +174,19 @@ namespace WebApplication1.Services
             var timeSpan = DateTime.Now - dateTime;
 
             if (timeSpan.TotalMinutes < 1)
-                return "V?a xong";
+                return "Vừa xong";
             if (timeSpan.TotalMinutes < 60)
-                return $"{(int)timeSpan.TotalMinutes} phút tr??c";
+                return $"{(int)timeSpan.TotalMinutes} phút trước";
             if (timeSpan.TotalHours < 24)
-                return $"{(int)timeSpan.TotalHours} gi? tr??c";
+                return $"{(int)timeSpan.TotalHours} giờ trước";
             if (timeSpan.TotalDays < 7)
-                return $"{(int)timeSpan.TotalDays} ngày tr??c";
+                return $"{(int)timeSpan.TotalDays} ngày trước";
             if (timeSpan.TotalDays < 30)
-                return $"{(int)(timeSpan.TotalDays / 7)} tu?n tr??c";
+                return $"{(int)(timeSpan.TotalDays / 7)} tuần trước";
             if (timeSpan.TotalDays < 365)
-                return $"{(int)(timeSpan.TotalDays / 30)} tháng tr??c";
+                return $"{(int)(timeSpan.TotalDays / 30)} tháng trước";
 
-            return $"{(int)(timeSpan.TotalDays / 365)} n?m tr??c";
+            return $"{(int)(timeSpan.TotalDays / 365)} năm trước";
         }
     }
 }

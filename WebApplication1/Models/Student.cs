@@ -17,5 +17,11 @@ namespace WebApplication1.Models
         public string Major { get; set; } = string.Empty; // Chuyên ngành
         public int AdmissionYear { get; set; } // N?m nh?p h?c
         public DateTime CreatedDate { get; set; }
+        // Navigation
+        public User User { get; set; } = null!;
+        public AdministrativeClass? AdministrativeClass { get; set; }
+        public ICollection<Enrollment> Enrollments { get; set; } = new List<Enrollment>();
+        public ICollection<Attendance> Attendances { get; set; } = new List<Attendance>();
+        public ICollection<Grade> Grades { get; set; } = new List<Grade>();
     }
 }

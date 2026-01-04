@@ -1,11 +1,11 @@
-using WebApplication1.Data;
+﻿using WebApplication1.Data;
 using WebApplication1.Models;
 using WebApplication1.ViewModels;
 
 namespace WebApplication1.Services
 {
     /// <summary>
-    /// Service qu?n l� User
+    /// Service quản lý User (SQL Server + EF Core)
     /// </summary>
     public interface IUserService
     {
@@ -23,70 +23,80 @@ namespace WebApplication1.Services
 
     public class UserService : IUserService
     {
+        private readonly ApplicationDbContext _db;
+
+        public UserService(ApplicationDbContext db)
+        {
+            _db = db;
+        }
+
         public List<UserListViewModel> GetAll()
         {
-            return FakeDatabase.Users.Select(u => new UserListViewModel
-            {
-                Id = u.Id,
-                Email = u.Email,
-                FullName = u.FullName,
-                Role = u.Role,
-                Status = u.Status,
-                CreatedDate = u.CreatedDate,
-                LastLoginDate = u.LastLoginDate
-            }).OrderByDescending(u => u.CreatedDate).ToList();
+            return _db.Users
+                .Select(u => new UserListViewModel
+                {
+                    Id = u.Id,
+                    Email = u.Email,
+                    FullName = u.FullName,
+                    Role = u.Role,
+                    Status = u.Status,
+                    CreatedDate = u.CreatedDate,
+                    LastLoginDate = u.LastLoginDate
+                })
+                .OrderByDescending(u => u.CreatedDate)
+                .ToList();
         }
 
         public User? GetById(int id)
         {
-            return FakeDatabase.Users.FirstOrDefault(u => u.Id == id);
+            return _db.Users.FirstOrDefault(u => u.Id == id);
         }
 
         public bool Create(UserFormViewModel model)
         {
-            // Ki?m tra email ?� t?n t?i
-            if (FakeDatabase.Users.Any(u => u.Email.Equals(model.Email, StringComparison.OrdinalIgnoreCase)))
-            {
+            // Kiểm tra email đã tồn tại
+            var emailLower = model.Email.Trim().ToLower();
+            if (_db.Users.Any(u => u.Email.ToLower() == emailLower))
                 return false;
-            }
 
             var user = new User
             {
-                Id = FakeDatabase.GetNextUserId(),
-                Email = model.Email,
-                Password = model.Password ?? "123456", // Default password
+                // KHÔNG set Id - SQL tự tăng
+                Email = model.Email.Trim(),
+                Password = string.IsNullOrWhiteSpace(model.Password) ? "123456" : model.Password,
                 FullName = model.FullName,
                 Role = model.Role,
                 Status = model.Status,
                 CreatedDate = DateTime.Now
             };
 
-            FakeDatabase.Users.Add(user);
+            _db.Users.Add(user);
+            _db.SaveChanges();
             return true;
         }
 
         public bool Update(UserFormViewModel model)
         {
-            var user = GetById(model.Id ?? 0);
+            var id = model.Id ?? 0;
+            var user = GetById(id);
             if (user == null) return false;
 
-            // Ki?m tra email tr�ng (ngo?i tr? user hi?n t?i)
-            if (FakeDatabase.Users.Any(u => u.Id != user.Id && 
-                u.Email.Equals(model.Email, StringComparison.OrdinalIgnoreCase)))
-            {
+            // Kiểm tra email trùng (ngoại trừ user hiện tại)
+            var emailLower = model.Email.Trim().ToLower();
+            if (_db.Users.Any(u => u.Id != user.Id && u.Email.ToLower() == emailLower))
                 return false;
-            }
 
-            user.Email = model.Email;
+            user.Email = model.Email.Trim();
             user.FullName = model.FullName;
             user.Role = model.Role;
             user.Status = model.Status;
 
-            if (!string.IsNullOrEmpty(model.Password))
+            if (!string.IsNullOrWhiteSpace(model.Password))
             {
-                user.Password = model.Password;
+                user.Password = model.Password!;
             }
 
+            _db.SaveChanges();
             return true;
         }
 
@@ -95,7 +105,8 @@ namespace WebApplication1.Services
             var user = GetById(id);
             if (user == null) return false;
 
-            FakeDatabase.Users.Remove(user);
+            _db.Users.Remove(user);
+            _db.SaveChanges();
             return true;
         }
 
@@ -105,6 +116,7 @@ namespace WebApplication1.Services
             if (user == null) return false;
 
             user.Role = newRole;
+            _db.SaveChanges();
             return true;
         }
 
@@ -114,6 +126,7 @@ namespace WebApplication1.Services
             if (user == null) return false;
 
             user.Status = newStatus;
+            _db.SaveChanges();
             return true;
         }
 
@@ -123,6 +136,7 @@ namespace WebApplication1.Services
             if (user == null) return false;
 
             user.FullName = fullName;
+            _db.SaveChanges();
             return true;
         }
 
@@ -132,11 +146,10 @@ namespace WebApplication1.Services
             if (user == null) return false;
 
             if (user.Password != currentPassword)
-            {
                 return false;
-            }
 
             user.Password = newPassword;
+            _db.SaveChanges();
             return true;
         }
 

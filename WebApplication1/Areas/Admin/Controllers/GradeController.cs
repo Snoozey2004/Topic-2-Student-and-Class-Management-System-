@@ -1,9 +1,10 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.EntityFrameworkCore;
 using WebApplication1.Data;
 using WebApplication1.Models;
-using WebApplication1.ViewModels;
 using WebApplication1.Services;
+using WebApplication1.ViewModels;
 
 namespace WebApplication1.Areas.Admin.Controllers
 {
@@ -11,10 +12,12 @@ namespace WebApplication1.Areas.Admin.Controllers
     public class GradeController : Controller
     {
         private readonly IGradeService _gradeService;
+        private readonly ApplicationDbContext _db;
 
-        public GradeController(IGradeService gradeService)
+        public GradeController(IGradeService gradeService, ApplicationDbContext db)
         {
             _gradeService = gradeService;
+            _db = db;
         }
 
         // GET: Admin/Grade
@@ -27,16 +30,13 @@ namespace WebApplication1.Areas.Admin.Controllers
         // GET: Admin/Grade/Details/5
         public IActionResult Details(int id)
         {
-            var grade = FakeDatabase.Grades.FirstOrDefault(g => g.Id == id);
-            if (grade == null)
-            {
-                return NotFound();
-            }
+            var grade = _db.Grades.AsNoTracking().FirstOrDefault(g => g.Id == id);
+            if (grade == null) return NotFound();
 
-            var student = FakeDatabase.Students.FirstOrDefault(s => s.Id == grade.StudentId);
-            var courseClass = FakeDatabase.CourseClasses.FirstOrDefault(c => c.Id == grade.CourseClassId);
-            var subject = courseClass != null 
-                ? FakeDatabase.Subjects.FirstOrDefault(s => s.Id == courseClass.SubjectId) 
+            var student = _db.Students.AsNoTracking().FirstOrDefault(s => s.Id == grade.StudentId);
+            var courseClass = _db.CourseClasses.AsNoTracking().FirstOrDefault(c => c.Id == grade.CourseClassId);
+            var subject = courseClass != null
+                ? _db.Subjects.AsNoTracking().FirstOrDefault(s => s.Id == courseClass.SubjectId)
                 : null;
 
             var model = new GradeDetailAdminViewModel
@@ -73,7 +73,7 @@ namespace WebApplication1.Areas.Admin.Controllers
             if (ModelState.IsValid)
             {
                 // Check if grade already exists for this enrollment
-                var existingGrade = FakeDatabase.Grades.FirstOrDefault(g => g.EnrollmentId == model.EnrollmentId);
+                var existingGrade = _db.Grades.FirstOrDefault(g => g.EnrollmentId == model.EnrollmentId);
                 if (existingGrade != null)
                 {
                     TempData["ErrorMessage"] = "Grade already exists for this enrollment!";
@@ -82,7 +82,7 @@ namespace WebApplication1.Areas.Admin.Controllers
                 }
 
                 // Get enrollment info
-                var enrollment = FakeDatabase.Enrollments.FirstOrDefault(e => e.Id == model.EnrollmentId);
+                var enrollment = _db.Enrollments.AsNoTracking().FirstOrDefault(e => e.Id == model.EnrollmentId);
                 if (enrollment == null)
                 {
                     TempData["ErrorMessage"] = "Enrollment not found!";
@@ -92,7 +92,7 @@ namespace WebApplication1.Areas.Admin.Controllers
 
                 var grade = new Grade
                 {
-                    Id = FakeDatabase.GetNextGradeId(),
+                    // KHÔNG set Id nếu Identity
                     EnrollmentId = model.EnrollmentId,
                     StudentId = enrollment.StudentId,
                     CourseClassId = enrollment.CourseClassId,
@@ -100,7 +100,7 @@ namespace WebApplication1.Areas.Admin.Controllers
                     MidtermScore = model.MidtermScore,
                     FinalScore = model.FinalScore,
                     LastUpdated = DateTime.Now,
-                    UpdatedBy = 1
+                    UpdatedBy = 1 // TODO: lấy userId admin thật nếu có claim
                 };
 
                 // Calculate total score if all components present
@@ -110,11 +110,14 @@ namespace WebApplication1.Areas.Admin.Controllers
                         grade.AttendanceScore.Value * 0.1 +
                         grade.MidtermScore.Value * 0.3 +
                         grade.FinalScore.Value * 0.6, 2);
+
                     grade.LetterGrade = _gradeService.CalculateLetterGrade(grade.TotalScore.Value);
                     grade.IsPassed = grade.TotalScore.Value >= 4.0;
                 }
 
-                FakeDatabase.Grades.Add(grade);
+                _db.Grades.Add(grade);
+                _db.SaveChanges();
+
                 TempData["SuccessMessage"] = "Grade created successfully!";
                 return RedirectToAction(nameof(Index));
             }
@@ -126,11 +129,8 @@ namespace WebApplication1.Areas.Admin.Controllers
         // GET: Admin/Grade/Edit/5
         public IActionResult Edit(int id)
         {
-            var grade = FakeDatabase.Grades.FirstOrDefault(g => g.Id == id);
-            if (grade == null)
-            {
-                return NotFound();
-            }
+            var grade = _db.Grades.AsNoTracking().FirstOrDefault(g => g.Id == id);
+            if (grade == null) return NotFound();
 
             var model = new GradeFormViewModel
             {
@@ -152,18 +152,12 @@ namespace WebApplication1.Areas.Admin.Controllers
         [ValidateAntiForgeryToken]
         public IActionResult Edit(int id, GradeFormViewModel model)
         {
-            if (id != model.Id)
-            {
-                return NotFound();
-            }
+            if (id != model.Id) return NotFound();
 
             if (ModelState.IsValid)
             {
-                var grade = FakeDatabase.Grades.FirstOrDefault(g => g.Id == id);
-                if (grade == null)
-                {
-                    return NotFound();
-                }
+                var grade = _db.Grades.FirstOrDefault(g => g.Id == id);
+                if (grade == null) return NotFound();
 
                 grade.AttendanceScore = model.AttendanceScore;
                 grade.MidtermScore = model.MidtermScore;
@@ -177,9 +171,19 @@ namespace WebApplication1.Areas.Admin.Controllers
                         grade.AttendanceScore.Value * 0.1 +
                         grade.MidtermScore.Value * 0.3 +
                         grade.FinalScore.Value * 0.6, 2);
+
                     grade.LetterGrade = _gradeService.CalculateLetterGrade(grade.TotalScore.Value);
                     grade.IsPassed = grade.TotalScore.Value >= 4.0;
                 }
+                else
+                {
+                    // Nếu thiếu điểm thì clear để khỏi giữ dữ liệu cũ
+                    grade.TotalScore = null;
+                    grade.LetterGrade = null;
+                    grade.IsPassed = false;
+                }
+
+                _db.SaveChanges();
 
                 TempData["SuccessMessage"] = "Grade updated successfully!";
                 return RedirectToAction(nameof(Index));
@@ -192,12 +196,10 @@ namespace WebApplication1.Areas.Admin.Controllers
         // GET: Admin/Grade/Delete/5
         public IActionResult Delete(int id)
         {
+            // nếu view Delete đang nhận GradeListViewModel thì giữ kiểu cũ:
             var grades = _gradeService.GetAll();
             var grade = grades.FirstOrDefault(g => g.Id == id);
-            if (grade == null)
-            {
-                return NotFound();
-            }
+            if (grade == null) return NotFound();
 
             return View(grade);
         }
@@ -207,37 +209,42 @@ namespace WebApplication1.Areas.Admin.Controllers
         [ValidateAntiForgeryToken]
         public IActionResult DeleteConfirmed(int id)
         {
-            var grade = FakeDatabase.Grades.FirstOrDefault(g => g.Id == id);
+            var grade = _db.Grades.FirstOrDefault(g => g.Id == id);
             if (grade == null)
             {
                 TempData["ErrorMessage"] = "Grade not found!";
                 return RedirectToAction(nameof(Index));
             }
 
-            FakeDatabase.Grades.Remove(grade);
+            _db.Grades.Remove(grade);
+            _db.SaveChanges();
+
             TempData["SuccessMessage"] = "Grade deleted successfully!";
             return RedirectToAction(nameof(Index));
         }
 
         private void PopulateDropdowns()
         {
-            // Get approved enrollments that don't have grades yet
-            var enrollmentsWithoutGrades = FakeDatabase.Enrollments
-                .Where(e => e.Status == EnrollmentStatus.Approved)
-                .Where(e => !FakeDatabase.Grades.Any(g => g.EnrollmentId == e.Id))
-                .Select(e =>
-                {
-                    var student = FakeDatabase.Students.FirstOrDefault(s => s.Id == e.StudentId);
-                    var courseClass = FakeDatabase.CourseClasses.FirstOrDefault(c => c.Id == e.CourseClassId);
-                    var subject = courseClass != null 
-                        ? FakeDatabase.Subjects.FirstOrDefault(s => s.Id == courseClass.SubjectId) 
-                        : null;
-                    return new SelectListItem
-                    {
-                        Value = e.Id.ToString(),
-                        Text = $"{student?.StudentCode} - {student?.FullName} | {courseClass?.ClassCode} - {subject?.SubjectName}"
-                    };
-                }).ToList();
+            // Approved enrollments chưa có grade
+            // NOTE: cách này translate tốt trên SQL Server
+            var enrollmentsWithoutGrades =
+                (from e in _db.Enrollments.AsNoTracking()
+                 where e.Status == EnrollmentStatus.Approved
+                 where !_db.Grades.Any(g => g.EnrollmentId == e.Id)
+                 join st in _db.Students.AsNoTracking() on e.StudentId equals st.Id into stj
+                 from student in stj.DefaultIfEmpty()
+                 join cc in _db.CourseClasses.AsNoTracking() on e.CourseClassId equals cc.Id into ccj
+                 from courseClass in ccj.DefaultIfEmpty()
+                 join sub in _db.Subjects.AsNoTracking() on (courseClass != null ? courseClass.SubjectId : 0) equals sub.Id into sj
+                 from subject in sj.DefaultIfEmpty()
+                 orderby student.StudentCode, courseClass.ClassCode
+                 select new SelectListItem
+                 {
+                     Value = e.Id.ToString(),
+                     Text = $"{(student != null ? student.StudentCode : "")} - {(student != null ? student.FullName : "")} | " +
+                            $"{(courseClass != null ? courseClass.ClassCode : "")} - {(subject != null ? subject.SubjectName : "")}"
+                 })
+                .ToList();
 
             ViewBag.Enrollments = enrollmentsWithoutGrades;
         }
