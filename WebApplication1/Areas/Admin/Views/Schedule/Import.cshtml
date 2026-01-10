@@ -1,0 +1,75 @@
+@{
+    ViewData["Title"] = "Import Schedules";
+    ViewData["PageTitle"] = "Import Schedules";
+    Layout = "~/Views/Shared/_DashboardLayout.cshtml";
+}
+
+@section SidebarMenu {
+    @await Html.PartialAsync("_AdminSidebar")
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/admin-crud.css" />
+}
+
+<a asp-action="Index" class="admin-back-link">
+    <i class="bi bi-arrow-left"></i> Back to Schedule List
+</a>
+
+<div class="admin-card">
+    <div class="admin-card-header">
+        <h5><i class="bi bi-file-earmark-excel"></i> Import Schedules from Excel</h5>
+    </div>
+
+    <div class="admin-card-body">
+        <div class="admin-alert admin-alert-info mb-3" style="background:#e7f3ff; border:1px solid #b6d7ff; color:#084298;">
+            <strong>Expected columns (row 1 headers):</strong>
+            <div class="small mt-2">
+                <div><code>ClassCode</code>, <code>DayOfWeek</code>, <code>Session</code>, <code>Period</code>, <code>StartTime</code>, <code>EndTime</code>, <code>Room</code>, <code>EffectiveDate</code>, <code>EndDate</code> (optional)</div>
+                <div class="mt-1">DayOfWeek: Monday..Friday. Dates: yyyy-MM-dd. Times: HH:mm.</div>
+            </div>
+        </div>
+
+        <form asp-action="Import" method="post" enctype="multipart/form-data" class="admin-form">
+            @Html.AntiForgeryToken()
+
+            <div class="mb-3">
+                <label class="form-label">Excel file (.xlsx)</label>
+                <input type="file" name="file" accept=".xlsx" class="form-control" required />
+            </div>
+
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn-admin-primary">
+                    <i class="bi bi-upload"></i> Import
+                </button>
+                <a asp-action="Index" class="btn-admin-outline">Cancel</a>
+            </div>
+        </form>
+
+        @if (ViewBag.ImportSummary != null)
+        {
+            <hr class="my-4" />
+            <div class="admin-alert admin-alert-success">
+                <i class="bi bi-check-circle"></i>
+                <span>@ViewBag.ImportSummary</span>
+            </div>
+        }
+
+        @if (ViewBag.ImportErrors != null)
+        {
+            <hr class="my-4" />
+            <div class="admin-alert admin-alert-danger">
+                <i class="bi bi-exclamation-circle"></i>
+                <div>
+                    <strong>Some rows could not be imported:</strong>
+                    <ul class="mt-2 mb-0">
+                        @foreach (var e in (List<string>)ViewBag.ImportErrors)
+                        {
+                            <li>@e</li>
+                        }
+                    </ul>
+                </div>
+            </div>
+        }
+    </div>
+</div>

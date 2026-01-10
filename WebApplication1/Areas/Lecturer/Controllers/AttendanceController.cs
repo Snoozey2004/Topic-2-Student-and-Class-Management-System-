@@ -1,5 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.EntityFrameworkCore;
+using WebApplication1.Data;
 using WebApplication1.Services;
 using WebApplication1.ViewModels;
 
@@ -11,15 +13,21 @@ namespace WebApplication1.Areas.Lecturer.Controllers
         private readonly IAttendanceService _attendanceService;
         private readonly ILecturerService _lecturerService;
         private readonly ISemesterService _semesterService;
+        private readonly IScheduleService _scheduleService;
+        private readonly ApplicationDbContext _db;
 
         public AttendanceController(
             IAttendanceService attendanceService,
             ILecturerService lecturerService,
-            ISemesterService semesterService)
+            ISemesterService semesterService,
+            IScheduleService scheduleService,
+            ApplicationDbContext db)
         {
             _attendanceService = attendanceService;
             _lecturerService = lecturerService;
             _semesterService = semesterService;
+            _scheduleService = scheduleService;
+            _db = db;
         }
 
         // GET: Lecturer/Attendance
@@ -67,11 +75,40 @@ namespace WebApplication1.Areas.Lecturer.Controllers
                 return NotFound("Lecturer not found");
             }
 
-            var sessionDate = date ?? DateTime.Today;
-            var sessionTime = session ?? "Morning";
+            var sessionDate = (date ?? DateTime.Today).Date;
+            var sessionTime = (session ?? "Morning").Trim();
+
+            // Allow editing if attendance already exists for this session
+            var alreadyExists = _db.Attendances
+                .AsNoTracking()
+                .Any(a => a.CourseClassId == id && a.AttendanceDate.Date == sessionDate && a.Session == sessionTime);
+
+            if (!alreadyExists)
+            {
+                // For new sessions, must match scheduled day-of-week + session
+                var scheduled = _scheduleService.GetByCourseClassId(id);
+
+                var matches = scheduled.Any(s =>
+                    string.Equals(s.DayOfWeek, sessionDate.DayOfWeek.ToString(), StringComparison.OrdinalIgnoreCase) &&
+                    string.Equals(s.Session, sessionTime, StringComparison.OrdinalIgnoreCase));
+
+                if (!matches)
+                {
+                    var allowed = scheduled
+                        .GroupBy(s => s.DayOfWeek, StringComparer.OrdinalIgnoreCase)
+                        .Select(g => $"{g.Key} ({string.Join("/", g.Select(x => x.Session).Distinct(StringComparer.OrdinalIgnoreCase))})")
+                        .ToList();
+
+                    TempData["ErrorMessage"] = allowed.Count > 0
+                        ? $"You can only take attendance on scheduled sessions: {string.Join(", ", allowed)}."
+                        : "No schedule found for this class. Please set up a schedule first.";
+
+                    return RedirectToAction(nameof(Index));
+                }
+            }
 
             var model = _attendanceService.GetAttendanceSession(id, sessionDate, sessionTime);
-            
+
             if (model.CourseClassId == 0)
             {
                 return NotFound("Class not found");
@@ -119,7 +156,7 @@ namespace WebApplication1.Areas.Lecturer.Controllers
                 return RedirectToAction(nameof(History), new { id = model.CourseClassId });
             }
 
-            TempData["ErrorMessage"] = "Failed to record attendance.";
+            TempData["ErrorMessage"] = "Attendance can only be recorded on a scheduled class day.";
             return RedirectToAction(nameof(TakeAttendance), new { id = model.CourseClassId, date = model.SessionDate, session = model.Session });
         }
 

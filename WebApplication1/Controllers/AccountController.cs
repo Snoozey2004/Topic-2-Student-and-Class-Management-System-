@@ -145,6 +145,12 @@ namespace WebApplication1.Controllers
                 return View(model);
             }
 
+            if (user.Role == UserRole.Admin)
+            {
+                ModelState.AddModelError("", "Password reset is not available for admin accounts.");
+                return View(model);
+            }
+
             // Simple flow: send user to reset form (no email/token)
             return RedirectToAction(nameof(ResetPassword), new { email = model.Email });
         }
@@ -152,6 +158,16 @@ namespace WebApplication1.Controllers
         [HttpGet]
         public IActionResult ResetPassword(string? email)
         {
+            if (!string.IsNullOrWhiteSpace(email))
+            {
+                var u = _authService.GetUserByEmail(email);
+                if (u != null && u.Role == UserRole.Admin)
+                {
+                    TempData["ErrorMessage"] = "Password reset is not available for admin accounts.";
+                    return RedirectToAction(nameof(Login));
+                }
+            }
+
             var model = new ResetPasswordViewModel
             {
                 Email = email ?? string.Empty
@@ -173,6 +189,12 @@ namespace WebApplication1.Controllers
             if (user == null)
             {
                 ModelState.AddModelError("Email", "Email does not exist in the system");
+                return View(model);
+            }
+
+            if (user.Role == UserRole.Admin)
+            {
+                ModelState.AddModelError("", "Password reset is not available for admin accounts.");
                 return View(model);
             }
 

@@ -184,6 +184,32 @@ namespace WebApplication1.Services
             // Normalize to date-only to avoid timezone/Kind related day shifting
             model.SessionDate = DateTime.SpecifyKind(model.SessionDate.Date, DateTimeKind.Unspecified);
 
+            var day = model.SessionDate.DayOfWeek;
+            var session = (model.Session ?? string.Empty).Trim();
+
+            // If attendance already exists for this session, allow updating it (debug/edit)
+            var alreadyExists = _db.Attendances
+                .AsNoTracking()
+                .Any(a =>
+                    a.CourseClassId == model.CourseClassId &&
+                    a.AttendanceDate.Date == model.SessionDate.Date &&
+                    a.Session == session);
+
+            if (!alreadyExists)
+            {
+                // For new sessions, require schedule match
+                var hasScheduleToday = _db.Schedules
+                    .AsNoTracking()
+                    .Any(s =>
+                        s.CourseClassId == model.CourseClassId &&
+                        s.DayOfWeek == day &&
+                        s.EffectiveDate.Date <= model.SessionDate.Date &&
+                        (s.EndDate == null || s.EndDate.Value.Date >= model.SessionDate.Date) &&
+                        s.Session == session);
+
+                if (!hasScheduleToday) return false;
+            }
+
             using var tx = _db.Database.BeginTransaction();
 
             try
@@ -210,7 +236,7 @@ namespace WebApplication1.Services
                         StudentId = student.StudentId,
                         CourseClassId = model.CourseClassId,
                         AttendanceDate = model.SessionDate,
-                        Session = model.Session,
+                        Session = session,
                         Status = student.IsPresent ? AttendanceStatus.Present : AttendanceStatus.Absent,
                         Note = student.Note,
                         CreatedDate = now,
