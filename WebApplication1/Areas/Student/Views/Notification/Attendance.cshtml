@@ -1,0 +1,58 @@
+@model List<WebApplication1.ViewModels.NotificationListViewModel>
+@{
+    Layout = "~/Views/Shared/_DashboardLayout.cshtml";
+}
+
+@section SidebarMenu {
+    @await Html.PartialAsync("_StudentSidebar")
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/portal-common.css" />
+}
+
+<div class="portal-card">
+    <div class="portal-card-header d-flex justify-content-between align-items-center">
+        <h5 style="margin:0;"><i class="bi bi-clipboard-x me-2"></i>Attendance Notifications</h5>
+
+        <form asp-area="Student" asp-controller="Notification" asp-action="ClearAttendance" method="post" class="m-0">
+            @Html.AntiForgeryToken()
+            <button type="submit" class="portal-btn portal-btn-outline portal-btn-sm"
+                    onclick="return confirm('Clear all attendance notifications?');">
+                <i class="bi bi-trash me-1"></i>Clear
+            </button>
+        </form>
+    </div>
+    <div class="portal-card-body">
+        @if (TempData["SuccessMessage"] != null)
+        {
+            <div class="alert alert-success">@TempData["SuccessMessage"]</div>
+        }
+
+        @if (Model == null || Model.Count == 0)
+        {
+            <div class="text-muted">No attendance notifications.</div>
+        }
+        else
+        {
+            <div class="list-group">
+                @foreach (var n in Model)
+                {
+                    <div class="list-group-item">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <div class="fw-semibold">@n.Title</div>
+                                <div class="text-muted small">@n.CreatedDate.ToString("dd/MM/yyyy HH:mm") • @n.TimeAgo</div>
+                            </div>
+                            @if (!n.IsRead)
+                            {
+                                <span class="badge text-bg-warning">New</span>
+                            }
+                        </div>
+                        <div class="mt-2">@n.Message</div>
+                    </div>
+                }
+            </div>
+        }
+    </div>
+</div>

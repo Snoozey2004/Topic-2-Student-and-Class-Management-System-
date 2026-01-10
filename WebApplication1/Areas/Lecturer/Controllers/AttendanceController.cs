@@ -88,7 +88,7 @@ namespace WebApplication1.Areas.Lecturer.Controllers
             if (!ModelState.IsValid)
             {
                 TempData["ErrorMessage"] = "Invalid data. Please check and try again.";
-                return RedirectToAction(nameof(TakeAttendance), new { id = model.CourseClassId });
+                return RedirectToAction(nameof(TakeAttendance), new { id = model.CourseClassId, date = model.SessionDate, session = model.Session });
             }
 
             var userIdClaim = User.FindFirst("UserId");
@@ -105,6 +105,12 @@ namespace WebApplication1.Areas.Lecturer.Controllers
                 return NotFound("Lecturer not found");
             }
 
+            var presentSet = (model.PresentStudentIds ?? new List<int>()).ToHashSet();
+            foreach (var s in model.Students)
+            {
+                s.IsPresent = presentSet.Contains(s.StudentId);
+            }
+
             var success = _attendanceService.TakeAttendance(model, lecturer.Id);
 
             if (success)
@@ -114,7 +120,7 @@ namespace WebApplication1.Areas.Lecturer.Controllers
             }
 
             TempData["ErrorMessage"] = "Failed to record attendance.";
-            return RedirectToAction(nameof(TakeAttendance), new { id = model.CourseClassId });
+            return RedirectToAction(nameof(TakeAttendance), new { id = model.CourseClassId, date = model.SessionDate, session = model.Session });
         }
 
         // GET: Lecturer/Attendance/History/5

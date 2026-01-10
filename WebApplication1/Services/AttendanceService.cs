@@ -21,11 +21,13 @@ namespace WebApplication1.Services
     {
         private readonly ApplicationDbContext _db;
         private readonly IGradeService _gradeService;
+        private readonly INotificationService _notificationService;
 
-        public AttendanceService(ApplicationDbContext db, IGradeService gradeService)
+        public AttendanceService(ApplicationDbContext db, IGradeService gradeService, INotificationService notificationService)
         {
             _db = db;
             _gradeService = gradeService;
+            _notificationService = notificationService;
         }
 
         /// <summary>
@@ -173,62 +175,134 @@ namespace WebApplication1.Services
 
         public bool TakeAttendance(TakeAttendanceViewModel model, int lecturerId)
         {
-            // Security: lecturer phải là owner của lớp
             var ownsClass = _db.CourseClasses
                 .AsNoTracking()
                 .Any(c => c.Id == model.CourseClassId && c.LecturerId == lecturerId);
 
             if (!ownsClass) return false;
 
+            // Normalize to date-only to avoid timezone/Kind related day shifting
+            model.SessionDate = DateTime.SpecifyKind(model.SessionDate.Date, DateTimeKind.Unspecified);
+
             using var tx = _db.Database.BeginTransaction();
 
-            // Xoá các attendance cũ của buổi đó
-            var oldAttendances = _db.Attendances
-                .Where(a => a.CourseClassId == model.CourseClassId
-                         && a.AttendanceDate.Date == model.SessionDate.Date
-                         && a.Session == model.Session)
+            try
+            {
+                var oldAttendances = _db.Attendances
+                    .Where(a => a.CourseClassId == model.CourseClassId
+                             && a.AttendanceDate.Date == model.SessionDate.Date
+                             && a.Session == model.Session)
+                    .ToList();
+
+                if (oldAttendances.Count > 0)
+                {
+                    _db.Attendances.RemoveRange(oldAttendances);
+                    _db.SaveChanges();
+                }
+
+                var now = DateTime.Now;
+
+                foreach (var student in model.Students)
+                {
+                    _db.Attendances.Add(new Attendance
+                    {
+                        EnrollmentId = student.EnrollmentId,
+                        StudentId = student.StudentId,
+                        CourseClassId = model.CourseClassId,
+                        AttendanceDate = model.SessionDate,
+                        Session = model.Session,
+                        Status = student.IsPresent ? AttendanceStatus.Present : AttendanceStatus.Absent,
+                        Note = student.Note,
+                        CreatedDate = now,
+                        CreatedBy = lecturerId
+                    });
+                }
+
+                _db.SaveChanges();
+
+                CreateAbsentNotifications(model);
+
+                var ok = UpdateAttendanceScore(model.CourseClassId);
+                if (!ok)
+                {
+                    tx.Rollback();
+                    return false;
+                }
+
+                tx.Commit();
+                return true;
+            }
+            catch
+            {
+                tx.Rollback();
+                throw;
+            }
+        }
+
+        private void CreateAbsentNotifications(TakeAttendanceViewModel model)
+        {
+            var absentStudentIds = model.Students
+                .Where(s => !s.IsPresent)
+                .Select(s => s.StudentId)
+                .Distinct()
                 .ToList();
 
-            if (oldAttendances.Count > 0)
+            if (absentStudentIds.Count == 0) return;
+
+            var courseClass = _db.CourseClasses
+                .AsNoTracking()
+                .FirstOrDefault(c => c.Id == model.CourseClassId);
+
+            if (courseClass == null) return;
+
+            var subjectName = _db.Subjects
+                .AsNoTracking()
+                .Where(s => s.Id == courseClass.SubjectId)
+                .Select(s => s.SubjectName)
+                .FirstOrDefault() ?? string.Empty;
+
+            // map StudentId -> UserId
+            var userIds = _db.Students
+                .AsNoTracking()
+                .Where(s => absentStudentIds.Contains(s.Id))
+                .Select(s => new { s.Id, s.UserId })
+                .ToList();
+
+            // Idempotency: remove previous missed-class notifications for the same class/date/session
+            // (TakeAttendance can be re-submitted and it rebuilds attendance rows)
+            var title = $"Missed class: {courseClass.ClassCode}";
+            var dateLabel = model.SessionDate.Date.ToString("dd/MM/yyyy");
+            var message = $"You were marked absent for {courseClass.ClassCode} ({subjectName}) on {dateLabel} ({model.Session}).";
+
+            var linkUrl = "/Student/Notification/Attendance";
+
+            var userIdList = userIds.Select(x => x.UserId).Distinct().ToList();
+            var existing = _db.Notifications
+                .Where(n => userIdList.Contains(n.UserId)
+                         && n.Type == NotificationType.Attendance
+                         && n.LinkUrl == linkUrl
+                         && n.Title == title
+                         && n.Message == message)
+                .ToList();
+
+            if (existing.Count > 0)
             {
-                _db.Attendances.RemoveRange(oldAttendances);
+                _db.Notifications.RemoveRange(existing);
                 _db.SaveChanges();
             }
 
-            // Insert mới
-            var now = DateTime.Now;
-
-            foreach (var student in model.Students)
+            foreach (var u in userIds)
             {
-                var attendance = new Attendance
-                {
-                    // KHÔNG set Id nếu Identity
-                    EnrollmentId = student.EnrollmentId,
-                    StudentId = student.StudentId,
-                    CourseClassId = model.CourseClassId,
-                    AttendanceDate = model.SessionDate,
-                    Session = model.Session,
-                    Status = student.IsPresent ? AttendanceStatus.Present : AttendanceStatus.Absent,
-                    Note = student.Note,
-                    CreatedDate = now,
-                    CreatedBy = lecturerId
-                };
+                if (u.UserId == 0) continue;
 
-                _db.Attendances.Add(attendance);
+                _notificationService.CreateNotification(
+                    u.UserId,
+                    title,
+                    message,
+                    NotificationType.Attendance,
+                    linkUrl
+                );
             }
-
-            _db.SaveChanges();
-
-            // Update điểm chuyên cần
-            var ok = UpdateAttendanceScore(model.CourseClassId);
-            if (!ok)
-            {
-                tx.Rollback();
-                return false;
-            }
-
-            tx.Commit();
-            return true;
         }
 
         public AttendanceHistoryViewModel GetAttendanceHistory(int courseClassId)

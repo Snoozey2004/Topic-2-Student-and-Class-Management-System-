@@ -51,7 +51,7 @@ namespace WebApplication1.Migrations
 
                     b.HasIndex("AdvisorLecturerId");
 
-                    b.ToTable("AdministrativeClasses");
+                    b.ToTable("AdministrativeClasses", (string)null);
                 });
 
             modelBuilder.Entity("WebApplication1.Models.Attendance", b =>
@@ -101,7 +101,7 @@ namespace WebApplication1.Migrations
                     b.HasIndex("EnrollmentId", "AttendanceDate", "Session")
                         .IsUnique();
 
-                    b.ToTable("Attendances");
+                    b.ToTable("Attendances", (string)null);
                 });
 
             modelBuilder.Entity("WebApplication1.Models.CourseClass", b =>
@@ -151,7 +151,7 @@ namespace WebApplication1.Migrations
 
                     b.HasIndex("SubjectId");
 
-                    b.ToTable("CourseClasses");
+                    b.ToTable("CourseClasses", (string)null);
                 });
 
             modelBuilder.Entity("WebApplication1.Models.Enrollment", b =>
@@ -191,7 +191,7 @@ namespace WebApplication1.Migrations
 
                     b.HasIndex("StudentId");
 
-                    b.ToTable("Enrollments");
+                    b.ToTable("Enrollments", (string)null);
                 });
 
             modelBuilder.Entity("WebApplication1.Models.Grade", b =>
@@ -245,7 +245,7 @@ namespace WebApplication1.Migrations
 
                     b.HasIndex("UpdatedBy");
 
-                    b.ToTable("Grades");
+                    b.ToTable("Grades", (string)null);
                 });
 
             modelBuilder.Entity("WebApplication1.Models.Lecturer", b =>
@@ -301,7 +301,7 @@ namespace WebApplication1.Migrations
                     b.HasIndex("UserId")
                         .IsUnique();
 
-                    b.ToTable("Lecturers");
+                    b.ToTable("Lecturers", (string)null);
                 });
 
             modelBuilder.Entity("WebApplication1.Models.Notification", b =>
@@ -342,7 +342,7 @@ namespace WebApplication1.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Notifications");
+                    b.ToTable("Notifications", (string)null);
                 });
 
             modelBuilder.Entity("WebApplication1.Models.Schedule", b =>
@@ -392,7 +392,7 @@ namespace WebApplication1.Migrations
 
                     b.HasIndex("CourseClassId");
 
-                    b.ToTable("Schedules");
+                    b.ToTable("Schedules", (string)null);
                 });
 
             modelBuilder.Entity("WebApplication1.Models.Student", b =>
@@ -452,7 +452,7 @@ namespace WebApplication1.Migrations
                     b.HasIndex("UserId")
                         .IsUnique();
 
-                    b.ToTable("Students");
+                    b.ToTable("Students", (string)null);
                 });
 
             modelBuilder.Entity("WebApplication1.Models.Subject", b =>
@@ -494,7 +494,7 @@ namespace WebApplication1.Migrations
                     b.HasIndex("SubjectCode")
                         .IsUnique();
 
-                    b.ToTable("Subjects");
+                    b.ToTable("Subjects", (string)null);
                 });
 
             modelBuilder.Entity("WebApplication1.Models.User", b =>
@@ -534,7 +534,7 @@ namespace WebApplication1.Migrations
                     b.HasIndex("Email")
                         .IsUnique();
 
-                    b.ToTable("Users");
+                    b.ToTable("Users", (string)null);
                 });
 
             modelBuilder.Entity("WebApplication1.Models.AdministrativeClass", b =>

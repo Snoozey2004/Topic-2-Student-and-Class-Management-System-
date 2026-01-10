@@ -80,10 +80,10 @@
 </div>
 
 <!-- Attendance Form -->
-<form asp-action="TakeAttendance" method="post">
-    <input type="hidden" asp-for="CourseClassId" />
-    <input type="hidden" asp-for="SessionDate" />
-    <input type="hidden" asp-for="Session" />
+<form asp-area="Lecturer" asp-controller="Attendance" asp-action="TakeAttendance" method="post">
+    <input type="hidden" name="CourseClassId" value="@Model.CourseClassId" />
+    <input type="hidden" name="SessionDate" value="@Model.SessionDate.ToString("yyyy-MM-dd")" />
+    <input type="hidden" name="Session" value="@Model.Session" />
 
     <div class="row">
         <div class="col-lg-9">
@@ -118,12 +118,13 @@
                                         <input type="hidden" name="Students[@i].StudentCode" value="@Model.Students[i].StudentCode" />
                                         <input type="hidden" name="Students[@i].FullName" value="@Model.Students[i].FullName" />
                                         <input type="hidden" name="Students[@i].Email" value="@Model.Students[i].Email" />
-                                        
-                                        <input type="checkbox" 
-                                               class="portal-checkbox attendance-checkbox" 
-                                               name="Students[@i].IsPresent" 
-                                               value="true"
-                                               checked="@Model.Students[i].IsPresent"
+                                        <input type="hidden" name="Students[@i].Note" value="@Model.Students[i].Note" />
+
+                                        <input type="checkbox"
+                                               class="portal-checkbox attendance-checkbox"
+                                               name="PresentStudentIds"
+                                               value="@Model.Students[i].StudentId"
+                                               @(Model.Students[i].IsPresent ? "checked" : null)
                                                id="student_@i">
                                     </td>
                                 </tr>

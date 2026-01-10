@@ -145,10 +145,45 @@ namespace WebApplication1.Controllers
                 return View(model);
             }
 
-            // Mock reset password - reset to default password
-            _authService.ResetPassword(model.Email, "123456");
+            // Simple flow: send user to reset form (no email/token)
+            return RedirectToAction(nameof(ResetPassword), new { email = model.Email });
+        }
 
-            TempData["SuccessMessage"] = "Password has been reset to: 123456. Please login and change your password.";
+        [HttpGet]
+        public IActionResult ResetPassword(string? email)
+        {
+            var model = new ResetPasswordViewModel
+            {
+                Email = email ?? string.Empty
+            };
+
+            return View(model);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult ResetPassword(ResetPasswordViewModel model)
+        {
+            if (!ModelState.IsValid)
+            {
+                return View(model);
+            }
+
+            var user = _authService.GetUserByEmail(model.Email);
+            if (user == null)
+            {
+                ModelState.AddModelError("Email", "Email does not exist in the system");
+                return View(model);
+            }
+
+            var ok = _authService.ResetPassword(model.Email, model.NewPassword);
+            if (!ok)
+            {
+                ModelState.AddModelError("", "Unable to reset password");
+                return View(model);
+            }
+
+            TempData["SuccessMessage"] = "Password updated successfully. Please login.";
             return RedirectToAction(nameof(Login));
         }
 

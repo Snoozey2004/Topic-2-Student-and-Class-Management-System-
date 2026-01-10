@@ -83,13 +83,14 @@
                         <th style="text-align: center;">Present</th>
                         <th style="text-align: center;">Absent</th>
                         <th style="text-align: center;">Rate</th>
+                        <th style="width: 90px;"></th>
                     </tr>
                 </thead>
                 <tbody>
                     @for (int i = 0; i < Model.Records.Count; i++)
                     {
                         var record = Model.Records[i];
-                        var rateClass = record.AttendanceRate >= 80 ? "portal-badge-success" : 
+                        var rateClass = record.AttendanceRate >= 80 ? "portal-badge-success" :
                                        record.AttendanceRate >= 60 ? "portal-badge-warning" : "portal-badge-danger";
                         <tr>
                             <td style="text-align: center;">@(i + 1)</td>
@@ -112,6 +113,15 @@
                             </td>
                             <td style="text-align: center;">
                                 <span class="portal-badge @rateClass">@record.AttendanceRate.ToString("F1")%</span>
+                            </td>
+                            <td style="text-align: center;">
+                                <a asp-action="TakeAttendance"
+                                   asp-route-id="@Model.CourseClassId"
+                                   asp-route-date="@record.SessionDate.ToString("yyyy-MM-dd")"
+                                   asp-route-session="@record.Session"
+                                   class="portal-btn portal-btn-outline portal-btn-sm">
+                                    Edit
+                                </a>
                             </td>
                         </tr>
                     }
@@ -154,7 +164,7 @@
                         int index = 1;
                         foreach (var stat in Model.StudentStats.Values.OrderBy(s => s.StudentCode))
                         {
-                            var scoreClass = stat.AttendanceScore >= 8 ? "portal-grade-a" : 
+                            var scoreClass = stat.AttendanceScore >= 8 ? "portal-grade-a" :
                                            stat.AttendanceScore >= 5 ? "portal-grade-c" : "portal-grade-d";
                             <tr>
                                 <td style="text-align: center;">@index</td>
