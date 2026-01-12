@@ -23,6 +23,7 @@ namespace WebApplication1.Models
         Enrollment,        // ??ng ký môn h?c
         Schedule,          // L?ch h?c
         Grade,             // ?i?m s?
+        Attendance,        // ?i?m danh / v?ng m?t
         ClassAnnouncement, // Thông báo l?p
         System             // H? th?ng
     }

@@ -19,6 +19,12 @@
         <input type="text" id="searchInput" placeholder="Search by class code, subject, room..." onkeyup="filterTable()">
     </div>
     <div class="admin-header-actions">
+        <a asp-action="Export" class="btn-admin-outline">
+            <i class="bi bi-download"></i> Export Excel
+        </a>
+        <a asp-action="Import" class="btn-admin-outline">
+            <i class="bi bi-file-earmark-excel"></i> Import Excel
+        </a>
         <a asp-action="Create" class="btn-admin-outline">
             <i class="bi bi-plus-circle"></i> Add schedule
         </a>

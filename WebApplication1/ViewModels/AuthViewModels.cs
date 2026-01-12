@@ -54,6 +54,26 @@ namespace WebApplication1.ViewModels
     }
 
     /// <summary>
+    /// ViewModel for Reset Password (simple flow)
+    /// </summary>
+    public class ResetPasswordViewModel
+    {
+        [Required(ErrorMessage = "Email is required")]
+        [EmailAddress(ErrorMessage = "Invalid email address")]
+        public string Email { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "New password is required")]
+        [StringLength(100, MinimumLength = 6, ErrorMessage = "Password must be at least 6 characters")]
+        [DataType(DataType.Password)]
+        public string NewPassword { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "Confirm password is required")]
+        [Compare("NewPassword", ErrorMessage = "Passwords do not match")]
+        [DataType(DataType.Password)]
+        public string ConfirmPassword { get; set; } = string.Empty;
+    }
+
+    /// <summary>
     /// ViewModel for Change Password
     /// </summary>
     public class ChangePasswordViewModel

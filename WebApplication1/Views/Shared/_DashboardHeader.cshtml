@@ -13,7 +13,20 @@
                 }
             </button>
             <div class="dropdown-menu dropdown-menu-end p-0" style="width: 320px;">
-                <div class="p-3 border-bottom"><h6 class="mb-0">Notifications</h6></div>
+                <div class="p-3 border-bottom d-flex align-items-center justify-content-between">
+                    <h6 class="mb-0">Notifications</h6>
+
+                    @if (ViewBag.NotificationBadge != null && ViewBag.NotificationBadge.UnreadCount > 0)
+                    {
+                        <form asp-area="" asp-controller="Notification" asp-action="ClearAll" method="post" class="m-0">
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="btn btn-sm btn-outline-danger"
+                                    onclick="return confirm('Clear all notifications?');">
+                                Clear
+                            </button>
+                        </form>
+                    }
+                </div>
                 @if (ViewBag.NotificationBadge != null && ((IEnumerable<dynamic>)ViewBag.NotificationBadge.RecentNotifications).Any())
                 {
                     @foreach (var notification in ViewBag.NotificationBadge.RecentNotifications)

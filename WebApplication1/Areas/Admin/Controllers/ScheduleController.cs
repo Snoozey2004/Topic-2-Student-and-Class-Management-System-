@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using ClosedXML.Excel;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using WebApplication1.Data;
@@ -24,6 +25,161 @@ namespace WebApplication1.Areas.Admin.Controllers
         {
             var schedules = _scheduleService.GetAll();
             return View(schedules);
+        }
+
+        // GET: Admin/Schedule/Export
+        public IActionResult Export()
+        {
+            // Build export from DB so we can include columns needed for import
+            var data = (
+                from s in _db.Schedules.AsNoTracking()
+                join cc in _db.CourseClasses.AsNoTracking() on s.CourseClassId equals cc.Id
+                select new
+                {
+                    cc.ClassCode,
+                    s.DayOfWeek,
+                    s.Session,
+                    s.Period,
+                    s.StartTime,
+                    s.EndTime,
+                    s.Room,
+                    s.EffectiveDate,
+                    s.EndDate
+                }
+            ).ToList();
+
+            using var wb = new XLWorkbook();
+            var ws = wb.AddWorksheet("Schedules");
+
+            var headers = new[]
+            {
+                "ClassCode",
+                "DayOfWeek",
+                "Session",
+                "Period",
+                "StartTime",
+                "EndTime",
+                "Room",
+                "EffectiveDate",
+                "EndDate"
+            };
+
+            for (int i = 0; i < headers.Length; i++)
+            {
+                ws.Cell(1, i + 1).Value = headers[i];
+                ws.Cell(1, i + 1).Style.Font.Bold = true;
+            }
+
+            var row = 2;
+            foreach (var x in data)
+            {
+                ws.Cell(row, 1).Value = x.ClassCode;
+                ws.Cell(row, 2).Value = x.DayOfWeek.ToString();
+                ws.Cell(row, 3).Value = x.Session;
+                ws.Cell(row, 4).Value = x.Period;
+                ws.Cell(row, 5).Value = x.StartTime;
+                ws.Cell(row, 6).Value = x.EndTime;
+                ws.Cell(row, 7).Value = x.Room;
+
+                ws.Cell(row, 8).Value = x.EffectiveDate.Date;
+                ws.Cell(row, 8).Style.DateFormat.Format = "yyyy-MM-dd";
+
+                if (x.EndDate.HasValue)
+                {
+                    ws.Cell(row, 9).Value = x.EndDate.Value.Date;
+                    ws.Cell(row, 9).Style.DateFormat.Format = "yyyy-MM-dd";
+                }
+
+                row++;
+            }
+
+            ws.Columns().AdjustToContents();
+
+            using var ms = new MemoryStream();
+            wb.SaveAs(ms);
+            ms.Position = 0;
+
+            var fileName = $"schedules-{DateTime.Now:yyyyMMdd-HHmmss}.xlsx";
+            return File(ms.ToArray(), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", fileName);
+        }
+
+        // GET: Admin/Schedule/Import
+        public IActionResult Import()
+        {
+            return View();
+        }
+
+        // POST: Admin/Schedule/Import
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult Import(IFormFile file)
+        {
+            if (file == null || file.Length == 0)
+            {
+                TempData["ErrorMessage"] = "Please select an Excel file.";
+                return View();
+            }
+
+            if (!Path.GetExtension(file.FileName).Equals(".xlsx", StringComparison.OrdinalIgnoreCase))
+            {
+                TempData["ErrorMessage"] = "Invalid file type. Please upload a .xlsx file.";
+                return View();
+            }
+
+            var classCodeToId = _db.CourseClasses
+                .AsNoTracking()
+                .ToDictionary(c => c.ClassCode, c => c.Id, StringComparer.OrdinalIgnoreCase);
+
+            var imported = 0;
+            var skipped = 0;
+            var invalid = 0;
+            var errors = new List<string>();
+
+            try
+            {
+                using var stream = file.OpenReadStream();
+                var rows = ScheduleExcelImport.Parse(stream, classCodeToId);
+
+                foreach (var r in rows)
+                {
+                    if (r.RowNumber == 0)
+                    {
+                        errors.Add(r.Error ?? "Invalid Excel file");
+                        continue;
+                    }
+
+                    if (r.Model == null)
+                    {
+                        invalid++;
+                        errors.Add($"Row {r.RowNumber}: {r.Error}");
+                        continue;
+                    }
+
+                    var ok = _scheduleService.Create(r.Model);
+                    if (ok) imported++;
+                    else
+                    {
+                        skipped++;
+                        errors.Add($"Row {r.RowNumber}: conflict detected (schedule not imported)");
+                    }
+                }
+
+                ViewBag.ImportSummary = $"Imported: {imported}. Skipped (conflicts): {skipped}. Invalid: {invalid}.";
+                if (errors.Count > 0)
+                    ViewBag.ImportErrors = errors;
+
+                if (imported > 0)
+                    TempData["SuccessMessage"] = $"Imported {imported} schedules.";
+                if (imported == 0 && errors.Count == 0)
+                    TempData["ErrorMessage"] = "No schedules were imported.";
+
+                return View();
+            }
+            catch (Exception ex)
+            {
+                TempData["ErrorMessage"] = $"Failed to import Excel: {ex.Message}";
+                return View();
+            }
         }
 
         // GET: Admin/Schedule/Details/5

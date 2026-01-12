@@ -47,6 +47,9 @@ namespace WebApplication1.ViewModels
         public string Session { get; set; } = string.Empty;
         
         public List<StudentAttendanceViewModel> Students { get; set; } = new();
+
+        // IDs of students marked present in the form
+        public List<int> PresentStudentIds { get; set; } = new();
     }
 
     /// <summary>
