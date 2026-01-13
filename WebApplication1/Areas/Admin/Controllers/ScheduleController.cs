@@ -368,7 +368,9 @@ namespace WebApplication1.Areas.Admin.Controllers
             {
                 new SelectListItem { Value = "Period 1-3", Text = "Period 1-3 (07:00-09:30)" },
                 new SelectListItem { Value = "Period 4-6", Text = "Period 4-6 (09:45-12:15)" },
-                new SelectListItem { Value = "Period 7-9", Text = "Period 7-9 (13:00-15:30)" }
+                new SelectListItem { Value = "Period 7-9", Text = "Period 7-9 (13:00-15:30)" },
+                new SelectListItem { Value = "Period 10-12", Text = "Period 10-12 (15:45-18:15)" },
+                new SelectListItem { Value = "Period 13-15", Text = "Period 13-15 (18:30-21:00)" }
             };
 
             var rooms = new List<SelectListItem>
