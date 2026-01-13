@@ -13,7 +13,7 @@ namespace WebApplication1.Services
         List<EnrollmentListViewModel> GetAll(EnrollmentStatus? status = null);
         List<EnrollmentListViewModel> GetByStudentId(int studentId);
         List<EnrollmentListViewModel> GetByCourseClassId(int courseClassId);
-        Enrollment? GetById(int id);
+        EnrollmentListViewModel? GetById(int id);
         bool Create(EnrollmentFormViewModel model);
         bool Update(EnrollmentFormViewModel model);
         bool Delete(int id);
@@ -117,9 +117,30 @@ namespace WebApplication1.Services
             return query.ToList();
         }
 
-        public Enrollment? GetById(int id)
+        public EnrollmentListViewModel? GetById(int id)
         {
-            return _db.Enrollments.FirstOrDefault(e => e.Id == id);
+            var query =
+                from e in _db.Enrollments.AsNoTracking()
+                join st in _db.Students.AsNoTracking() on e.StudentId equals st.Id
+                join cc in _db.CourseClasses.AsNoTracking() on e.CourseClassId equals cc.Id
+                join sub in _db.Subjects.AsNoTracking() on cc.SubjectId equals sub.Id
+                where e.Id == id
+                select new EnrollmentListViewModel
+                {
+                    Id = e.Id,
+                    StudentId = e.StudentId,
+                    CourseClassId = e.CourseClassId,
+                    StudentCode = st.StudentCode,
+                    StudentName = st.FullName,
+                    ClassCode = cc.ClassCode,
+                    SubjectName = sub.SubjectName,
+                    Semester = cc.Semester,
+                    EnrollmentDate = e.EnrollmentDate,
+                    Status = e.Status.ToString(),
+                    RejectionReason = e.RejectionReason
+                };
+
+            return query.FirstOrDefault();
         }
 
         public bool Create(EnrollmentFormViewModel model)
@@ -147,7 +168,7 @@ namespace WebApplication1.Services
 
         public bool Update(EnrollmentFormViewModel model)
         {
-            var enrollment = GetById(model.Id ?? 0);
+            var enrollment = _db.Enrollments.FirstOrDefault(e => e.Id == model.Id);
             if (enrollment == null) return false;
 
             enrollment.StudentId = model.StudentId;
@@ -196,7 +217,7 @@ namespace WebApplication1.Services
             if (autoApprove)
             {
                 enrollment.ApprovedDate = DateTime.Now;
-                enrollment.ApprovedBy = 0; // system
+                enrollment.ApprovedBy = 2; // system
 
                 courseClass.CurrentStudents++;
             }

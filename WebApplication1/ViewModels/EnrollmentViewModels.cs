@@ -1,14 +1,16 @@
-using System.ComponentModel.DataAnnotations;
+ï»¿using System.ComponentModel.DataAnnotations;
 using WebApplication1.Models;
 
 namespace WebApplication1.ViewModels
 {
     /// <summary>
-    /// ViewModel cho danh sách Enrollment
+    /// ViewModel cho danh sÃ¡ch Enrollment
     /// </summary>
     public class EnrollmentListViewModel
     {
         public int Id { get; set; }
+        public int StudentId { get; set; }
+        public int CourseClassId { get; set; }
         public string StudentCode { get; set; } = string.Empty;
         public string StudentName { get; set; } = string.Empty;
         public string ClassCode { get; set; } = string.Empty;
@@ -34,7 +36,7 @@ namespace WebApplication1.ViewModels
     }
 
     /// <summary>
-    /// ViewModel cho ??ng ký môn h?c (Student)
+    /// ViewModel cho ??ng kÃ½ mÃ´n h?c (Student)
     /// </summary>
     public class EnrollmentRegisterViewModel
     {
@@ -43,7 +45,7 @@ namespace WebApplication1.ViewModels
     }
 
     /// <summary>
-    /// ViewModel cho môn h?c có th? ??ng ký
+    /// ViewModel cho mÃ´n h?c cÃ³ th? ??ng kÃ½
     /// </summary>
     public class AvailableCourseViewModel
     {
@@ -63,7 +65,7 @@ namespace WebApplication1.ViewModels
     }
 
     /// <summary>
-    /// ViewModel cho duy?t/t? ch?i ??ng ký
+    /// ViewModel cho duy?t/t? ch?i ??ng kÃ½
     /// </summary>
     public class EnrollmentApprovalViewModel
     {
