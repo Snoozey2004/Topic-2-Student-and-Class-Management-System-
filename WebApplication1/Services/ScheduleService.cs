@@ -24,11 +24,26 @@ namespace WebApplication1.Services
     {
         private readonly ApplicationDbContext _db;
         private readonly INotificationService _notificationService;
+        private static readonly Dictionary<string, (string Start, string End)> PeriodTimes = new()
+        {
+            { "Period 1-3", ("07:00", "09:30") },
+            { "Period 4-6", ("09:45", "12:15") },
+            { "Period 7-9", ("13:00", "15:30") },
+            { "Period 10-12", ("15:45", "18:15") },
+            { "Period 13-15", ("18:30", "21:00") }
+        };
 
         public ScheduleService(ApplicationDbContext db, INotificationService notificationService)
         {
             _db = db;
             _notificationService = notificationService;
+        }
+
+        private void ApplyDefaultTimesIfMissing(ScheduleFormViewModel model)
+        {
+            if (!PeriodTimes.TryGetValue(model.Period ?? string.Empty, out var times)) return;
+            if (string.IsNullOrWhiteSpace(model.StartTime)) model.StartTime = times.Start;
+            if (string.IsNullOrWhiteSpace(model.EndTime)) model.EndTime = times.End;
         }
 
         public List<ScheduleListViewModel> GetAll()
@@ -275,6 +290,7 @@ namespace WebApplication1.Services
 
         public bool Create(ScheduleFormViewModel model)
         {
+            ApplyDefaultTimesIfMissing(model);
             // Room conflict
             if (HasConflict(model.CourseClassId, model.DayOfWeek, model.Period, model.Room, null))
                 return false;
@@ -316,6 +332,8 @@ namespace WebApplication1.Services
             var id = model.Id ?? 0;
             var schedule = _db.Schedules.FirstOrDefault(s => s.Id == id);
             if (schedule == null) return false;
+
+            ApplyDefaultTimesIfMissing(model);
 
             // Room conflict (exclude current)
             if (HasConflict(model.CourseClassId, model.DayOfWeek, model.Period, model.Room, schedule.Id))

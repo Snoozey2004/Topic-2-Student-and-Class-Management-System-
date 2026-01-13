@@ -8,6 +8,11 @@
     </a>
 </li>
 <li class="nav-item">
+    <a class="nav-link @(controller == "Statistics" ? "active" : "")" asp-area="Student" asp-controller="Statistics" asp-action="Index">
+        <i class="bi bi-bar-chart"></i>Personal Statistics
+    </a>
+</li>
+<li class="nav-item">
     <a class="nav-link @(controller == "Enrollment" ? "active" : "")" asp-area="Student" asp-controller="Enrollment" asp-action="Index">
         <i class="bi bi-clipboard-check"></i>Course Registration
     </a>

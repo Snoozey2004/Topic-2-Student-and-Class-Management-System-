@@ -1,0 +1,313 @@
+@model WebApplication1.ViewModels.LecturerStatisticsViewModel
+@using System.Text.Json
+@{
+    ViewData["Title"] = ViewData["Title"] ?? "Teaching Statistics";
+    ViewData["PageTitle"] = ViewData["PageTitle"] ?? "Teaching Statistics";
+    Layout = "~/Views/Shared/_DashboardLayout.cshtml";
+}
+
+@section SidebarMenu {
+    @await Html.PartialAsync("_LecturerSidebar")
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/portal-common.css" />
+    <style>
+        .stat-chip { padding: 6px 10px; border-radius: 8px; background: var(--portal-surface-2); font-weight: 600; font-size: 0.95rem; }
+        .table-sm th, .table-sm td { padding: 6px 8px; }
+    </style>
+}
+
+<div class="portal-stats">
+    <div class="portal-stat-card">
+        <div class="portal-stat-icon primary">
+            <i class="bi bi-journal-text"></i>
+        </div>
+        <div class="portal-stat-info">
+            <h4>@Model.TotalClasses</h4>
+            <p>Classes Teaching</p>
+        </div>
+    </div>
+    <div class="portal-stat-card">
+        <div class="portal-stat-icon accent">
+            <i class="bi bi-people"></i>
+        </div>
+        <div class="portal-stat-info">
+            <h4>@Model.TotalStudents</h4>
+            <p>Total Students</p>
+        </div>
+    </div>
+    <div class="ms-auto">
+        <a class="portal-btn portal-btn-primary" asp-area="Lecturer" asp-controller="Statistics" asp-action="Export">
+            <i class="bi bi-download"></i> Export Excel
+        </a>
+    </div>
+</div>
+
+<div class="portal-card mb-4">
+    <div class="portal-card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0"><i class="bi bi-award"></i> Grade Statistics by Class</h5>
+    </div>
+    <div class="portal-card-body">
+        @if (!Model.GradeStats.Any())
+        {
+            <div class="text-muted">No grade data available.</div>
+        }
+        else
+        {
+            <div class="row g-4">
+                @foreach (var g in Model.GradeStats)
+                {
+                    <div class="col-lg-6">
+                        <div class="portal-card" style="box-shadow:none; border:1px solid var(--portal-border);">
+                            <div class="portal-card-header">
+                                <div>
+                                    <h6 class="mb-1">@g.ClassCode</h6>
+                                    <small class="text-muted">@g.SubjectName</small>
+                                </div>
+                                <div class="stat-chip">Avg: @g.AverageScore</div>
+                            </div>
+                            <div class="portal-card-body">
+                                <div class="row">
+                                    <div class="col-6">
+                                        <ul class="list-unstyled mb-3" style="font-size:0.95rem;">
+                                            <li>Excellent (9-10): <strong>@g.ExcellentCount</strong></li>
+                                            <li>Good (8-8.9): <strong>@g.GoodCount</strong></li>
+                                            <li>Fair (7-7.9): <strong>@g.FairCount</strong></li>
+                                            <li>Average (5-6.9): <strong>@g.AverageCount</strong></li>
+                                            <li>Weak (&lt;5): <strong>@g.WeakCount</strong></li>
+                                        </ul>
+                                    </div>
+                                    <div class="col-6">
+                                        <canvas id="gradeChart-@g.CourseClassId" height="160"></canvas>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+    </div>
+</div>
+
+@if (Model.StudentsWithoutScores.Any())
+{
+    <div class="portal-card mb-4">
+        <div class="portal-card-header">
+            <h5 class="mb-0"><i class="bi bi-exclamation-triangle"></i> Students Missing Scores</h5>
+        </div>
+        <div class="portal-card-body">
+            <div class="table-responsive">
+                <table class="table table-sm align-middle">
+                    <thead>
+                        <tr>
+                            <th>Student</th>
+                            <th>Class</th>
+                            <th>Subject</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var s in Model.StudentsWithoutScores)
+                        {
+                            <tr>
+                                <td><strong>@s.StudentCode</strong> - @s.StudentName</td>
+                                <td>@s.ClassCode</td>
+                                <td>@s.SubjectName</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+}
+
+<div class="portal-card mb-4">
+    <div class="portal-card-header">
+        <h5 class="mb-0"><i class="bi bi-clipboard-check"></i> Attendance Statistics by Class</h5>
+    </div>
+    <div class="portal-card-body">
+        @if (!Model.AttendanceStats.Any())
+        {
+            <div class="text-muted">No attendance data available.</div>
+        }
+        else
+        {
+            <div class="row g-4">
+                @foreach (var a in Model.AttendanceStats)
+                {
+                    <div class="col-12">
+                        <div class="portal-card" style="box-shadow:none; border:1px solid var(--portal-border);">
+                            <div class="portal-card-header d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="mb-1">@a.ClassCode</h6>
+                                    <small class="text-muted">@a.SubjectName</small>
+                                </div>
+                                <div class="d-flex gap-2">
+                                    <span class="stat-chip">Avg Attendance: @a.AverageAttendanceRate% </span>
+                                    <span class="stat-chip" style="background: rgba(255,99,132,0.1); color:#d9534f;">High absence: @a.HighAbsenceCount</span>
+                                </div>
+                            </div>
+                            <div class="portal-card-body">
+                                <div class="row">
+                                    <div class="col-lg-6">
+                                        <canvas id="attendanceChart-@a.CourseClassId" height="160"></canvas>
+                                    </div>
+                                    <div class="col-lg-6">
+                                        <h6 class="fw-semibold mb-2">Absence Alerts (>20%)</h6>
+                                        @if (!a.HighAbsenceStudents.Any())
+                                        {
+                                            <div class="text-muted">No alerts.</div>
+                                        }
+                                        else
+                                        {
+                                            <div class="table-responsive mb-3">
+                                                <table class="table table-sm align-middle">
+                                                    <thead>
+                                                        <tr>
+                                                            <th>Student</th>
+                                                            <th>Present</th>
+                                                            <th>Absent</th>
+                                                            <th>Rate</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        @foreach (var s in a.HighAbsenceStudents)
+                                                        {
+                                                            <tr>
+                                                                <td><strong>@s.StudentCode</strong> - @s.StudentName</td>
+                                                                <td>@s.PresentSessions</td>
+                                                                <td>@s.AbsentSessions</td>
+                                                                <td>@s.AttendanceRate%</td>
+                                                            </tr>
+                                                        }
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        }
+
+                                        <h6 class="fw-semibold mb-2">Session Details</h6>
+                                        @if (!a.SessionDetails.Any())
+                                        {
+                                            <div class="text-muted">No sessions recorded.</div>
+                                        }
+                                        else
+                                        {
+                                            <div class="table-responsive">
+                                                <table class="table table-sm align-middle">
+                                                    <thead>
+                                                        <tr>
+                                                            <th>Date</th>
+                                                            <th>Session</th>
+                                                            <th>Present</th>
+                                                            <th>Absent</th>
+                                                            <th>Rate</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        @foreach (var sd in a.SessionDetails)
+                                                        {
+                                                            <tr>
+                                                                <td>@sd.SessionDate.ToString("dd/MM/yyyy")</td>
+                                                                <td>@sd.Session</td>
+                                                                <td>@sd.PresentCount</td>
+                                                                <td>@sd.AbsentCount</td>
+                                                                <td>@sd.AttendanceRate%</td>
+                                                            </tr>
+                                                        }
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        const gradeCharts = @Html.Raw(JsonSerializer.Serialize(Model.GradeStats.Select(g => new {
+            id = g.CourseClassId,
+            labels = new[] { "9-10", "8-8.9", "7-7.9", "5-6.9", "<5" },
+            data = new[] { g.ExcellentCount, g.GoodCount, g.FairCount, g.AverageCount, g.WeakCount },
+            label = g.ClassCode + " - " + g.SubjectName
+        })));
+
+        gradeCharts.forEach(cfg => {
+            const ctx = document.getElementById(`gradeChart-${cfg.id}`);
+            if (!ctx) return;
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: cfg.labels,
+                    datasets: [{
+                        label: cfg.label,
+                        data: cfg.data,
+                        backgroundColor: [
+                            'rgba(75, 192, 192, 0.6)',
+                            'rgba(54, 162, 235, 0.6)',
+                            'rgba(255, 205, 86, 0.6)',
+                            'rgba(255, 159, 64, 0.6)',
+                            'rgba(255, 99, 132, 0.6)'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: { stepSize: 1 }
+                        }
+                    }
+                }
+            });
+        });
+
+        const attendanceCharts = @Html.Raw(JsonSerializer.Serialize(Model.AttendanceStats.Select(a => new {
+            id = a.CourseClassId,
+            labels = a.SessionDetails.Select(sd => sd.SessionDate.ToString("dd/MM") + " " + sd.Session),
+            data = a.SessionDetails.Select(sd => sd.AttendanceRate),
+            classLabel = a.ClassCode + " - " + a.SubjectName
+        })));
+
+        attendanceCharts.forEach(cfg => {
+            const ctx = document.getElementById(`attendanceChart-${cfg.id}`);
+            if (!ctx) return;
+
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: cfg.labels,
+                    datasets: [{
+                        label: 'Attendance %',
+                        data: cfg.data,
+                        borderColor: 'rgba(54, 162, 235, 0.8)',
+                        backgroundColor: 'rgba(54, 162, 235, 0.1)',
+                        tension: 0.2,
+                        fill: true
+                    }]
+                },
+                options: {
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            suggestedMax: 100,
+                            ticks: { callback: value => `${value}%` }
+                        }
+                    }
+                }
+            });
+        });
+    </script>
+}

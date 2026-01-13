@@ -35,6 +35,9 @@ builder.Services.AddScoped<IEnrollmentService, EnrollmentService>();
 builder.Services.AddScoped<IGradeService, GradeService>();
 builder.Services.AddScoped<IAttendanceService, AttendanceService>();
 builder.Services.AddScoped<ISemesterService, SemesterService>();
+builder.Services.AddScoped<ILecturerStatisticsService, LecturerStatisticsService>();
+builder.Services.AddScoped<IStudentStatisticsService, StudentStatisticsService>();
+builder.Services.AddScoped<IAdminStatisticsService, AdminStatisticsService>();
 
 // Cookie Auth
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)

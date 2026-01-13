@@ -215,9 +215,13 @@ namespace WebApplication1.Services
                 }
             }
 
-            // String like "7:00:00 AM" or "07:00" etc.
+            // String like "7:00:00 AM" or "07:00" etc. Allow blank to fall back to defaults later.
             var raw = cell.GetString()?.Trim();
-            if (string.IsNullOrWhiteSpace(raw)) return false;
+            if (string.IsNullOrWhiteSpace(raw))
+            {
+                time = string.Empty;
+                return true;
+            }
 
             if (DateTime.TryParse(raw, CultureInfo.InvariantCulture, DateTimeStyles.AllowWhiteSpaces, out var dt) ||
                 DateTime.TryParse(raw, CultureInfo.CurrentCulture, DateTimeStyles.AllowWhiteSpaces, out dt))
