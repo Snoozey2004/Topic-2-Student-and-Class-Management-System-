@@ -1,0 +1,183 @@
+@model WebApplication1.ViewModels.AdminStatisticsViewModel
+@using System.Text.Json
+@{
+    ViewData["Title"] = ViewData["Title"] ?? "Overall Statistics";
+    ViewData["PageTitle"] = ViewData["PageTitle"] ?? "Overall Statistics";
+    Layout = "~/Views/Shared/_DashboardLayout.cshtml";
+}
+
+@section SidebarMenu {
+    @await Html.PartialAsync("_AdminSidebar")
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/portal-common.css" />
+    <style>
+        .stat-chip { padding: 6px 10px; border-radius: 8px; background: var(--portal-surface-2); font-weight: 600; font-size: 0.95rem; }
+        .table-sm th, .table-sm td { padding: 6px 8px; }
+    </style>
+}
+
+<div class="portal-stats">
+    <div class="portal-stat-card">
+        <div class="portal-stat-icon primary"><i class="bi bi-people"></i></div>
+        <div class="portal-stat-info"><h4>@Model.TotalStudents</h4><p>Students</p></div>
+    </div>
+    <div class="portal-stat-card">
+        <div class="portal-stat-icon accent"><i class="bi bi-person-workspace"></i></div>
+        <div class="portal-stat-info"><h4>@Model.TotalLecturers</h4><p>Lecturers</p></div>
+    </div>
+    <div class="portal-stat-card">
+        <div class="portal-stat-icon success"><i class="bi bi-journal-text"></i></div>
+        <div class="portal-stat-info"><h4>@Model.TotalClasses</h4><p>Classes</p></div>
+    </div>
+    <div class="ms-auto">
+        <a class="portal-btn portal-btn-primary" asp-area="Admin" asp-controller="Statistics" asp-action="Export">
+            <i class="bi bi-download"></i> Export Excel
+        </a>
+    </div>
+</div>
+
+<div class="portal-card mb-4">
+    <div class="portal-card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0"><i class="bi bi-award"></i> Score Statistics</h5>
+        <div class="d-flex gap-2">
+            <span class="stat-chip">Avg: @Model.AverageScore</span>
+            <span class="stat-chip">Pass: @Model.PassRate%</span>
+            <span class="stat-chip" style="background: rgba(255,99,132,0.1); color:#d9534f;">Warnings: @Model.WarningLowScoreCount</span>
+        </div>
+    </div>
+    <div class="portal-card-body">
+        <div class="row g-4">
+            <div class="col-lg-6">
+                <canvas id="scoreDistChart" height="220"></canvas>
+            </div>
+            <div class="col-lg-6">
+                <canvas id="scoreTrendChart" height="220"></canvas>
+            </div>
+        </div>
+
+        <h6 class="fw-semibold mt-4 mb-2">Top Students</h6>
+        @if (!Model.TopStudents.Any())
+        {
+            <div class="text-muted">No GPA data.</div>
+        }
+        else
+        {
+            <div class="table-responsive">
+                <table class="table table-sm align-middle">
+                    <thead>
+                        <tr>
+                            <th>Student</th>
+                            <th>GPA</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var s in Model.TopStudents)
+                        {
+                            <tr>
+                                <td><strong>@s.StudentCode</strong> - @s.StudentName</td>
+                                <td>@s.GPA</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+</div>
+
+<div class="portal-card mb-4">
+    <div class="portal-card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0"><i class="bi bi-clipboard-check"></i> Attendance Statistics</h5>
+        <div class="d-flex gap-2">
+            <span class="stat-chip">Avg: @Model.AverageAttendanceRate%</span>
+            <span class="stat-chip" style="background: rgba(255,99,132,0.1); color:#d9534f;">High absence students: @Model.HighAbsenceStudentCount</span>
+        </div>
+    </div>
+    <div class="portal-card-body">
+        <div class="row g-4">
+            <div class="col-lg-6">
+                <canvas id="attendanceClassChart" height="220"></canvas>
+            </div>
+            <div class="col-lg-6">
+                <canvas id="attendanceTrendChart" height="220"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        const scoreDist = @Html.Raw(JsonSerializer.Serialize(Model.ScoreDistribution));
+        if (scoreDist && scoreDist.length) {
+            new Chart(document.getElementById('scoreDistChart'), {
+                type: 'bar',
+                data: {
+                    labels: scoreDist.map(x => x.label),
+                    datasets: [{
+                        label: 'Count',
+                        data: scoreDist.map(x => x.count),
+                        backgroundColor: 'rgba(54, 162, 235, 0.6)'
+                    }]
+                },
+                options: { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
+            });
+        }
+
+        const scoreTrend = @Html.Raw(JsonSerializer.Serialize(Model.ScoreTrendBySemester));
+        if (scoreTrend && scoreTrend.length) {
+            new Chart(document.getElementById('scoreTrendChart'), {
+                type: 'line',
+                data: {
+                    labels: scoreTrend.map(x => x.semester),
+                    datasets: [{
+                        label: 'Avg Score',
+                        data: scoreTrend.map(x => x.value),
+                        borderColor: 'rgba(75, 192, 192, 0.9)',
+                        backgroundColor: 'rgba(75, 192, 192, 0.15)',
+                        tension: 0.2,
+                        fill: true
+                    }]
+                },
+                options: { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, suggestedMax: 10 } } }
+            });
+        }
+
+        const attendanceClass = @Html.Raw(JsonSerializer.Serialize(Model.AttendanceByClass));
+        if (attendanceClass && attendanceClass.length) {
+            new Chart(document.getElementById('attendanceClassChart'), {
+                type: 'bar',
+                data: {
+                    labels: attendanceClass.map(x => x.classCode),
+                    datasets: [{
+                        label: 'Attendance %',
+                        data: attendanceClass.map(x => x.attendanceRate),
+                        backgroundColor: 'rgba(255, 205, 86, 0.6)'
+                    }]
+                },
+                options: { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, suggestedMax: 100 } } }
+            });
+        }
+
+        const attendanceTrend = @Html.Raw(JsonSerializer.Serialize(Model.AttendanceTrendBySemester));
+        if (attendanceTrend && attendanceTrend.length) {
+            new Chart(document.getElementById('attendanceTrendChart'), {
+                type: 'line',
+                data: {
+                    labels: attendanceTrend.map(x => x.semester),
+                    datasets: [{
+                        label: 'Attendance %',
+                        data: attendanceTrend.map(x => x.value),
+                        borderColor: 'rgba(255, 159, 64, 0.9)',
+                        backgroundColor: 'rgba(255, 159, 64, 0.15)',
+                        tension: 0.2,
+                        fill: true
+                    }]
+                },
+                options: { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, suggestedMax: 100 } } }
+            });
+        }
+    </script>
+}
