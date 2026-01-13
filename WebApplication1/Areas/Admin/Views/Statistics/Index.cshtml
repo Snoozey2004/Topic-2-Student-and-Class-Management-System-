@@ -4,6 +4,7 @@
     ViewData["Title"] = ViewData["Title"] ?? "Overall Statistics";
     ViewData["PageTitle"] = ViewData["PageTitle"] ?? "Overall Statistics";
     Layout = "~/Views/Shared/_DashboardLayout.cshtml";
+    var jsonOptions = new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase }; 
 }
 
 @section SidebarMenu {
@@ -110,7 +111,7 @@
 @section Scripts {
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
-        const scoreDist = @Html.Raw(JsonSerializer.Serialize(Model.ScoreDistribution));
+        const scoreDist = @Html.Raw(JsonSerializer.Serialize(Model.ScoreDistribution, jsonOptions));
         if (scoreDist && scoreDist.length) {
             new Chart(document.getElementById('scoreDistChart'), {
                 type: 'bar',
@@ -126,7 +127,7 @@
             });
         }
 
-        const scoreTrend = @Html.Raw(JsonSerializer.Serialize(Model.ScoreTrendBySemester));
+        const scoreTrend = @Html.Raw(JsonSerializer.Serialize(Model.ScoreTrendBySemester, jsonOptions));
         if (scoreTrend && scoreTrend.length) {
             new Chart(document.getElementById('scoreTrendChart'), {
                 type: 'line',
@@ -145,7 +146,7 @@
             });
         }
 
-        const attendanceClass = @Html.Raw(JsonSerializer.Serialize(Model.AttendanceByClass));
+        const attendanceClass = @Html.Raw(JsonSerializer.Serialize(Model.AttendanceByClass, jsonOptions));
         if (attendanceClass && attendanceClass.length) {
             new Chart(document.getElementById('attendanceClassChart'), {
                 type: 'bar',
@@ -161,7 +162,7 @@
             });
         }
 
-        const attendanceTrend = @Html.Raw(JsonSerializer.Serialize(Model.AttendanceTrendBySemester));
+        const attendanceTrend = @Html.Raw(JsonSerializer.Serialize(Model.AttendanceTrendBySemester, jsonOptions));
         if (attendanceTrend && attendanceTrend.length) {
             new Chart(document.getElementById('attendanceTrendChart'), {
                 type: 'line',
