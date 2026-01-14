@@ -38,8 +38,22 @@
 <!-- Filter Bar -->
 <div class="portal-filter-bar">
     <div class="portal-filter-controls">
-        <select class="portal-select">
-            <option value="HK1-2024">@Model.SemesterLabel</option>
+        <select class="portal-select" id="semesterSelect">
+            <option value="">All semesters</option>
+            @if (ViewBag.Semesters is IEnumerable<string> semesters)
+            {
+                foreach (var sem in semesters)
+                {
+                    if ((string)ViewBag.SelectedSemester == sem)
+                    {
+                        <option value="@sem" selected>@sem</option>
+                    }
+                    else
+                    {
+                        <option value="@sem">@sem</option>
+                    }
+                }
+            }
         </select>
         <select class="portal-select">
             <option value="">@Model.WeekLabel</option>
@@ -63,24 +77,12 @@
     <!-- Day Headers -->
     <div class="portal-day-headers">
         <div class="portal-time-header">Period</div>
-        @{
-            var daysWithDates = new[] { 
-                new { Name = "Monday", Date = "(15/12)" },
-                new { Name = "Tuesday", Date = "(16/12)" },
-                new { Name = "Wednesday", Date = "(17/12)" },
-                new { Name = "Thursday", Date = "(18/12)" },
-                new { Name = "Friday", Date = "(19/12)" },
-                new { Name = "Saturday", Date = "(20/12)" },
-                new { Name = "Sunday", Date = "(21/12)" }
-            };
-            
-            foreach (var day in daysWithDates)
-            {
-                <div class="portal-day-header">
-                    <div class="portal-day-name">@day.Name</div>
-                    <div class="portal-day-date">@day.Date</div>
-                </div>
-            }
+        @foreach (var day in Model.DayHeaders)
+        {
+            <div class="portal-day-header">
+                <div class="portal-day-name">@day.DayName</div>
+                <div class="portal-day-date">@day.DateDisplay</div>
+            </div>
         }
     </div>
 
@@ -179,13 +181,25 @@
 
 @section Scripts {
     <script>
-        function showClassModal(element) {
-            document.getElementById('modalSubject').textContent = element.dataset.subject;
-            document.getElementById('modalCode').textContent = element.dataset.code;
-            document.getElementById('modalRoom').textContent = element.dataset.room;
-            document.getElementById('modalTime').textContent = element.dataset.time;
-            document.getElementById('classModal').classList.add('show');
-        }
+        (function(){
+            const semesterSelect = document.getElementById('semesterSelect');
+            if (semesterSelect) {
+                semesterSelect.addEventListener('change', function(){
+                    if (!this.value) {
+                        window.location.href = window.location.pathname;
+                        return;
+                    }
+                    window.location.href = `${window.location.pathname}?semester=${encodeURIComponent(this.value)}`;
+                });
+            }
+        })();
+         function showClassModal(element) {
+             document.getElementById('modalSubject').textContent = element.dataset.subject;
+             document.getElementById('modalCode').textContent = element.dataset.code;
+             document.getElementById('modalRoom').textContent = element.dataset.room;
+             document.getElementById('modalTime').textContent = element.dataset.time;
+             document.getElementById('classModal').classList.add('show');
+         }
         
         function closeClassModal() {
             document.getElementById('classModal').classList.remove('show');

@@ -13,8 +13,9 @@ namespace WebApplication1.Services
         List<ScheduleListViewModel> GetAll();
         List<ScheduleListViewModel> GetByCourseClassId(int courseClassId);
         TimetableViewModel GetStudentTimetable(int studentId, string? semester);
-        TimetableViewModel GetLecturerTimetable(int lecturerId, string semester);
+        TimetableViewModel GetLecturerTimetable(int lecturerId, string? semester);
         List<string> GetStudentSemesters(int studentId);
+        List<string> GetLecturerSemesters(int lecturerId);
         Schedule? GetById(int id);
         bool Create(ScheduleFormViewModel model);
         bool Update(ScheduleFormViewModel model);
@@ -219,17 +220,30 @@ namespace WebApplication1.Services
             return timetable;
         }
 
-        public TimetableViewModel GetLecturerTimetable(int lecturerId, string semester)
+        public TimetableViewModel GetLecturerTimetable(int lecturerId, string? semester)
         {
-            var courseClasses = _db.CourseClasses
+            var classQuery = _db.CourseClasses
                 .AsNoTracking()
-                .Where(c => c.LecturerId == lecturerId && c.Semester == semester)
-                .ToList();
+                .Where(c => c.LecturerId == lecturerId);
 
-            var semesterParts = semester.Split('-');
-            var semesterNumber = semesterParts.Length > 0 ? semesterParts[0] : "HK1";
-            var year = semesterParts.Length > 1 ? semesterParts[1] : DateTime.Now.Year.ToString();
-            var semesterLabel = $"{semesterNumber} - School year {year} - {int.Parse(year) + 1}";
+            if (string.IsNullOrWhiteSpace(semester))
+            {
+                var semesters = classQuery
+                    .Select(c => c.Semester)
+                    .Distinct()
+                    .ToList();
+
+                semester = GetLatestSemesterOrDefault(semesters, null);
+            }
+
+            if (!string.IsNullOrWhiteSpace(semester))
+            {
+                classQuery = classQuery.Where(c => c.Semester == semester);
+            }
+
+            var courseClasses = classQuery.ToList();
+
+            var semesterLabel = !string.IsNullOrWhiteSpace(semester) ? BuildSemesterLabel(semester) : "All semesters";
 
             var currentDate = DateTime.Now;
             var startOfWeek = currentDate.AddDays(-(int)currentDate.DayOfWeek + (int)DayOfWeek.Monday);
@@ -250,7 +264,7 @@ namespace WebApplication1.Services
 
             var timetable = new TimetableViewModel
             {
-                Semester = semester,
+                Semester = semester ?? "All",
                 SemesterLabel = semesterLabel,
                 WeekLabel = weekLabel,
                 DayHeaders = dayHeaders,
@@ -301,7 +315,7 @@ namespace WebApplication1.Services
             return weekNumber;
         }
 
-        private string GetLatestSemesterOrDefault(IEnumerable<string> semesters, string defaultSemester)
+        private string? GetLatestSemesterOrDefault(IEnumerable<string> semesters, string? defaultSemester)
         {
             var parsed = semesters
                 .Select(s => (raw: s, parsed: ParseSemester(s)))
@@ -310,7 +324,8 @@ namespace WebApplication1.Services
                 .ThenByDescending(x => x.parsed.Value.term)
                 .FirstOrDefault();
 
-            return parsed.parsed.HasValue ? parsed.raw : (semesters.FirstOrDefault() ?? defaultSemester);
+            if (parsed.parsed.HasValue) return parsed.raw;
+            return semesters.FirstOrDefault() ?? defaultSemester;
         }
 
         private string BuildSemesterLabel(string semester)
@@ -338,6 +353,24 @@ namespace WebApplication1.Services
                 .ToList();
 
             return semesters
+                .Select(s => (raw: s, parsed: ParseSemester(s)))
+                .Where(x => x.parsed.HasValue)
+                .OrderByDescending(x => x.parsed.Value.year)
+                .ThenByDescending(x => x.parsed.Value.term)
+                .Select(x => x.raw)
+                .ToList();
+        }
+
+        public List<string> GetLecturerSemesters(int lecturerId)
+        {
+            var semesterList = _db.CourseClasses
+                .AsNoTracking()
+                .Where(c => c.LecturerId == lecturerId)
+                .Select(c => c.Semester)
+                .Distinct()
+                .ToList();
+
+            return semesterList
                 .Select(s => (raw: s, parsed: ParseSemester(s)))
                 .Where(x => x.parsed.HasValue)
                 .OrderByDescending(x => x.parsed.Value.year)
