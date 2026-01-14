@@ -32,8 +32,11 @@ namespace WebApplication1.Areas.Student.Controllers
                 return NotFound();
             }
 
-            semester = semester ?? "HK1-2024"; // Default semester
+            var semesters = _scheduleService.GetStudentSemesters(student.Id);
             var timetable = _scheduleService.GetStudentTimetable(student.Id, semester);
+
+            ViewBag.Semesters = semesters;
+            ViewBag.SelectedSemester = timetable.Semester;
 
             return View(timetable);
         }

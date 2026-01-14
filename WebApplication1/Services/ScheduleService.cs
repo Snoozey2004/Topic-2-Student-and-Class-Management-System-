@@ -12,8 +12,9 @@ namespace WebApplication1.Services
     {
         List<ScheduleListViewModel> GetAll();
         List<ScheduleListViewModel> GetByCourseClassId(int courseClassId);
-        TimetableViewModel GetStudentTimetable(int studentId, string semester);
+        TimetableViewModel GetStudentTimetable(int studentId, string? semester);
         TimetableViewModel GetLecturerTimetable(int lecturerId, string semester);
+        List<string> GetStudentSemesters(int studentId);
         Schedule? GetById(int id);
         bool Create(ScheduleFormViewModel model);
         bool Update(ScheduleFormViewModel model);
@@ -113,25 +114,42 @@ namespace WebApplication1.Services
 
 
 
-        public TimetableViewModel GetStudentTimetable(int studentId, string semester)
+        public TimetableViewModel GetStudentTimetable(int studentId, string? semester)
         {
-            // lấy classId đã Approved
-            var enrolledClassIds = _db.Enrollments
+            var enrollments = _db.Enrollments
                 .AsNoTracking()
                 .Where(e => e.StudentId == studentId && e.Status == EnrollmentStatus.Approved)
-                .Select(e => e.CourseClassId)
-                .Distinct()
                 .ToList();
 
-            var courseClasses = _db.CourseClasses
+            var enrolledClassIds = enrollments.Select(e => e.CourseClassId).Distinct().ToList();
+
+            string? selectedSemester = semester;
+            if (string.IsNullOrWhiteSpace(selectedSemester))
+            {
+                var semesters = _db.CourseClasses
+                    .AsNoTracking()
+                    .Where(c => enrolledClassIds.Contains(c.Id))
+                    .Select(c => c.Semester)
+                    .Distinct()
+                    .ToList();
+
+                selectedSemester = GetLatestSemesterOrDefault(semesters, null);
+            }
+
+            var courseClassesQuery = _db.CourseClasses
                 .AsNoTracking()
-                .Where(c => enrolledClassIds.Contains(c.Id) && c.Semester == semester)
-                .ToList();
+                .Where(c => enrolledClassIds.Contains(c.Id));
 
-            var semesterParts = semester.Split('-');
-            var semesterNumber = semesterParts.Length > 0 ? semesterParts[0] : "HK1";
-            var year = semesterParts.Length > 1 ? semesterParts[1] : DateTime.Now.Year.ToString();
-            var semesterLabel = $"{semesterNumber} - School year {year} - {int.Parse(year) + 1}";
+            if (!string.IsNullOrWhiteSpace(selectedSemester))
+            {
+                courseClassesQuery = courseClassesQuery.Where(c => c.Semester == selectedSemester);
+            }
+
+            var courseClasses = courseClassesQuery.ToList();
+
+            var semesterLabel = !string.IsNullOrWhiteSpace(selectedSemester)
+                ? BuildSemesterLabel(selectedSemester)
+                : "All semesters";
 
             var currentDate = DateTime.Now;
             var startOfWeek = currentDate.AddDays(-(int)currentDate.DayOfWeek + (int)DayOfWeek.Monday);
@@ -152,7 +170,7 @@ namespace WebApplication1.Services
 
             var timetable = new TimetableViewModel
             {
-                Semester = semester,
+                Semester = selectedSemester ?? "All",
                 SemesterLabel = semesterLabel,
                 WeekLabel = weekLabel,
                 DayHeaders = dayHeaders,
@@ -281,6 +299,62 @@ namespace WebApplication1.Services
             var firstMonday = jan1.AddDays(-daysOffset);
             var weekNumber = ((date - firstMonday).Days / 7) + 1;
             return weekNumber;
+        }
+
+        private string GetLatestSemesterOrDefault(IEnumerable<string> semesters, string defaultSemester)
+        {
+            var parsed = semesters
+                .Select(s => (raw: s, parsed: ParseSemester(s)))
+                .Where(x => x.parsed.HasValue)
+                .OrderByDescending(x => x.parsed.Value.year)
+                .ThenByDescending(x => x.parsed.Value.term)
+                .FirstOrDefault();
+
+            return parsed.parsed.HasValue ? parsed.raw : (semesters.FirstOrDefault() ?? defaultSemester);
+        }
+
+        private string BuildSemesterLabel(string semester)
+        {
+            var parts = semester.Split('-', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+            var semesterNumber = parts.Length > 0 ? parts[0] : "HK1";
+            var year = parts.Length > 1 ? parts[1] : DateTime.Now.Year.ToString();
+            return $"{semesterNumber} - School year {year} - {int.Parse(year) + 1}";
+        }
+
+        public List<string> GetStudentSemesters(int studentId)
+        {
+            var enrollments = _db.Enrollments
+                .AsNoTracking()
+                .Where(e => e.StudentId == studentId && e.Status == EnrollmentStatus.Approved)
+                .Select(e => e.CourseClassId)
+                .Distinct()
+                .ToList();
+
+            var semesters = _db.CourseClasses
+                .AsNoTracking()
+                .Where(c => enrollments.Contains(c.Id))
+                .Select(c => c.Semester)
+                .Distinct()
+                .ToList();
+
+            return semesters
+                .Select(s => (raw: s, parsed: ParseSemester(s)))
+                .Where(x => x.parsed.HasValue)
+                .OrderByDescending(x => x.parsed.Value.year)
+                .ThenByDescending(x => x.parsed.Value.term)
+                .Select(x => x.raw)
+                .ToList();
+        }
+
+        private (int year, int term)? ParseSemester(string semester)
+        {
+            if (string.IsNullOrWhiteSpace(semester)) return null;
+            var parts = semester.Split('-', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+            if (parts.Length < 2) return null;
+            var termPart = parts[0].Replace("HK", "", StringComparison.OrdinalIgnoreCase);
+            if (!int.TryParse(termPart, out var term)) return null;
+            if (!int.TryParse(parts[1], out var year)) return null;
+            return (year, term);
         }
 
         public Schedule? GetById(int id)

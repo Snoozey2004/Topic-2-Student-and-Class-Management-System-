@@ -16,8 +16,22 @@
 <!-- Filter Bar -->
 <div class="portal-filter-bar">
     <div class="portal-filter-controls">
-        <select class="portal-select">
-            <option value="">@Model.SemesterLabel</option>
+        <select class="portal-select" id="semesterSelect">
+            <option value="">All semesters</option>
+            @if (ViewBag.Semesters is IEnumerable<string> semesters)
+            {
+                foreach (var sem in semesters)
+                {
+                    if ((string)ViewBag.SelectedSemester == sem)
+                    {
+                        <option value="@sem" selected>@sem</option>
+                    }
+                    else
+                    {
+                        <option value="@sem">@sem</option>
+                    }
+                }
+            }
         </select>
         <select class="portal-select">
             <option value="">@Model.WeekLabel</option>
@@ -150,6 +164,17 @@
 
 @section Scripts {
     <script>
+        (function(){
+            const select = document.getElementById('semesterSelect');
+            if (select) {
+                select.addEventListener('change', function(){
+                    const val = this.value;
+                    const url = val ? `?semester=${encodeURIComponent(val)}` : window.location.pathname;
+                    window.location.href = url;
+                });
+            }
+        })();
+        
         function showClassModal(element) {
             document.getElementById('modalSubject').textContent = element.dataset.subject;
             document.getElementById('modalCode').textContent = element.dataset.code;
